@@ -1,0 +1,2337 @@
+---
+title: "Plots"
+author: "Alexa Varah"
+date: "2023-02-20"
+output: html_document
+---
+
+# 1. Set up
+## 1.1. Load packages
+```{r}
+rm(list=ls())
+library(tidyverse) # loads ggplot2
+library(patchwork) # for panel plots
+```
+
+
+## 1.2. Load data
+
+```{r}
+# Line graph - density
+df_line_den <- read.csv("../output/data for line graph_density.csv", 
+                        header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    initDR3 = factor(initDR3,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+
+# Line graph - gross profit
+df_line_gp <- read.csv("../output/data for line graph_gross profit.csv", 
+                       header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    initDR3 = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR"))) %>% 
+  dplyr::select(-initdenres_collapsed)
+
+# Scatter plot - gross profit
+df_scatter_gp <- read.csv("../output/data for scatter plot_gross profit.csv", 
+                          header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+
+df_scatter_gp_hd <- read.csv("../output/data for scatter plot_gross profit_hd.csv", 
+                          header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+
+
+# Scatter plot - wheat yield
+df_scatter_wwyld <- read.csv("../output/data for scatter plot_wheat yield.csv", 
+                             header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+
+df_scatter_wwyld_hd <- read.csv("../output/data for scatter plot_wheat yield_hd.csv", 
+                             header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+
+# Scatter plot - worst case opportunity costs
+df_wc_oc <- read.csv("../output/opp costs_worst case vs current.csv", 
+                     header = T) %>% 
+  dplyr::mutate(
+    situation = factor(situation, levels = c("Current", "Worst case")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+
+# Scatter plot - worst case productivity costs
+df_wc_pc <- read.csv("../output/prod costs_worst case vs current.csv", 
+                     header = T) %>% 
+  dplyr::mutate(
+    situation = factor(situation, levels = c("Current", "Worst case")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+
+# Stacked bar chart, costs and output
+df_for_stack <- read.csv("../output/data for stacked bar plot.csv", 
+                     header = T) %>% 
+  dplyr::mutate(
+    xval = factor(xval,
+                  levels = c("BAU_LD-LR", "BAU_LD-HR", "BAU_HD-HR", 
+                             "MIT_LD-LR", "MIT_LD-HR", "MIT_HD-HR"))
+    )
+
+
+levels(df_for_stack$xval)
+
+# Scatter plot - effect of init condit on density
+density_3dr <- readRDS("../output/density_data_summarised_3dr.rds")
+density_3dr_hd <- readRDS("../output/density_data_summarised_3dr_hd.rds")
+```
+
+
+
+# 2. Line graphs, density and gross profit by year
+
+## 2.1. Weed density
+Specify the labels for the panels.   
+```{r panel-labels-line-den}
+initDR3.labs <- c("(i) Low density,\n low resistance", "(ii) Low density,\n high resistance", "(iii) High density,\n high resistance") # new
+names(initDR3.labs) <- c("LD-LR", "LD-HR", "HD-HR") # original
+```
+
+Specify the plot.  
+```{r plot-line-den}
+plot_line_den <- ggplot(df_line_den, 
+       aes(x = year, y = hvh, group = scenario, colour = scenario)) +
+  facet_wrap(~initDR3, labeller = labeller(initDR3 = initDR3.labs)) +
+  geom_ribbon(aes(ymin = hvh_95ci_l, ymax = hvh_95ci_u, fill = scenario), 
+              alpha = 0.1, # controls transparency
+              linetype = "blank" # gets rid of upper and lower lines
+              ) +
+  scale_fill_manual(
+    name = "Scenario",
+    values = c("#00306F", # BAU, madison blue
+               "#00C2F9", # MIT, capri blue
+               "#005FCC"  # CWW, royal blue
+               )
+    ) +
+  geom_line() +  
+  scale_color_manual(
+    name = "Scenario",
+    values = c("#00306F", # BAU, madison blue
+               "#00C2F9", # MIT, capri blue
+               "#005FCC"  # CWW, royal blue
+               )
+    ) +
+  theme_classic() +
+  labs(x = "Year in rotation", 
+       y = "Proportion of field with economically- \n damaging Black-grass density") +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    plot.title = element_blank(),
+    axis.title=element_text(size=22),
+    axis.text.x=element_text(size=rel(2)),
+    axis.text.y=element_text(size=rel(2)),
+    legend.title=element_text(size=22),
+    legend.text=element_text(size=20),
+    strip.background = element_rect(color = "white",
+                                    fill = "grey"),# colour of rectangle round region labels
+    strip.text = element_text(size = 18)
+    ) +
+  theme(legend.position="none")
+
+plot_line_den
+```
+
+### Weed density - black and white
+```{r plot-line-den-bw}
+plot_line_den_bw <- ggplot(df_line_den, 
+       aes(x = year, y = hvh, group = scenario, colour = scenario, linetype=scenario)) +
+  facet_wrap(~initDR3, labeller = labeller(initDR3 = initDR3.labs)) +
+  geom_ribbon(aes(ymin = hvh_95ci_l, ymax = hvh_95ci_u, fill = scenario), 
+              alpha = 0.15, # controls transparency
+              linetype = "blank" # gets rid of upper and lower lines
+              ) +
+  scale_fill_manual(
+    name = "Scenario",
+    values = c("black", # BAU, madison blue
+               "grey61", # MIT, capri blue
+               "grey40"  # CWW, royal blue
+               )
+    ) +
+  geom_line() + 
+  scale_linetype_manual(name = "Scenario", values=c(1,2,3)) +
+  scale_color_manual(
+    name = "Scenario",
+    values = c("black", # BAU, madison blue
+               "grey61", # MIT, capri blue
+               "grey40"  # CWW, royal blue
+               )
+    ) +
+  theme_classic() +
+  labs(x = "Year in rotation", 
+       y = "Proportion of field with economically- \n damaging Black-grass density") +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    #plot.title = element_text(size=18, face="bold"),
+    plot.title = element_blank(),
+    axis.title=element_text(size=22),#18
+    axis.text.x=element_text(size=rel(2)),#1.7
+    axis.text.y=element_text(size=rel(2)),#1.7
+    legend.title=element_text(size=22),#18
+    legend.text=element_text(size=20),#16
+    strip.background = element_rect(color = "white",
+                                    fill = "grey"),# colour of rectangle round region labels
+    strip.text = element_text(size = 18)#16
+    ) +
+  theme(legend.position="none") #+ 
+  #ggtitle("(a)") 
+
+plot_line_den_bw
+```
+
+
+## 2.2. Gross profit
+
+First, specify the labels for the panels.  
+```{r panel-labels-line-gp}
+initDR3.labs <- c("(i) Low density,\n low resistance", "(ii) Low density,\n high resistance", "(iii) High density,\n high resistance") # new
+names(initDR3.labs) <- c("LD-LR", "LD-HR", "HD-HR") # original
+```
+
+Then specify the plot.
+```{r plot-line-gp}
+plot_line_gp <- ggplot(df_line_gp, aes(x = year, y = gp, group = scenario, colour = scenario)) +
+  facet_wrap(~initDR3, labeller = labeller(initDR3 = initDR3.labs)) +
+  geom_ribbon(aes(ymin = gp_ci_l, ymax = gp_ci_u, fill = scenario), 
+              alpha = 0.1, # controls transparency
+              linetype = "blank" # gets rid of upper and lower lines
+              ) +
+  scale_fill_manual(
+    name = "Scenario",
+    values = c("#00306F", # BAU, madison blue
+               "#00C2F9", # MIT, capri blue
+               "#005FCC"  # CWW, royal blue
+               ) 
+    ) +
+  geom_line() +  
+  scale_color_manual(
+    name = "Scenario",
+    values = c("#00306F", # BAU, madison blue
+               "#00C2F9", # MIT, capri blue
+               "#005FCC"  # CWW, royal blue
+               )
+    ) +
+  theme_classic() +
+  labs(x = "Year in rotation", 
+       y = "Annual gross profit (£/ha)") +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    #plot.title = element_text(size=18, face="bold"),
+    plot.title = element_blank(),
+    axis.title=element_text(size=22),#18
+    axis.text.x=element_text(size=rel(2)),#1.7
+    axis.text.y=element_text(size=rel(2)),#1.7
+    legend.title=element_text(size=22),#18
+    legend.text=element_text(size=20),#16
+    strip.background = element_rect(color = "white",
+                                    fill = "grey"),# colour of rectangle round region labels
+    strip.text = element_text(size = 18)#16
+    ) #+ 
+  #ggtitle("(b)") 
+
+plot_line_gp
+```
+
+95% CIs show variation due to region and soil type.  
+
+
+### Gross profit - black and white
+```{r plot-line-gp-bw}
+plot_line_gp_bw <- ggplot(df_line_gp, aes(x = year, y = gp, group = scenario, 
+                                       colour = scenario, linetype=scenario)) +
+  facet_wrap(~initDR3, labeller = labeller(initDR3 = initDR3.labs)) +
+  geom_ribbon(aes(ymin = gp_ci_l, ymax = gp_ci_u, fill = scenario), 
+              alpha = 0.15, # controls transparency
+              linetype = "blank" # gets rid of upper and lower lines
+              ) +
+  geom_line() + 
+  scale_linetype_manual(name = "Scenario", values=c(1,2,3)) +
+  scale_fill_manual(
+    name = "Scenario",
+    values = c("black", # BAU, madison blue
+               "grey61", # MIT, capri blue
+               "grey40"  # CWW, royal blue
+               ) 
+    ) +
+  geom_line() +  
+  scale_color_manual(
+    name = "Scenario",
+    values = c("black", # BAU, madison blue
+               "grey61", # MIT, capri blue
+               "grey40"  # CWW, royal blue
+               )
+    ) +
+  theme_classic() +
+  labs(x = "Year in rotation", 
+       y = "Annual gross profit (£/ha)") +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    #plot.title = element_text(size=18, face="bold"),
+    plot.title = element_blank(),
+    axis.title=element_text(size=22),#18
+    axis.text.x=element_text(size=rel(2)),#1.7
+    axis.text.y=element_text(size=rel(2)),#1.7
+    legend.title=element_text(size=22),#18
+    legend.text=element_text(size=20),#16
+    strip.background = element_rect(color = "white",
+                                    fill = "grey"),# colour of rectangle round region labels
+    strip.text = element_text(size = 18)#16
+    ) #+ 
+  #ggtitle("(b)") 
+
+plot_line_gp_bw
+```
+
+95% CIs show variation due to region and soil type.  
+
+
+## 2.3. Panel plot
+
+Colour.
+```{r}
+line_den_gp <- (plot_line_den + plot_line_gp) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 18, face="bold"))
+line_den_gp
+```
+
+Black and white.
+```{r}
+line_den_gp_bw <- (plot_line_den_bw + plot_line_gp_bw) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 18, face="bold"))
+line_den_gp_bw
+```
+
+
+
+
+## 2.4. Save
+
+Colour.
+```{r}
+png("../figures/Script 09_line graph_den and gp.png",
+    height = 6, width = 17, units = "in", res = 300)
+print(line_den_gp)
+dev.off()
+```
+
+Black and white.
+```{r}
+png("../figures/Script 09_line graph_den and gp_bw.png",
+    height = 6, width = 17, units = "in", res = 300)
+print(line_den_gp_bw)
+dev.off()
+```
+
+
+
+# 3. Scatter plots, gp and wheat yield
+## 3.1. Gross profit scatter plot
+
+Specify the labels for the panels.   
+```{r panel-labels-scatter-gp}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+ 
+Specify the plot annotations. These will show the **numbers of spring crops** in each rotation.
+```{r annotations-scatter-worstcase-oc}
+anno_gp <- data.frame(
+  x = c("HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR"
+        ),
+  y = c(150,150,150,
+        150,150,150,
+        150,150,150,
+        150,150,150,
+        150,150,150,
+        150,150,150,
+        150,150,150,
+        150,150,150,
+        150,150,150
+        ),
+  # numbers of spring crops:
+  lab = c("3", "3", "3", # north, HD-HR
+          "3", "3", "3", # central, HD-HR
+          "4", "4", "4", # east, HD-HR
+          
+          "2", "2", "2", # north, LD-HR
+          "2", "2", "2", # central, LD-HR
+          "1", "1", "1", # east, LD-HR
+          
+          "1", "1", "1", # north, LD-LR
+          "1", "1", "1", # central, LD-LR
+          "0", "0", "0"  # east, LD-LR
+          ),
+  region = c("north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east"
+             ),
+  soiltype = c("heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light"
+               ),
+  scenario = c("MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT"
+                )
+           ) %>% 
+  dplyr::mutate(
+    region = factor(region,
+                    levels = c("north", "central", "east")
+                    ),
+    soiltype = factor(soiltype,
+                    levels = c("heavy", "medium", "light")
+                    )
+  )
+```
+
+Specify the plot.   
+```{r plot-scatter-gp}
+plot_scatter_gp <- ggplot(df_scatter_gp %>% 
+         filter(!scenario=="CWW"),
+       aes(initdenres_collapsed, gp, 
+                   colour = scenario, 
+                   shape = scenario)) + 
+  #geom_point(size = 4) +
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Mean annual gross profit (£/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario",
+                     values = c("#00306F", # BAU, madison blue
+                                "#00C2F9"  # MIT, capri blue
+                                )
+                     )+ 
+  scale_shape_manual(name = "Scenario",
+                     values=c(15, 16)) + # BAU, 15 = square; MIT, 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 16),
+        strip.text.y = element_text(size = 16),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(1.7)),
+        axis.text.y=element_text(size=rel(1.7)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=16)
+        ) +
+  geom_pointrange(aes(ymin = gp_ci_l, 
+                      ymax = gp_ci_u
+                      ), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) +
+  theme(legend.position="none") + 
+  geom_text(data = anno_gp, aes(x = x,  y = y, label = lab),
+           colour = "grey",  size=6) 
+
+plot_scatter_gp
+```
+
+95% CIs show year-to-year variation.  
+
+
+### 3.1.1. Gross profit scatter plot using subscripts
+
+Specify the plot.   
+```{r plot-scatter-gp-subscr}
+plot_scatter_gp_subscr <- ggplot(df_scatter_gp %>% 
+         filter(!scenario=="CWW"),
+       aes(initdenres_collapsed, gp, 
+                   colour = scenario, 
+                   shape = scenario)) + 
+  #geom_point(size = 4) +
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(#guide = guide_axis(angle = 45),
+                   labels = c(expression('D'['l']*'-R'['l']),
+                              expression('D'['l']*'-R'['h']), 
+                              expression('D'['h']*'-R'['h'])
+                              )
+                   ) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Mean annual gross profit (£/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario",
+                     values = c("#00306F", # BAU, madison blue
+                                "#00C2F9"  # MIT, capri blue
+                                )
+                     )+ 
+  scale_shape_manual(name = "Scenario",
+                     values=c(15, 16)) + # BAU, 15 = square; MIT, 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 16),
+        strip.text.y = element_text(size = 16),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(2)),
+        axis.text.y=element_text(size=rel(2)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=16)
+        ) +
+  geom_pointrange(aes(ymin = gp_ci_l, 
+                      ymax = gp_ci_u
+                      ), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) +
+  theme(legend.position="none") + 
+  geom_text(data = anno_gp, aes(x = x,  y = y, label = lab),
+           colour = "grey",  size=6) 
+plot_scatter_gp_subscr
+```
+
+
+
+
+## 3.2. Wheat yield scatter plot
+
+Specify the labels for the panels.  
+```{r panel-labels-scatter-wwyld, eval=FALSE, echo=FALSE}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+
+Specify annotations. These show **numbers of winter wheat crops** in each rotation.
+```{r annotations-scatter-worstcase-oc}
+anno_ww <- data.frame(
+  x = c("HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR"
+        ),
+  y = c(-0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5
+        ),
+  # numbers of winter wheat crops:
+  lab = c("2", "2", "2", # north, HD-HR
+          "2", "2", "2", # central, HD-HR
+          "2", "2", "2", # east, HD-HR
+          
+          "2", "2", "2", # north, LD-HR
+          "2", "2", "2", # central, LD-HR
+          "3", "3", "3", # east, LD-HR
+          
+          "3", "3", "3", # north, LD-LR
+          "3", "3", "3", # central, LD-LR
+          "4", "4", "4"  # east, LD-LR
+          ),
+  region = c("north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east"
+             ),
+  soiltype = c("heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light"
+               ),
+  scenario = c("MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT"
+                )
+           ) %>% 
+  dplyr::mutate(
+    region = factor(region,
+                    levels = c("north", "central", "east")
+                    ),
+    soiltype = factor(soiltype,
+                    levels = c("heavy", "medium", "light")
+                    )
+  )
+```
+
+  
+Specify the plot.  
+```{r plot-scatter-wwyld}
+plot_scatter_wwyld <- ggplot(df_scatter_wwyld %>% 
+         filter(!scenario=="CWW"),
+       aes(initdenres_collapsed, ww_mean, 
+                   colour = scenario, 
+                   shape = scenario)) + 
+  #geom_point(size = 4) +
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Mean annual wheat yield (£/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario",
+                     values = c("#00306F", # BAU, madison blue
+                                "#00C2F9"  # MIT, capri blue
+                                )
+                     )+ 
+  scale_shape_manual(name = "Scenario",
+                     values=c(15, 16)) + # BAU, 15 = square; MIT, 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 16),#, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 16),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(1.7)),#, 
+        axis.text.y=element_text(size=rel(1.7)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=16)
+        ) +
+  geom_pointrange(aes(ymin = ww_ci_l,# 
+                      ymax = ww_ci_u
+                      ), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) + 
+  geom_text(data = anno_ww, aes(x = x,  y = y, label = lab),
+           colour = "grey",  size=6) 
+
+plot_scatter_wwyld
+```
+
+## 3.2.1 Wheat yield scatter plot using subscripts
+Specify the plot.  
+```{r plot-scatter-wwyld-subscr}
+plot_scatter_wwyld_subscr <- ggplot(df_scatter_wwyld %>% 
+         filter(!scenario=="CWW"),
+       aes(initdenres_collapsed, ww_mean, 
+                   colour = scenario, 
+                   shape = scenario)) + 
+  #geom_point(size = 4) +
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(#guide = guide_axis(angle = 45),
+                   labels = c(expression('D'['l']*'-R'['l']),
+                              expression('D'['l']*'-R'['h']), 
+                              expression('D'['h']*'-R'['h'])
+                              )
+                   ) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Mean annual wheat yield (£/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario",
+                     values = c("#00306F", # BAU, madison blue
+                                "#00C2F9"  # MIT, capri blue
+                                )
+                     )+ 
+  scale_shape_manual(name = "Scenario",
+                     values=c(15, 16)) + # BAU, 15 = square; MIT, 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 16),#, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 16),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(2)),#, 
+        axis.text.y=element_text(size=rel(2)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=16)
+        ) +
+  geom_pointrange(aes(ymin = ww_ci_l,# 
+                      ymax = ww_ci_u
+                      ), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) + 
+  geom_text(data = anno_ww, aes(x = x,  y = y, label = lab),
+           colour = "grey",  size=6) 
+
+plot_scatter_wwyld_subscr
+```
+
+
+## 3.3. Panel plot
+
+```{r}
+scatt_gp_wwyld <- (plot_scatter_gp + plot_scatter_wwyld) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 18, face="bold"))
+scatt_gp_wwyld
+```
+
+
+### 3.3.1. Panel plot with subscripts
+
+```{r}
+scatt_gp_wwyld_subscr <- (plot_scatter_gp_subscr + plot_scatter_wwyld_subscr) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 18, face="bold"))
+scatt_gp_wwyld_subscr
+```
+
+
+## 3.4. Save
+```{r}
+png("../figures/Script 09_scatter_gp and wwyld.png",
+    height = 10, width = 20, units = "in", res = 300)
+print(scatt_gp_wwyld)
+dev.off()
+```
+
+### 3.4.1. Save panel plot with subscripts
+```{r}
+png("../figures/Script 09_scatter_gp and wwyld_subscripts.png",
+    height = 10, width = 20, units = "in", res = 300)
+print(scatt_gp_wwyld_subscr)
+dev.off()
+```
+
+# 4. Scatter plots, gp and wheat yield - LD-HR with init HD
+## 4.1. Gross profit scatter plot
+
+Specify the labels for the panels.   
+```{r panel-labels-scatter-gp}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+ 
+Specify the plot annotations. These will show the **numbers of spring crops** in each rotation.
+```{r annotations-scatter-worstcase-oc}
+anno_gp <- data.frame(
+  x = c("HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR"
+        ),
+  y = c(150,150,150,
+        150,150,150,
+        150,150,150,
+        150,150,150,
+        150,150,150,
+        150,150,150,
+        150,150,150,
+        150,150,150,
+        150,150,150
+        ),
+  # numbers of spring / ww crops:
+  lab = c("s3,w2", "s3,w2", "s3,w2", # north, HD-HR
+          "s3,w2", "s3,w2", "s3,w2", # central, HD-HR
+          "s4,w2", "s4,w2", "s4,w2", # east, HD-HR
+          
+          "s2,w2", "s2,w2", "s2,w2", # north, LD-HR
+          "s2,w2", "s2,w2", "s2,w2", # central, LD-HR
+          "s1,w3", "s1,w3", "s1,w3", # east, LD-HR
+          
+          "s1,w3", "s1,w3", "s1,w3", # north, LD-LR
+          "s1,w3", "s1,w3", "s1,w3", # central, LD-LR
+          "s0,w4", "s0,w4", "s0,w4"  # east, LD-LR
+          ),
+  region = c("north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east"
+             ),
+  soiltype = c("heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light"
+               ),
+  scenario = c("MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT"
+                )
+           ) %>% 
+  dplyr::mutate(
+    region = factor(region,
+                    levels = c("north", "central", "east")
+                    ),
+    soiltype = factor(soiltype,
+                    levels = c("heavy", "medium", "light")
+                    )
+  )
+```
+
+Specify the plot.   
+```{r plot-scatter-gp}
+plot_scatter_gp_hd <- ggplot(df_scatter_gp %>% 
+         filter(!scenario=="CWW"),
+       aes(initdenres_collapsed, gp, 
+                   colour = scenario, 
+                   shape = scenario)) + 
+  #geom_point(size = 4) +
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Mean annual gross profit (£/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario",
+                     values = c("#00306F", # BAU, madison blue
+                                "#00C2F9"  # MIT, capri blue
+                                )
+                     )+ 
+  scale_shape_manual(name = "Scenario",
+                     values=c(15, 16)) + # BAU, 15 = square; MIT, 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 18),
+        strip.text.y = element_text(size = 18),
+        #plot.title = element_text(size=22),
+        axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(1.9)),
+        axis.text.y=element_text(size=rel(1.9)),
+        legend.title=element_text(size=20),
+        legend.text=element_text(size=18)
+        ) +
+  geom_pointrange(aes(ymin = gp_ci_l, 
+                      ymax = gp_ci_u
+                      ), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) +
+  theme(legend.position="none") + 
+  geom_text(data = anno_gp, aes(x = x,  y = y, label = lab),
+           colour = "gray48",  size=6) +
+  geom_pointrange(data = df_scatter_gp_hd %>% 
+                  dplyr::filter(initdenres_collapsed=="LD-HR" & scenario=="MIT") %>% 
+                  dplyr::mutate(
+                    initdenres_collapsed = recode_factor(initdenres_collapsed, 
+                                                         "LD-HR" = "HD-HR")),
+                  aes(ymin = gp_ci_l, 
+                      ymax = gp_ci_u),
+                  color = "red",
+                  #position=position_dodge(width=0.3),
+                  size = 0.9,
+                  show.legend = FALSE)
+
+plot_scatter_gp_hd
+```
+
+
+### 4.1.1. Gross profit scatter plot using subscripts
+
+Specify the plot.   
+```{r plot-scatter-gp-subscr}
+plot_scatter_gp_subscr_hd <- ggplot(df_scatter_gp %>% 
+         filter(!scenario=="CWW"),
+       aes(initdenres_collapsed, gp, 
+                   colour = scenario, 
+                   shape = scenario)) + 
+  #geom_point(size = 4) +
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(#guide = guide_axis(angle = 45),
+                   labels = c(expression('D'['l']*'-R'['l']),
+                              expression('D'['l']*'-R'['h']), 
+                              expression('D'['h']*'-R'['h'])
+                              )
+                   ) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Mean annual gross profit (£/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario",
+                     values = c("#00306F", # BAU, madison blue
+                                "#00C2F9"  # MIT, capri blue
+                                )
+                     )+ 
+  scale_shape_manual(name = "Scenario",
+                     values=c(15, 16)) + # BAU, 15 = square; MIT, 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 16),
+        strip.text.y = element_text(size = 16),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(2)),
+        axis.text.y=element_text(size=rel(2)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=16)
+        ) +
+  geom_pointrange(aes(ymin = gp_ci_l, 
+                      ymax = gp_ci_u
+                      ), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) +
+  theme(legend.position="none") + 
+  geom_text(data = anno_gp, aes(x = x,  y = y, label = lab),
+           colour = "grey",  size=6) +
+  geom_pointrange(data = df_scatter_gp_hd %>% 
+                  dplyr::filter(initdenres_collapsed=="LD-HR" & scenario=="MIT") %>% 
+                  dplyr::mutate(
+                    initdenres_collapsed = recode_factor(initdenres_collapsed, 
+                                                         "LD-HR" = "HD-HR")),
+                  aes(ymin = gp_ci_l, 
+                      ymax = gp_ci_u),
+                  color = "red",
+                  #position=position_dodge(width=0.3),
+                  size = 0.9,
+                  show.legend = FALSE)
+
+plot_scatter_gp_subscr_hd
+```
+
+
+
+
+## 4.2. Wheat yield scatter plot
+
+Specify the labels for the panels.  
+```{r panel-labels-scatter-wwyld, eval=FALSE, echo=FALSE}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+
+Specify annotations. These show **numbers of winter wheat crops** in each rotation.
+```{r annotations-scatter-worstcase-oc}
+anno_ww <- data.frame(
+  x = c("HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR"
+        ),
+  y = c(-0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5
+        ),
+  # numbers of winter wheat crops:
+  lab = c("2", "2", "2", # north, HD-HR
+          "2", "2", "2", # central, HD-HR
+          "2", "2", "2", # east, HD-HR
+          
+          "2", "2", "2", # north, LD-HR
+          "2", "2", "2", # central, LD-HR
+          "3", "3", "3", # east, LD-HR
+          
+          "3", "3", "3", # north, LD-LR
+          "3", "3", "3", # central, LD-LR
+          "4", "4", "4"  # east, LD-LR
+          ),
+  region = c("north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east"
+             ),
+  soiltype = c("heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light"
+               ),
+  scenario = c("MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT",
+                "MIT", "MIT", "MIT"
+                )
+           ) %>% 
+  dplyr::mutate(
+    region = factor(region,
+                    levels = c("north", "central", "east")
+                    ),
+    soiltype = factor(soiltype,
+                    levels = c("heavy", "medium", "light")
+                    )
+  )
+```
+
+  
+Specify the plot.  
+```{r plot-scatter-wwyld}
+plot_scatter_wwyld_hd <- ggplot(df_scatter_wwyld %>% 
+         filter(!scenario=="CWW"),
+       aes(initdenres_collapsed, ww_mean, 
+                   colour = scenario, 
+                   shape = scenario)) + 
+  #geom_point(size = 4) +
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Mean annual wheat yield (£/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario",
+                     values = c("#00306F", # BAU, madison blue
+                                "#00C2F9"  # MIT, capri blue
+                                )
+                     )+ 
+  scale_shape_manual(name = "Scenario",
+                     values=c(15, 16)) + # BAU, 15 = square; MIT, 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 18),
+        strip.text.y = element_text(size = 18),
+        #plot.title = element_text(size=22),
+        axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(1.9)),
+        axis.text.y=element_text(size=rel(1.9)),
+        legend.title=element_text(size=20),
+        legend.text=element_text(size=18)
+        ) +
+  geom_pointrange(aes(ymin = ww_ci_l,# 
+                      ymax = ww_ci_u
+                      ), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) + 
+  geom_text(data = anno_ww, aes(x = x,  y = y, label = lab),
+           colour = "gray48",  size=7) +
+  geom_pointrange(data = df_scatter_wwyld_hd %>% 
+                  dplyr::filter(initdenres_collapsed=="LD-HR" & scenario=="MIT") %>% 
+                  dplyr::mutate(
+                    initdenres_collapsed = recode_factor(initdenres_collapsed, 
+                                                         "LD-HR" = "HD-HR")),
+                  aes(ymin = ww_ci_l, 
+                      ymax = ww_ci_u),
+                  color = "red",
+                  #position=position_dodge(width=0.3),
+                  size = 0.9,
+                  show.legend = FALSE)
+
+plot_scatter_wwyld_hd
+```
+
+## 4.2.1 Wheat yield scatter plot using subscripts
+Specify the plot.  
+```{r plot-scatter-wwyld-subscr-hd}
+plot_scatter_wwyld_subscr_hd <- ggplot(df_scatter_wwyld %>% 
+         filter(!scenario=="CWW"),
+       aes(initdenres_collapsed, ww_mean, 
+                   colour = scenario, 
+                   shape = scenario)) + 
+  #geom_point(size = 4) +
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(#guide = guide_axis(angle = 45),
+                   labels = c(expression('D'['l']*'-R'['l']),
+                              expression('D'['l']*'-R'['h']), 
+                              expression('D'['h']*'-R'['h'])
+                              )
+                   ) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Mean annual wheat yield (£/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario",
+                     values = c("#00306F", # BAU, madison blue
+                                "#00C2F9"  # MIT, capri blue
+                                )
+                     )+ 
+  scale_shape_manual(name = "Scenario",
+                     values=c(15, 16)) + # BAU, 15 = square; MIT, 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 16),#, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 16),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(2)),#, 
+        axis.text.y=element_text(size=rel(2)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=16)
+        ) +
+  geom_pointrange(aes(ymin = ww_ci_l,# 
+                      ymax = ww_ci_u
+                      ), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) + 
+  geom_text(data = anno_ww, aes(x = x,  y = y, label = lab),
+           colour = "grey",  size=6) +
+  geom_pointrange(data = df_scatter_wwyld_hd %>% 
+                  dplyr::filter(initdenres_collapsed=="LD-HR" & scenario=="MIT") %>% 
+                  dplyr::mutate(
+                    initdenres_collapsed = recode_factor(initdenres_collapsed, 
+                                                         "LD-HR" = "HD-HR")),
+                  aes(ymin = ww_ci_l, 
+                      ymax = ww_ci_u),
+                  color = "red",
+                  #position=position_dodge(width=0.3),
+                  size = 0.9,
+                  show.legend = FALSE)
+
+plot_scatter_wwyld_subscr_hd
+```
+
+
+## 4.3. Panel plot
+
+```{r}
+scatt_gp_wwyld_hd <- (plot_scatter_gp_hd + plot_scatter_wwyld_hd) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 20, face="bold"))
+scatt_gp_wwyld_hd
+```
+
+
+### 4.3.1. Panel plot with subscripts
+
+```{r}
+scatt_gp_wwyld_subscr_hd <- (plot_scatter_gp_subscr_hd + plot_scatter_wwyld_subscr_hd) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 18, face="bold"))
+scatt_gp_wwyld_subscr_hd
+```
+
+
+## 4.4. Save
+```{r}
+png("../figures/Script 09_scatter_gp and wwyld_hd.png",
+    height = 10, width = 20, units = "in", res = 300)
+print(scatt_gp_wwyld_hd)
+dev.off()
+```
+
+```{r}
+png("../figures/Script 09_scatter_gp and wwyld_subscripts_hd.png",
+    height = 10, width = 20, units = "in", res = 300)
+print(scatt_gp_wwyld_subscr_hd)
+dev.off()
+```
+
+# 5. Scatter plots, worst case vs current, oc and pc
+## 5.1. Opp costs
+
+Specify the labels for the panels.  
+```{r panel-labels-scatter-worstcase-oc}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+
+Specify the plot annotations. These will show the **numbers of spring crops and winter wheat crops** in each rotation.
+```{r annotations-scatter-worstcase-oc}
+anno_oc <- data.frame(
+  x = c("HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR"
+        ),
+  y = c(-550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550
+        ),
+  # numbers of spring / ww crops:
+  lab = c("s3,w2", "s3,w2", "s3,w2", # north, HD-HR
+          "s3,w2", "s3,w2", "s3,w2", # central, HD-HR
+          "s4,w2", "s4,w2", "s4,w2", # east, HD-HR
+          
+          "s2,w2", "s2,w2", "s2,w2", # north, LD-HR
+          "s2,w2", "s2,w2", "s2,w2", # central, LD-HR
+          "s1,w3", "s1,w3", "s1,w3", # east, LD-HR
+          
+          "s1,w3", "s1,w3", "s1,w3", # north, LD-LR
+          "s1,w3", "s1,w3", "s1,w3", # central, LD-LR
+          "s0,w4", "s0,w4", "s0,w4"  # east, LD-LR
+          ),
+  region = c("north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east"
+             ),
+  soiltype = c("heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light"
+               ),
+  situation = c("Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current"
+                )
+           ) %>% 
+  dplyr::mutate(
+    region = factor(region,
+                    levels = c("north", "central", "east")
+                    ),
+    soiltype = factor(soiltype,
+                    levels = c("heavy", "medium", "light")
+                    )
+  )
+```
+
+Alternatively, annotate with number of winter wheat crops (this is not what went into the final manuscript).
+```{r annotations-scatter-worstcase-oc}
+anno_oc <- data.frame(
+  x = c("HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR"
+        ),
+  y = c(-550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550
+        ),
+  # numbers of winter wheat crops:
+  lab = c("2", "2", "2", # north, HD-HR
+          "2", "2", "2", # central, HD-HR
+          "2", "2", "2", # east, HD-HR
+          
+          "2", "2", "2", # north, LD-HR
+          "2", "2", "2", # central, LD-HR
+          "3", "3", "3", # east, LD-HR
+          
+          "3", "3", "3", # north, LD-LR
+          "3", "3", "3", # central, LD-LR
+          "4", "4", "4"  # east, LD-LR
+          ),
+  region = c("north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east"
+             ),
+  soiltype = c("heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light"
+               ),
+  situation = c("Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current"
+                )
+           ) %>% 
+  dplyr::mutate(
+    region = factor(region,
+                    levels = c("north", "central", "east")
+                    ),
+    soiltype = factor(soiltype,
+                    levels = c("heavy", "medium", "light")
+                    )
+  )
+```
+
+Then specify the plot.  
+Colour version.
+```{r plot-scatter-worstcase-oc}
+scatt_oc_current_worst <- ggplot(df_wc_oc, aes(initdenres_collapsed, oc*(-1), 
+                    colour = situation, shape = situation)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  geom_hline(aes(yintercept = 0), color="grey") + #, linetype="dashed"
+  labs(x = "Initial density and resistance", 
+       y = "Mean annual opportunity cost, BAU-MIT (£/ha)") +
+  # specify colours for 'situation':
+  scale_color_manual(name = "Situation",
+                     values = c("#EECC66", # current, (capri blue #00C2F9) (blue #1A85FF)
+                                "#000000" # worst case, (magenta #EE3377) (pink #D41159)
+                                )
+                     ) + 
+  scale_shape_manual(name = "Situation",
+                     values=c(15, 16)) + # current 15 square; worst 16 circle
+  theme(strip.placement = 'outside',
+        panel.background = element_rect(fill = "white", colour = "black"),# white background in main panels
+        strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
+        strip.text.x = element_text(size = 18),#16, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 18),#16
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=22),#18
+        axis.text.x=element_text(size=rel(2)),#1.7
+        axis.text.y=element_text(size=rel(2)),#1.7
+        legend.title=element_text(size=22),#18
+        legend.text=element_text(size=20),#16
+        legend.key = element_blank(),# removes grey background behind symbols in legend
+        ) +
+  geom_pointrange(aes(ymin = oc_ci_l*(-1), 
+                      ymax = oc_ci_u*(-1)
+                      ), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) + 
+  geom_text(data = anno_oc, aes(x = x,  y = y, label = lab),
+           colour = "grey",  size=6) +
+  theme(legend.position="none")
+
+scatt_oc_current_worst
+```
+
+Figure shows: Mean annual opportunity costs of switching from BAU to MIT rotations (i.e., the chosen option is MIT; the foregone option is BAU), for current conditions and worst-case conditions. ‘Current’ opportunity costs are calculated as BAU, current density – MIT, current density. ‘Worst-case ’ opportunity costs are calculated as BAU, worst-case density – MIT, current density. ‘Worst-case’ is defined as 100% of surveyed grid cells in a field having very high black-grass density. **Points below the line at y=0 indicate that MIT strategies did better than BAU strategies.** Error bars are 95% CIs. x-axis abbreviations: D, density; R, resistance; L, low; H, high. Annotations show numbers of spring crops in the 6-year rotation.
+
+Black and white version.
+```{r plot-scatter-worstcase-oc-bw}
+scatt_oc_current_worst_bw <- ggplot(df_wc_oc, aes(initdenres_collapsed, oc*(-1), 
+                    colour = situation, shape = situation)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  geom_hline(aes(yintercept = 0), color="grey") + #, linetype="dashed"
+  labs(x = "Initial density and resistance", 
+       y = "Mean annual opportunity cost, BAU-MIT (£/ha)") +
+  # specify colours for 'situation':
+  scale_color_manual(name = "Situation",
+                     values = c("grey61", # current, (capri blue #00C2F9) (blue #1A85FF)
+                                "#000000" # worst case, (magenta #EE3377) (pink #D41159)
+                                )
+                     ) + 
+  scale_shape_manual(name = "Situation",
+                     values=c(15, 16)) + # current 15 square; worst 16 circle
+  theme(strip.placement = 'outside',
+        panel.background = element_rect(fill = "white", colour = "black"),# white background in main panels
+        strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
+        strip.text.x = element_text(size = 18),#16, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 18),#16
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=22),#18
+        axis.text.x=element_text(size=rel(2)),#1.7
+        axis.text.y=element_text(size=rel(2)),#1.7
+        legend.title=element_text(size=22),#18
+        legend.text=element_text(size=20),#16
+        legend.key = element_blank(),# removes grey background behind symbols in legend
+        ) +
+  geom_pointrange(aes(ymin = oc_ci_l*(-1), 
+                      ymax = oc_ci_u*(-1)
+                      ), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) + 
+  geom_text(data = anno_oc, aes(x = x,  y = y, label = lab),
+           colour = "grey",  size=6) +
+  theme(legend.position="none")
+
+scatt_oc_current_worst_bw
+```
+
+## 5.2. Prod costs
+Specify the labels for the panels (already done above).  
+```{r panel-labels-scatter-worstcase-pc, echo=FALSE, eval=FALSE}
+#region.labs <- c("Northern England", "Central England", "Eastern England") # new
+#names(region.labs) <- c("north", "central", "east") # original
+
+#soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+#names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+
+Specify annotations. These show **numbers of winter wheat crops** in each rotation.
+```{r annotations-scatter-worstcase-oc}
+anno_pc <- data.frame(
+  x = c("HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR"
+        ),
+  y = c(-6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2
+        ),
+  # numbers of winter wheat crops:
+  lab = c("2", "2", "2", # north, HD-HR
+          "2", "2", "2", # central, HD-HR
+          "2", "2", "2", # east, HD-HR
+          
+          "2", "2", "2", # north, LD-HR
+          "2", "2", "2", # central, LD-HR
+          "3", "3", "3", # east, LD-HR
+          
+          "3", "3", "3", # north, LD-LR
+          "3", "3", "3", # central, LD-LR
+          "4", "4", "4"  # east, LD-LR
+          ),
+  region = c("north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east"
+             ),
+  soiltype = c("heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light"
+               ),
+  situation = c("Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current"
+                )
+           ) %>% 
+  dplyr::mutate(
+    region = factor(region,
+                    levels = c("north", "central", "east")
+                    ),
+    soiltype = factor(soiltype,
+                    levels = c("heavy", "medium", "light")
+                    )
+  )
+```
+
+
+Specify the plot. 
+Colour.
+```{r plot-scatter-worstcase-pc}
+scatt_pc_current_worst <- ggplot(df_wc_pc, aes(initdenres_collapsed, pc*(-1), 
+                    colour = situation, shape = situation)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  geom_hline(aes(yintercept = 0), color="grey") + #, linetype="dashed"
+  labs(x = "Initial density and resistance", 
+       y = "Mean annual productivity cost, BAU-MIT (t/ha)") +
+  # specify colours for 'situation':
+  scale_color_manual(name = "Situation",
+                     values = c("#EECC66", # current
+                                "#000000"  # worst case
+                                )
+                     ) + 
+  scale_shape_manual(name = "Situation",
+                     values=c(15, 16)) + # current 15 square; worst 16 circle
+  theme(strip.placement = 'outside',
+        #strip.background.x = element_blank(),
+        #strip.text.x = element_blank(), # removes facet labels
+        panel.background = element_rect(fill = "white", colour = "black"),# white background in main panels
+        strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
+        strip.text.x = element_text(size = 18),#16, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 18),#16
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=22),#18
+        axis.text.x=element_text(size=rel(2)),#1.7
+        axis.text.y=element_text(size=rel(2)),#1.7
+        legend.title=element_text(size=22),#18
+        legend.text=element_text(size=20),#16
+        legend.key = element_blank(),# removes grey background behind symbols in legend
+        #legend.title = element_blank()
+        ) +
+  geom_pointrange(aes(ymin = pc_ci_l*(-1), 
+                      ymax = pc_ci_u*(-1)
+                      ), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) + 
+  geom_text(data = anno_pc, aes(x = x,  y = y, label = lab),
+           colour = "grey",  size=6) 
+
+scatt_pc_current_worst
+```
+
+**Figure shows:** Mean annual productivity costs of switching from BAU to MIT rotations (i.e., the chosen option is MIT; the foregone option is BAU), for current conditions and worst-case conditions. Current’ productivity costs are calculated as BAU, current density – MIT, current density. ‘Worst-case’ productivity costs – in other words, is it better for wheat production to switch pre-emptively to MIT, or is it better for wheat production to continue with BAU in the knowledge that weed density will get worse – are calculated as BAU, worst-case density – MIT, current density. ‘Worst-case’ is defined as 100% of surveyed grid cells in a field having very high black-grass density. **Points below the line at y=0 indicate that MIT strategies did better than BAU strategies.** Error bars are 95% CIs. x-axis abbreviations: D, density; R, resistance; L, low; H, high. Annotations show numbers of spring crops in the 6-year rotation.
+
+Black and white.
+```{r plot-scatter-worstcase-pc-bw}
+scatt_pc_current_worst_bw <- ggplot(df_wc_pc, aes(initdenres_collapsed, pc*(-1), 
+                    colour = situation, shape = situation)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  geom_hline(aes(yintercept = 0), color="grey") + #, linetype="dashed"
+  labs(x = "Initial density and resistance", 
+       y = "Mean annual productivity cost, BAU-MIT (t/ha)") +
+  # specify colours for 'situation':
+  scale_color_manual(name = "Situation",
+                     values = c("grey61", # current
+                                "#000000"  # worst case
+                                )
+                     ) + 
+  scale_shape_manual(name = "Situation",
+                     values=c(15, 16)) + # current 15 square; worst 16 circle
+  theme(strip.placement = 'outside',
+        #strip.background.x = element_blank(),
+        #strip.text.x = element_blank(), # removes facet labels
+        panel.background = element_rect(fill = "white", colour = "black"),# white background in main panels
+        strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
+        strip.text.x = element_text(size = 18),#16, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 18),#16
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=22),#18
+        axis.text.x=element_text(size=rel(2)),#1.7
+        axis.text.y=element_text(size=rel(2)),#1.7
+        legend.title=element_text(size=22),#18
+        legend.text=element_text(size=20),#16
+        legend.key = element_blank(),# removes grey background behind symbols in legend
+        #legend.title = element_blank()
+        ) +
+  geom_pointrange(aes(ymin = pc_ci_l*(-1), 
+                      ymax = pc_ci_u*(-1)
+                      ), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) + 
+  geom_text(data = anno_pc, aes(x = x,  y = y, label = lab),
+           colour = "grey",  size=6) 
+
+scatt_pc_current_worst_bw
+```
+
+## 5.3. Panel plot
+
+Colour.
+```{r}
+scatt_wc_oc_pc <- (scatt_oc_current_worst + scatt_pc_current_worst) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 18, face="bold"))
+scatt_wc_oc_pc
+```
+
+Black and white.
+```{r}
+scatt_wc_oc_pc_bw <- (scatt_oc_current_worst_bw + scatt_pc_current_worst_bw) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 18, face="bold"))
+scatt_wc_oc_pc_bw
+```
+
+
+## 5.4. Save
+
+Colour.
+```{r}
+png("../figures/Script 09_scatter_worstcase_oc and pc.png",
+    height = 10, width = 20, units = "in", res = 300)
+print(scatt_wc_oc_pc)
+dev.off()
+
+
+tiff("../figures/Script 09_scatter_worstcase_oc and pc.tiff", 
+     height = 10, width = 20, pointsize = 1/300, units = 'in', res = 300)
+print(scatt_wc_oc_pc)
+dev.off()
+```
+
+Black and white.
+```{r}
+png("../figures/Script 09_scatter_worstcase_oc and pc_bw.png",
+    height = 10, width = 20, units = "in", res = 300)
+print(scatt_wc_oc_pc_bw)
+dev.off()
+```
+
+
+
+# 6. Stacked bar plot
+Colour.
+```{r stacked-plot, echo=TRUE, fig.keep='all'}
+sp <- ggplot(df_for_stack %>% dplyr::filter(!cost=="cly"),
+             aes(x=xval, y=amount, fill=cost)) +
+  geom_bar(position="stack", stat="identity") +
+  scale_fill_manual(
+    name = "Cost \ncomponent",
+    values = c('#9ecae1', '#3ac8e1', '#005FCC'),# '#08306b',  #0E61DC
+    labels = c('Herbicide', 'Operations', 'Other') # 'Lost yield', 
+    ) +
+
+  # 1. BAU LD-LR
+  # output
+  geom_point(aes(x = 1, y = 1416.308), 
+             cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
+  geom_segment(aes(x = 1, y = 1307.133, xend = 1, yend = 1525.483)) + # CIs
+  # output with no BG
+  geom_point(aes(x = 1.05, y = 1446.279), # point
+             cex = 4, shape = 17, show.legend = FALSE) + 
+  geom_segment(aes(x = 1.05, y = 1332.746, xend = 1.05, yend = 1559.811)) + # CIs
+  # gross profit line
+  geom_segment(aes(   x = 0.95,    y = 766.8389, 
+                   xend = 0.95, yend = 1416.308, 
+                   linetype = 'dotdash')) + # diff = gp 649.4691
+  
+  # 2. BAU LD-HR
+  # output
+  geom_point(aes(x = 2, y = 1378.1), 
+             cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
+  geom_segment(aes(   x = 2,    y = 1271.964, 
+                   xend = 2, yend = 1484.184)) + # CIs
+  # output with no BG
+  geom_point(aes(x = 2.05, y = 1484.513), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 2.05, y = 1367.219, xend = 2.05, yend = 1601.806)) + # CIs
+  # gross profit line
+  geom_segment(aes(   x = 1.95,    y = 766.0656, 
+                   xend = 1.95, yend = 1378.1, 
+                   linetype = 'dashed')) +
+  
+  # 3. BAU HD-HR
+  # output
+  geom_point(aes(x = 3, y = 1349.2), cex = 4, show.legend = FALSE) + # point #colour = "#020E20",
+  geom_segment(aes(x = 3, y = 1244.473, xend = 3, yend = 1453.913)) + # CIs
+  # output with no BG
+  geom_point(aes(x = 3.05, y = 1513.394), cex = 4, shape = 17, show.legend = FALSE) + 
+  geom_segment(aes(   x = 3.05,    y = 1394.663, 
+                   xend = 3.05, yend = 1632.125)) + # CIs #,colour = "#08306b"
+  # gross profit line
+  geom_segment(aes(   x = 2.95,    y = 767.4341, 
+                   xend = 2.95, yend = 1349.2, 
+                   linetype = 'dotted')) + 
+  scale_linetype_identity() +  
+
+  # 4. MIT LD-LR
+  # output
+  geom_point(aes(x = 4, y = 1447.7), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
+  geom_segment(aes(x = 4, y = 1349.828, xend = 4, yend = 1545.666)) + # CIs
+  # output with no BG
+  geom_point(aes(x = 4.05, y = 1456.491), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 4.05, y = 1358.818, xend = 4.05, yend = 1554.165)) + # CIs
+  # gross profit from BAU scenario
+  geom_segment(aes(   x = 3.95,    y = 1447.7-649.4691, 
+                   xend = 3.95, yend = 1447.7,
+                   linetype = 'dotdash')) + # # diff = 649.4691
+  
+  # 5. MIT LD-HR
+  # output
+  geom_point(aes(x = 5, y = 1331.78), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
+  geom_segment(aes(x = 5, y = 1250.360, xend = 5, yend = 1413.200)) + # CIs
+  # output with no BG
+  geom_point(aes(x = 5.05, y = 1349.842), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 5.05, y = 1267.995, xend = 5.05, yend = 1431.689)) + # CIs
+  # gross profit from BAU scenario
+  geom_segment(aes(   x = 4.95,    y = 719.7456, 
+                   xend = 4.95, yend = 1331.78, 
+                   linetype = 'dashed')) + # diff = 612.0344
+  
+
+  # 6. MIT HD-HR
+  # output
+  geom_point(aes(x = 6, y = 1190.729), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
+  geom_segment(aes(x = 6, y = 1108.905, xend = 6, yend = 1272.553)) + # CIs
+  # output with no BG
+  geom_point(aes(x = 6.05, y = 1246.424), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 6.05, y = 1164.023, xend = 6.05, yend = 1328.824)) + # CIs
+  # gross profit from BAU scenario
+  geom_segment(aes(   x = 5.95,    y = 608.9631, 
+                   xend = 5.95, yend = 1190.729, 
+                   linetype = 'dotted')) +
+  
+  labs(x = "\n\nScenario and initial density-resistance state", 
+       y = "Mean annual costs and output (£/ha)") +
+  scale_x_discrete(labels=c('LD-LR', 'LD-HR', 'HD-HR',
+                              'LD-LR', 'LD-HR', 'HD-HR')) +
+  annotate("text", x=2, y=-230, label="BAU", size = 7) +
+  annotate("text", x=5, y=-230, label="MIT", size = 7) +
+  coord_cartesian(ylim=c(0,1600),clip="off") +
+  theme_classic() +
+  theme(axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(2)),#, 
+        axis.text.y=element_text(size=rel(2)),
+        legend.title=element_text(size=22),
+        legend.text=element_text(size=20)
+        ) 
+
+sp
+```
+
+Black and white.
+```{r stacked-plot-bw, echo=TRUE, fig.keep='all'}
+sp_bw <- ggplot(df_for_stack %>% dplyr::filter(!cost=="cly"), 
+                aes(x=xval, y=amount, fill=cost)) +
+  geom_bar(position="stack", stat="identity") +
+  scale_fill_manual(
+    name = "Cost \ncomponent",
+    values = c('grey81', 'grey56', 'grey40'),# '#08306b',  #0E61DC
+    labels = c('Herbicide', 'Operations', 'Other') # 'Lost yield', 
+    ) +
+
+  # 1. BAU LD-LR
+  # output
+  geom_point(aes(x = 1, y = 1416.308), 
+             cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
+  geom_segment(aes(x = 1, y = 1307.133, xend = 1, yend = 1525.483)) + # CIs
+  # output with no BG
+  geom_point(aes(x = 1.05, y = 1446.279), # point
+             cex = 4, shape = 17, show.legend = FALSE) + 
+  geom_segment(aes(x = 1.05, y = 1332.746, xend = 1.05, yend = 1559.811)) + # CIs
+  # gross profit line
+  geom_segment(aes(   x = 0.95,    y = 766.8389, 
+                   xend = 0.95, yend = 1416.308, 
+                   linetype = 'dotdash')) + # diff = gp 649.4691
+  
+  # 2. BAU LD-HR
+  # output
+  geom_point(aes(x = 2, y = 1378.1), 
+             cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
+  geom_segment(aes(   x = 2,    y = 1271.964, 
+                   xend = 2, yend = 1484.184)) + # CIs
+  # output with no BG
+  geom_point(aes(x = 2.05, y = 1484.513), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 2.05, y = 1367.219, xend = 2.05, yend = 1601.806)) + # CIs
+  # gross profit line
+  geom_segment(aes(   x = 1.95,    y = 766.0656, 
+                   xend = 1.95, yend = 1378.1, 
+                   linetype = 'dashed')) +
+  
+  # 3. BAU HD-HR
+  # output
+  geom_point(aes(x = 3, y = 1349.2), cex = 4, show.legend = FALSE) + # point #colour = "#020E20",
+  geom_segment(aes(x = 3, y = 1244.473, xend = 3, yend = 1453.913)) + # CIs
+  # output with no BG
+  geom_point(aes(x = 3.05, y = 1513.394), cex = 4, shape = 17, show.legend = FALSE) + 
+  geom_segment(aes(   x = 3.05,    y = 1394.663, 
+                   xend = 3.05, yend = 1632.125)) + # CIs #,colour = "#08306b"
+  # gross profit line
+  geom_segment(aes(   x = 2.95,    y = 767.4341, 
+                   xend = 2.95, yend = 1349.2, 
+                   linetype = 'dotted')) + 
+  scale_linetype_identity() +  
+
+  # 4. MIT LD-LR
+  # output
+  geom_point(aes(x = 4, y = 1447.7), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
+  geom_segment(aes(x = 4, y = 1349.828, xend = 4, yend = 1545.666)) + # CIs
+  # output with no BG
+  geom_point(aes(x = 4.05, y = 1456.491), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 4.05, y = 1358.818, xend = 4.05, yend = 1554.165)) + # CIs
+  # gross profit from BAU scenario
+  geom_segment(aes(   x = 3.95,    y = 1447.7-649.4691, 
+                   xend = 3.95, yend = 1447.7,
+                   linetype = 'dotdash')) + # # diff = 649.4691
+  
+  # 5. MIT LD-HR
+  # output
+  geom_point(aes(x = 5, y = 1331.78), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
+  geom_segment(aes(x = 5, y = 1250.360, xend = 5, yend = 1413.200)) + # CIs
+  # output with no BG
+  geom_point(aes(x = 5.05, y = 1349.842), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 5.05, y = 1267.995, xend = 5.05, yend = 1431.689)) + # CIs
+  # gross profit from BAU scenario
+  geom_segment(aes(   x = 4.95,    y = 719.7456, 
+                   xend = 4.95, yend = 1331.78, 
+                   linetype = 'dashed')) + # diff = 612.0344
+  
+
+  # 6. MIT HD-HR
+  # output
+  geom_point(aes(x = 6, y = 1190.729), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
+  geom_segment(aes(x = 6, y = 1108.905, xend = 6, yend = 1272.553)) + # CIs
+  # output with no BG
+  geom_point(aes(x = 6.05, y = 1246.424), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 6.05, y = 1164.023, xend = 6.05, yend = 1328.824)) + # CIs
+  # gross profit from BAU scenario
+  geom_segment(aes(   x = 5.95,    y = 608.9631, 
+                   xend = 5.95, yend = 1190.729, 
+                   linetype = 'dotted')) +
+  
+  labs(x = "\n\nScenario and initial density-resistance state", 
+       y = "Mean annual costs and output (£/ha)") +
+  scale_x_discrete(labels=c('LD-LR', 'LD-HR', 'HD-HR',
+                              'LD-LR', 'LD-HR', 'HD-HR')) +
+  annotate("text", x=2, y=-230, label="BAU", size = 7) +
+  annotate("text", x=5, y=-230, label="MIT", size = 7) +
+  coord_cartesian(ylim=c(0,1600),clip="off") +
+  theme_classic() +
+  theme(axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(2)),#, 
+        axis.text.y=element_text(size=rel(2)),
+        legend.title=element_text(size=22),
+        legend.text=element_text(size=20)
+        ) 
+
+sp_bw
+```
+
+
+## 6.1. Save plots.
+
+Colour.
+```{r}
+png("../figures/Script 11_cost components_stacked.png",
+    height = 10, width = 17, units = "in", res = 300)
+print(sp)
+dev.off()
+
+#tiff("../figures/Script 09_scatter_worstcase_oc and pc.tiff", 
+#     height = 10, width = 20, pointsize = 1/300, units = 'in', res = 300)
+#print(scatt_wc_oc_pc)
+#dev.off()
+```
+
+Black and white.
+```{r}
+png("../figures/Script 09_cost components_stacked_bw.png",
+    height = 10, width = 17, units = "in", res = 300)
+print(sp_bw)
+dev.off()
+```
+
+
+# 7. When does it flip?
+See script 4e.
+
+# 8. SI: Scatter plot, density - LD-HR with init HD
+Scatter plot of density by 3 init conditions, just BAU and MIT scenarios. Use the `prophvh_3dr` dataset: this contains the mean proportion of squares in high or very high density states, with initial density/resistance states collapsed to three levels.
+
+N.B. I checked whether it made any difference to the error bars if I calculated the mean first, then collapsed init den res levels and combined h&vh, then calculated new mean, OR if I collapsed init den res levels and combined h&vh first and then calculated mean. It made no difference.
+
+#### Plot
+Specify what you want written in the facet strips.
+```{r specify-facets-sp1}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+
+
+Specify the plot annotations. These will show the **numbers of spring crops** in each rotation.
+```{r annotations-scatter-worstcase-oc}
+anno_den <- data.frame(
+  x = c("HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR"
+        ),
+  y = c(-0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1
+        ),
+  # numbers of spring crops:
+  lab = c("3", "3", "3", # north, HD-HR
+          "3", "3", "3", # central, HD-HR
+          "4", "4", "4", # east, HD-HR
+          
+          "2", "2", "2", # north, LD-HR
+          "2", "2", "2", # central, LD-HR
+          "1", "1", "1", # east, LD-HR
+          
+          "1", "1", "1", # north, LD-LR
+          "1", "1", "1", # central, LD-LR
+          "0", "0", "0"  # east, LD-LR
+          ),
+  region = c("north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east",
+             "north",   "north",   "north", 
+             "central", "central", "central",
+             "east",    "east",    "east"
+             ),
+  soiltype = c("heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light",
+               "heavy", "medium", "light"
+               ),
+  scenario = c("MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT"
+                )
+           ) %>% 
+  dplyr::mutate(
+    region = factor(region,
+                    levels = c("north", "central", "east")
+                    ),
+    soiltype = factor(soiltype,
+                    levels = c("heavy", "medium", "light")
+                    )
+  )
+```
+
+Specify plot.
+```{r plot-sp1}
+sp1 <- ggplot(density_3dr %>% dplyr::filter(year == 6 & !scenario=="CWW"), #Keep only yr 6, remove CWW
+       aes(initDR3, hvh_mean, colour = scenario, shape = scenario)) + 
+  facet_grid(region ~ soiltype, labeller = labeller(region = region.labs, 
+                                                    soiltype = soiltype.labs)) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  ylim(-0.15, 1) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Proportion of field with economically- \ndamaging Black-grass density at year 6") +
+  # specify colours and shapes for 'scenario':
+  scale_color_manual(name = "Scenario",
+                     values = c("#00306F", # BAU, madison blue
+                                "#00C2F9")) + # MIT, capri blue
+  scale_shape_manual(name = "Scenario",
+                     values=c(15, 16)) + # BAU 15 = square; MIT 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 16),#, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 16),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(1.7)),
+        axis.text.y=element_text(size=rel(1.7)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=16)
+  ) +
+  geom_pointrange(aes(ymin = hvh_ci_l, 
+                      ymax = hvh_ci_u),
+                  size = 0.9) + 
+  geom_text(data = anno_den, aes(x = x,  y = y, label = lab),
+           colour = "gray48", size=7) 
+
+sp1
+```
+
+#### Save plot
+```{r save-sp1}
+#ggsave("../figures/Script 3c_prop hvh_yr6_effect of scenario and initcondit_3dr_scatter_noCWW.png", 
+#       height = 10, width = 10, dpi = 300)
+
+png("../figures/Script 3c_prop hvh_yr6_effect of scenario and initcondit_3dr_scatter_noCWW.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(sp1)
+dev.off()
+```
+
+###        To the above plot I need to add the LD-HR scenario run with initial high density.
+**Lines 482-584 have not been updated since receiving the final density simulations from Rob G, 13th Feb 2023.**
+See original script, "03b. Analyse simulated density data.R", lines 480-550.
+Also see section at line 962.
+
+For fields with high initial density, I want to see whether black-grass density is reduced by the LD-HR strategies. In these fields, the HD-HR strategies did successfully reduce BG density, but would LD-HR strategies also be successful?
+
+#### Load data
+```{r, eval=FALSE, echo=FALSE}
+prophvh_3dr_hd <- read.csv("../output/simulated_yearly_mean_prophvh_3dr_hd.csv", 
+                header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario),
+    region = factor(region, levels = c("north", "central","east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initDR3 = factor(initDR3),
+    strategy = factor(strategy)
+  )
+
+prophvh_3dr_vd <- read.csv("../output/simulated_yearly_mean_prophvh_3dr_vd.csv", 
+                header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario),
+    region = factor(region, levels = c("north", "central","east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initDR3 = factor(initDR3),
+    strategy = factor(strategy)
+  )
+```
+
+
+#### Re-specify plot
+**Add LD-HR run with init high density, and run with initial very high density, to this plot**
+
+Actually, the two runs (all at initial high density, and all at initial very high density), produce almost the same final density estimations for year 6. This means that if I plot both new points, they overlap each other, so just plot the point from one of the runs (either HD or VD).
+```{r, eval=FALSE, echo=FALSE}
+sp2 <- ggplot(density_3dr_hd %>% dplyr::filter(year == 6 & !scenario=="CWW"), #Keep only yr 6, remove CWW
+       aes(initDR3, hvh_mean, colour = scenario, shape = scenario)) + 
+  facet_grid(region ~ soiltype, labeller = labeller(region = region.labs, 
+                                                    soiltype = soiltype.labs)) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  ylim(-0.15, 1) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Proportion of field with economically- \ndamaging Black-grass density at year 6") +
+  # specify colours and shapes for 'scenario':
+  scale_color_manual(name = "Scenario",
+                     values = c("#00306F", # BAU, madison blue
+                                "#00C2F9")) + # MIT, capri blue
+  scale_shape_manual(name = "Scenario",
+                     values=c(15, 16)) + # BAU 15 = square; MIT 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 18),
+        strip.text.y = element_text(size = 18),
+        #plot.title = element_text(size=22),
+        axis.title=element_text(size=20),
+        axis.text.x=element_text(size=rel(1.8)),
+        axis.text.y=element_text(size=rel(1.8)),
+        legend.title=element_text(size=20),
+        legend.text=element_text(size=18)
+        ) +
+  geom_pointrange(aes(ymin = hvh_ci_l, 
+                      ymax = hvh_ci_u),
+                  size = 0.9) + 
+  geom_text(data = anno_den, aes(x = x,  y = y, label = lab),
+           colour = "gray48", size=6) +
+  # add new point:
+  # re-define data and overwrite top layer inheritance
+  #geom_pointrange(data = prophvh_3dr_hd %>% 
+  #                  dplyr::filter(year == 6 & initDR3=="LD-HR" & scenario=="MIT") %>% 
+  #                  dplyr::mutate(
+  #                    initDR3 = recode_factor(initDR3, "LD-HR" = "HR-HD")),
+  #                aes(ymin = hvh_ci_l, 
+  #                    ymax = hvh_ci_u),
+  #                color = "orange",
+  #                #position=position_dodge(width=0.3),
+  #                size = 0.9,
+  #                show.legend = FALSE) +
+  geom_pointrange(data = density_3dr_hd %>% 
+                  dplyr::filter(year == 6 & initDR3=="LD-HR" & scenario=="MIT") %>% 
+                  dplyr::mutate(
+                    initDR3 = recode_factor(initDR3, "LD-HR" = "HD-HR")),
+                    #initDR3 = recode_factor(initDR3, "LD-HR" = "HR-HD")),
+                  aes(ymin = hvh_ci_l, 
+                      ymax = hvh_ci_u),
+                  color = "red",
+                  #position=position_dodge(width=0.3),
+                  size = 0.9,
+                  show.legend = FALSE)
+
+sp2
+```
+
+
+Save plot.
+```{r, eval=FALSE, echo=FALSE}
+#ggsave("../figures/Script 3c_prop hvh_yr6_effect of scenario and initDR_3dr_scatter_noCWW_VD added.png",
+#       height = 10, width = 10)
+
+png("../figures/Script 09_prop hvh_yr6_noCWW_LD-HR added.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(sp2)
+dev.off()
+```
+
+
+
+ 
+# 9. SI: Sensitivity analysis plots
+
+## 9.1. Scatter plot, gp, MIT & BAU
+If not done above, specify the labels for the panels.  
+```{r specify-panel-labels}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+
+Then specify the plot.
+```{r plot-gp-sensanaly-noCWW}
+scatt_SA_gp <- ggplot(gp_oc %>% filter(!scenario=="CWW"), 
+                aes(initdenres_collapsed, gp, 
+                    colour = ID, shape = ID)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance", 
+       y = "Mean annual gross profit (£/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario & 
+yield penalties",
+                     values = c("#88CCEE", # BAU, lower yield penalty
+                                "#005FCC", # BAU
+                                "#00306F", # BAU, upper yield penalty
+                                
+                                "#DDCC77", # MIT, lower yield penalty
+                                "#999933", # MIT
+                                "#117733" # MIT, upper yield penalty
+                                )) + 
+  scale_shape_manual(name = "Scenario & 
+yield penalties",
+                     values=c(15, 15, 15,    # BAU 15 = square
+                              16, 16, 16)) + # MIT 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 18),
+        strip.text.y = element_text(size = 18),
+        axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(1.9)),
+        axis.text.y=element_text(size=rel(1.9)),
+        legend.title=element_text(size=20),
+        legend.text=element_text(size=18)
+        ) +
+  geom_pointrange(aes(ymin = gp_ci_l, 
+                      ymax = gp_ci_u), 
+                  position=position_dodge(width=0.6),
+                  size = 0.9) 
+
+scatt_SA_gp
+```
+
+Save plot.
+```{r save-econ-plot-noCWW}
+png("../figures/Script 09_SA_gp by initcondit_BAU & MIT.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(scatt_SA_gp)
+dev.off()
+```
+
+
+## 9.2. Scatter plot, ww, MIT & BAU
+If not done above, specify the labels for the panels.  
+```{r specify-panel-labels}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+
+Then specify the plot.
+```{r plot-gp-sensanaly-noCWW}
+scatt_SA_ww <- ggplot(ww_pc %>% filter(!scenario=="CWW"), 
+                aes(initdenres_collapsed, ww, 
+                    colour = ID, shape = ID)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance", 
+       y = "Mean annual wheat yield (t/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario & 
+yield penalties",
+                     values = c("#88CCEE", # BAU, lower yield penalty
+                                "#005FCC", # BAU
+                                "#00306F", # BAU, upper yield penalty
+                                
+                                "#DDCC77", # MIT, lower yield penalty
+                                "#999933", # MIT
+                                "#117733" # MIT, upper yield penalty
+                                )) + 
+  scale_shape_manual(name = "Scenario & 
+yield penalties",
+                     values=c(15, 15, 15,    # BAU 15 = square
+                              16, 16, 16)) + # MIT 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 18),
+        strip.text.y = element_text(size = 18),
+        axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(1.9)),
+        axis.text.y=element_text(size=rel(1.9)),
+        legend.title=element_text(size=20),
+        legend.text=element_text(size=18)
+        ) +
+  geom_pointrange(aes(ymin = ww_ci_l, 
+                      ymax = ww_ci_u), 
+                  position=position_dodge(width=0.6),
+                  size = 0.9) 
+
+scatt_SA_ww
+```
+
+
+
+Save plot.
+```{r save-econ-plot-noCWW}
+png("../figures/Script 09_SA_ww by initcondit_BAU & MIT.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(scatt_SA_ww)
+dev.off()
+```

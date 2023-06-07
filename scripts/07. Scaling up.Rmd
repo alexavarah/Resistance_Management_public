@@ -1,0 +1,776 @@
+---
+title: "Scaling up"
+author: "Alexa Varah"
+date: "31/01/2022"
+output: html_document
+---
+
+# 1. Intro
+This script answers the following questions:  
+
+1. At a national scale, how much less wheat do MIT strategies produce than BAU and CWW strategies?  
+
+2. For different initial den-res states, if farmers switched from BAU to MIT strategies, what would be the drop in wheat production at national and regional scales?  
+
+3. At a national scale, is it better for wheat production to switch pre-emptively to MIT, or is it better for wheat production to continue with BAU in the knowledge that weed density will get worse?  
+
+When calculating mean annual wheat yield, I average across imputations (this is already done - resulting file is 'cerealarea_by_localauthority_and_denres_3DR.csv') before averaging wheat yield across rotations. The SD therefore tells us how wheat yield varies through the rotation.  
+
+# 2. Set up
+## 2.1. Load packages
+```{r load-packages, message = FALSE}
+rm(list=ls())
+library(tidyverse) # for easy data manipulation; includes dplyr, ggplot & more
+```
+
+## 2.2. Load functions
+Function to count complete observations
+```{r load-functions}
+nobs <- function(x) length(x[!is.na(x)])
+```
+
+## 2.3. Load data
+Use the summarised economic data created in Script 4b and summarised yield data created in script 5b.
+```{r load-data}
+# regional cereal areas for each denres state:
+cereal <- read.csv("../output/cerealarea_by_localauthority_and_denres_3DR_2021.csv", 
+                   header = TRUE) %>% 
+  dplyr::mutate(initDR = as.factor(initDR),
+                initDR = fct_recode(initDR,
+                                    "LD-LR" = "LDLR",
+                                    "LD-HR" = "LDHR",
+                                    "HD-HR" = "HDHR")) %>% 
+  dplyr::rename(initdenres = initDR)
+
+# economic data:
+econ_3dr <- read.csv("../output/economic_data_for_analysis_3DR.csv", header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario),
+    region = factor(region,
+                    levels = c("north", "central","east")),
+    soiltype = factor(soiltype,
+                      levels = c("heavy", "medium","light")),
+    initdenres = factor(initdenres_collapsed,
+                        levels = c("LD-LR", "LD-HR", "HD-HR"))
+    ) %>% 
+  dplyr::select(-initdenres_collapsed)
+
+# yield data:
+ww_3dr <- read.csv("../output/wwyield_data_for_analysis_3DR.csv", header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario),
+    region = factor(region,
+                    levels = c("north", "central","east")),
+    soiltype = factor(soiltype,
+                      levels = c("heavy", "medium","light")),
+    initdenres = factor(initdenres_collapsed,
+                        levels = c("LD-LR", "LD-HR", "HD-HR"))
+    ) %>% 
+  dplyr::select(-initdenres_collapsed)
+
+# worst case economic data
+bau_vhig <- read.csv("../output/bau_ECOMOD_output_V.csv", header=TRUE) %>% 
+  dplyr::select(-Field_no) %>% # remove unnecessary column
+  dplyr::rename_with(stringr::str_replace, 
+              # add '.' b4 the number in 'crop' colnames:
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  dplyr::rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# worst case productivity costs
+pc_both <- read.csv("../output/prod costs_worst case vs current.csv", header = TRUE) %>% 
+  dplyr::mutate(
+    region = factor(region,
+                    levels = c("north", "central","east")),
+    soiltype = factor(soiltype,
+                      levels = c("heavy", "medium","light")),
+    initdenres = factor(initdenres_collapsed,
+                        levels = c("LD-LR", "LD-HR", "HD-HR"))
+    )
+
+# worst case opportunity costs
+oc_both <- read.csv("../output/opp costs_worst case vs current.csv", header = TRUE) %>% 
+  dplyr::mutate(
+    region = factor(region,
+                    levels = c("north", "central","east")),
+    soiltype = factor(soiltype,
+                      levels = c("heavy", "medium","light")),
+    initdenres = factor(initdenres_collapsed,
+                        levels = c("LD-LR", "LD-HR", "HD-HR"))
+    )
+```
+
+## 2.4. Tidy data
+Join economic and yield data.
+```{r}
+econ_wwyield <- left_join(econ_3dr, ww_3dr %>% 
+                            dplyr::select(c(ID, ww_yield_mean:prod_cost_ci_u)),
+                          by="ID") %>% 
+  dplyr::relocate(initdenres, .after=soiltype)
+```
+
+Sort out BAU very high density data.
+```{r BAU-worstcase-reshape-tidy-calc-means}
+bau_worstcase <- bau_vhig %>%
+  # reshape
+  tidyr::pivot_longer(
+    cols = c(2:85),
+    names_to = c(".value", "year"),
+    names_sep = '\\.'
+    ) %>% 
+  dplyr::select(-meanrotgrossprof) %>% 
+  dplyr::arrange(field_name) %>% 
+  # make columns for soil, region, initial density etc
+  dplyr::mutate(
+    initdenres = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    
+    # extract characters between 1st and 2nd underscore ( x[2] pulls out the 
+    # 2nd split string when split on underscores):
+    soiltype = sapply(strsplit(field_name, "_"), function(x) x[2]), 
+    soiltype = substr(soiltype, start = 1, stop = 1), # extract 1st character
+ 
+    region = sub('_.*', '', field_name), # extract chrs before first '_'
+    region = tolower(region),
+
+    # recode soil type and region, and specify order of factor levels
+    soiltype = dplyr::recode(soiltype,
+                      "h" = "heavy",
+                      "m" = "medium",
+                      "l" = "light"),
+    soiltype = factor(soiltype,
+                      levels = c("heavy", "medium", "light")
+                      ),
+    region = dplyr::recode(region,
+                    "n" = "north",
+                    "c" = "central",
+                    "e" = "east"),
+    region = factor(region,
+                    levels = c("north", "central", "east")
+                    ),
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "BAU"
+    ) %>%
+  # make it easier to look at
+  dplyr::relocate(scenario, initcondit, 
+                  initdenres, region, soiltype) %>% 
+  dplyr::select(-field_name) %>% 
+  
+  # Collapse den-res levels
+  dplyr::mutate(
+    initdenres_collapsed = fct_recode(
+      initdenres, 
+      "LD-LR" = "MD-LR",# LD-LR & MD-LR (best case)
+      "LD-HR" = "MD-HR",# LD-HR & MD-HR (intermediate case) 
+      "HD-HR" = "VD-HR"),# HD-HR & VD-HR (worst case)
+    initdenres_collapsed = factor(initdenres_collapsed,
+      levels = c("LD-LR", "LD-HR", "HD-HR"))
+    ) %>% 
+  #for any crop that isn't wheat, assign zero yield
+  dplyr::mutate(ww_yield = ifelse(stringr::str_detect(crop, 'wheat'),yield, 0)) %>% 
+  # Calculate mean gross profit and wheat yield across the new den-res levels 
+  # (include 'crop' in the grouping command just to retain that variable - 
+  # it doesn't change the calculations if I omit it)
+  group_by(scenario, region, soiltype, year, initdenres_collapsed, crop) %>% 
+  dplyr::mutate(
+    # yield
+    ww_yld_mean = mean(ww_yield, na.rm = TRUE),
+    ww_yld_ci_l = mean(ww_yield, na.rm = TRUE) - 
+      (1.96 * sd(ww_yield, na.rm = TRUE) / sqrt(nobs(ww_yield))),
+    ww_yld_ci_u = mean(ww_yield, na.rm = TRUE) + 
+      (1.96 * sd(ww_yield, na.rm = TRUE) / sqrt(nobs(ww_yield))),
+    # gross profit
+    gp_mean = mean(grossprof, na.rm = TRUE),
+    gp_ci_l = mean(grossprof, na.rm = TRUE) - 
+      (1.96 * sd(grossprof, na.rm = TRUE) / sqrt(nobs(grossprof))),
+    gp_ci_u = mean(grossprof, na.rm = TRUE) + 
+      (1.96 * sd(grossprof, na.rm = TRUE) / sqrt(nobs(grossprof)))
+    ) %>%
+  dplyr::select(scenario, region, soiltype, year, initdenres_collapsed, crop, 
+                ww_yld_mean, ww_yld_ci_l, ww_yld_ci_u, 
+                gp_mean, gp_ci_l, gp_ci_u) %>% 
+  dplyr::distinct(scenario, region, soiltype, initdenres_collapsed, year, .keep_all = TRUE) %>% 
+  dplyr::arrange(scenario, region, soiltype, initdenres_collapsed, year)
+```
+
+
+
+# 3. Scale up
+## 3.1. Yield & economic data
+### Calculate mean annual ww yield, prod costs & opp costs per initdenres and region
+In other words, calculate the mean values across a 6-year rotation for each den-res state in each region. Collapse across soil types.  
+```{r mean-values-per-denres-and-region}
+oc_pc_annual_region <- econ_wwyield %>% 
+  dplyr::filter(scenario=="MIT") %>% 
+  # find rotation mean first
+  dplyr::group_by(region, soiltype, initdenres) %>% 
+  dplyr::summarize(
+    # wheat yield
+    ww_mean = mean(ww_yield_mean, na.rm = TRUE),
+    ww_ci_l = mean(ww_yield_mean, na.rm = TRUE) - 
+      (1.96*(sd(ww_yield_mean, na.rm = TRUE)/sqrt(nobs(ww_yield_mean)))),
+    ww_ci_u = mean(ww_yield_mean, na.rm = TRUE) + 
+      (1.96*(sd(ww_yield_mean, na.rm = TRUE)/sqrt(nobs(ww_yield_mean)))),
+    # productivity cost
+    pc_mean = mean(prod_cost_mean, na.rm = TRUE),
+    pc_ci_l = mean(prod_cost_mean, na.rm = TRUE) - 
+      (1.96*(sd(prod_cost_mean, na.rm = TRUE)/sqrt(nobs(prod_cost_mean)))),
+    pc_ci_u = mean(prod_cost_mean, na.rm = TRUE) + 
+      (1.96*(sd(prod_cost_mean, na.rm = TRUE)/sqrt(nobs(prod_cost_mean)))),
+    # opportunity cost
+    oc_mean = mean(wtd_opp_cost_mean, na.rm = TRUE),
+    oc_ci_l = mean(wtd_opp_cost_mean, na.rm = TRUE) - 
+      (1.96*(sd(wtd_opp_cost_mean, na.rm = TRUE)/sqrt(nobs(wtd_opp_cost_mean)))),
+    oc_ci_u = mean(wtd_opp_cost_mean, na.rm = TRUE) + 
+      (1.96*(sd(wtd_opp_cost_mean, na.rm = TRUE)/sqrt(nobs(wtd_opp_cost_mean))))    
+    ) %>% 
+  # then find average value by region and initdenres
+  group_by(region, initdenres) %>%
+  dplyr::summarise(
+    # wheat yield
+    ww = mean(ww_mean, na.rm = TRUE),
+    ww_ci_l = mean(ww_mean, na.rm = TRUE) - 
+      (1.96*(sd(ww_mean, na.rm = TRUE)/sqrt(nobs(ww_mean)))),
+    ww_ci_u = mean(ww_mean, na.rm = TRUE) + 
+      (1.96*(sd(ww_mean, na.rm = TRUE)/sqrt(nobs(ww_mean)))),
+    # productivity cost
+    pc = mean(pc_mean*(-1), na.rm = TRUE),
+    pc_var = var(pc_mean, na.rm = TRUE),
+    pc_ci_l = mean(pc_mean*(-1), na.rm = TRUE) - 
+      (1.96*(sd(pc_mean*(-1), na.rm = TRUE)/sqrt(nobs(pc_mean*(-1))))),
+    pc_ci_u = mean(pc_mean*(-1), na.rm = TRUE) + 
+      (1.96*(sd(pc_mean*(-1), na.rm = TRUE)/sqrt(nobs(pc_mean*(-1))))),
+    # opportunity cost
+    oc = mean(oc_mean*(-1), na.rm = TRUE),
+    oc_var = var(oc_mean, na.rm = TRUE),
+    oc_ci_l = mean(oc_mean*(-1), na.rm = TRUE) - 
+      (1.96*(sd(oc_mean*(-1), na.rm = TRUE)/sqrt(nobs(oc_mean*(-1))))),
+    oc_ci_u = mean(oc_mean*(-1), na.rm = TRUE) + 
+      (1.96*(sd(oc_mean*(-1), na.rm = TRUE)/sqrt(nobs(oc_mean*(-1)))))
+    ) 
+
+oc_pc_annual_region
+```
+
+For opp and prod costs, a negative value means that MIT wins.  
+95% confidence intervals indicate variation across soil types within a region.  
+
+
+### Calculate mean annual ww yield, prod costs & opp costs per initdenres across all regions
+In other words, calculate the mean values across a 6-year rotation for each den-res state, collapsed across all regions and soil types.
+```{r mean-values-per-denres}
+oc_pc_annual_total <- econ_wwyield %>% 
+  dplyr::filter(scenario=="MIT") %>% 
+  # find rotation mean first
+  dplyr::group_by(region, soiltype, initdenres) %>% 
+  dplyr::summarize(
+    # wheat yield
+    ww_mean = mean(ww_yield_mean, na.rm = TRUE),
+    ww_ci_l = mean(ww_yield_mean, na.rm = TRUE) - 
+      (1.96*(sd(ww_yield_mean, na.rm = TRUE)/sqrt(nobs(ww_yield_mean)))),
+    ww_ci_u = mean(ww_yield_mean, na.rm = TRUE) + 
+      (1.96*(sd(ww_yield_mean, na.rm = TRUE)/sqrt(nobs(ww_yield_mean)))),
+    # productivity cost
+    pc_mean = mean(prod_cost_mean, na.rm = TRUE),
+    pc_ci_l = mean(prod_cost_mean, na.rm = TRUE) - 
+      (1.96*(sd(prod_cost_mean, na.rm = TRUE)/sqrt(nobs(prod_cost_mean)))),
+    pc_ci_u = mean(prod_cost_mean, na.rm = TRUE) + 
+      (1.96*(sd(prod_cost_mean, na.rm = TRUE)/sqrt(nobs(prod_cost_mean)))),
+    # opportunity cost
+    oc_mean = mean(wtd_opp_cost_mean, na.rm = TRUE),
+    oc_ci_l = mean(wtd_opp_cost_mean, na.rm = TRUE) - 
+      (1.96*(sd(wtd_opp_cost_mean, na.rm = TRUE)/sqrt(nobs(wtd_opp_cost_mean)))),
+    oc_ci_u = mean(wtd_opp_cost_mean, na.rm = TRUE) + 
+      (1.96*(sd(wtd_opp_cost_mean, na.rm = TRUE)/sqrt(nobs(wtd_opp_cost_mean))))    
+    ) %>%  
+  # then find mean value for each initdenres
+  group_by(initdenres) %>%
+  dplyr::summarise(
+    # wheat yield
+    ww = mean(ww_mean, na.rm = TRUE),
+    ww_ci_l = mean(ww_mean, na.rm = TRUE) - 
+      (1.96*(sd(ww_mean, na.rm = TRUE)/sqrt(nobs(ww_mean)))),
+    ww_ci_u = mean(ww_mean, na.rm = TRUE) + 
+      (1.96*(sd(ww_mean, na.rm = TRUE)/sqrt(nobs(ww_mean)))),
+    # productivity cost
+    pc = mean(pc_mean*(-1), na.rm = TRUE),
+    pc_var = var(pc_mean, na.rm = TRUE),
+    pc_ci_l = mean(pc_mean*(-1), na.rm = TRUE) - 
+      (1.96*(sd(pc_mean*(-1), na.rm = TRUE)/sqrt(nobs(pc_mean*(-1))))),
+    pc_ci_u = mean(pc_mean*(-1), na.rm = TRUE) + 
+      (1.96*(sd(pc_mean*(-1), na.rm = TRUE)/sqrt(nobs(pc_mean*(-1))))),
+    # opportunity cost
+    oc = mean(oc_mean*(-1), na.rm = TRUE),
+    oc_var = var(oc_mean, na.rm = TRUE),
+    oc_ci_l = mean(oc_mean*(-1), na.rm = TRUE) - 
+      (1.96*(sd(oc_mean*(-1), na.rm = TRUE)/sqrt(nobs(oc_mean*(-1))))),
+    oc_ci_u = mean(oc_mean*(-1), na.rm = TRUE) + 
+      (1.96*(sd(oc_mean*(-1), na.rm = TRUE)/sqrt(nobs(oc_mean*(-1)))))
+    ) %>% 
+  dplyr::mutate(region = "all") %>%
+  dplyr::relocate(region, .before = initdenres)
+
+oc_pc_annual_total
+```
+
+
+For opp and prod costs, a negative value means that MIT wins.  
+95% confidence intervals indicate variation across regions and soil types.  
+
+
+### Calculate mean annual ww yield, prod costs & opp costs per region across all initdenres
+In other words, calculate the mean values across a 6-year rotation for each region, collapsed across all den-res states and soil types.
+```{r mean-values-per-denres-repeated}
+oc_pc_annual_allDR <- econ_wwyield %>% 
+  dplyr::filter(scenario=="MIT") %>% 
+  # find rotation mean first
+  dplyr::group_by(region, soiltype, initdenres) %>% 
+  dplyr::summarize(
+    # wheat yield
+    ww_mean = mean(ww_yield_mean, na.rm = TRUE),
+    ww_ci_l = mean(ww_yield_mean, na.rm = TRUE) - 
+      (1.96*(sd(ww_yield_mean, na.rm = TRUE)/sqrt(nobs(ww_yield_mean)))),
+    ww_ci_u = mean(ww_yield_mean, na.rm = TRUE) + 
+      (1.96*(sd(ww_yield_mean, na.rm = TRUE)/sqrt(nobs(ww_yield_mean)))),
+    # productivity cost
+    pc_mean = mean(prod_cost_mean, na.rm = TRUE),
+    pc_ci_l = mean(prod_cost_mean, na.rm = TRUE) - 
+      (1.96*(sd(prod_cost_mean, na.rm = TRUE)/sqrt(nobs(prod_cost_mean)))),
+    pc_ci_u = mean(prod_cost_mean, na.rm = TRUE) + 
+      (1.96*(sd(prod_cost_mean, na.rm = TRUE)/sqrt(nobs(prod_cost_mean)))),
+    # opportunity cost
+    oc_mean = mean(wtd_opp_cost_mean, na.rm = TRUE),
+    oc_ci_l = mean(wtd_opp_cost_mean, na.rm = TRUE) - 
+      (1.96*(sd(wtd_opp_cost_mean, na.rm = TRUE)/sqrt(nobs(wtd_opp_cost_mean)))),
+    oc_ci_u = mean(wtd_opp_cost_mean, na.rm = TRUE) + 
+      (1.96*(sd(wtd_opp_cost_mean, na.rm = TRUE)/sqrt(nobs(wtd_opp_cost_mean))))    
+    ) %>% 
+  # then find regional mean
+  group_by(region) %>%
+  dplyr::summarise(
+    # wheat yield
+    ww = mean(ww_mean, na.rm = TRUE),
+    ww_ci_l = mean(ww_mean, na.rm = TRUE) - 
+      (1.96*(sd(ww_mean, na.rm = TRUE)/sqrt(nobs(ww_mean)))),
+    ww_ci_u = mean(ww_mean, na.rm = TRUE) + 
+      (1.96*(sd(ww_mean, na.rm = TRUE)/sqrt(nobs(ww_mean)))),
+    # productivity cost
+    pc = mean(pc_mean*(-1), na.rm = TRUE),
+    pc_var = var(pc_mean, na.rm = TRUE),
+    pc_ci_l = mean(pc_mean*(-1), na.rm = TRUE) - 
+      (1.96*(sd(pc_mean*(-1), na.rm = TRUE)/sqrt(nobs(pc_mean*(-1))))),
+    pc_ci_u = mean(pc_mean*(-1), na.rm = TRUE) + 
+      (1.96*(sd(pc_mean*(-1), na.rm = TRUE)/sqrt(nobs(pc_mean*(-1))))),
+    # opportunity cost
+    oc = mean(oc_mean*(-1), na.rm = TRUE),
+    oc_var = var(oc_mean, na.rm = TRUE),
+    oc_ci_l = mean(oc_mean*(-1), na.rm = TRUE) - 
+      (1.96*(sd(oc_mean*(-1), na.rm = TRUE)/sqrt(nobs(oc_mean*(-1))))),
+    oc_ci_u = mean(oc_mean*(-1), na.rm = TRUE) + 
+      (1.96*(sd(oc_mean*(-1), na.rm = TRUE)/sqrt(nobs(oc_mean*(-1)))))
+    ) %>% 
+  dplyr::mutate(initdenres = "all") %>%
+  dplyr::relocate(region, initdenres)
+
+oc_pc_annual_allDR
+```
+
+For opp and prod costs, a negative value means that MIT wins.  
+95% confidence intervals indicate variation across regions and soil types and init den res levels.  
+
+
+
+### Join 'individual regions' yield data to 'all regions' data
+```{r}
+yld_oc_pc <- rbind(oc_pc_annual_region, oc_pc_annual_allDR, oc_pc_annual_total)%>% 
+  dplyr::mutate(ID = paste(region, initdenres, sep = "_")) %>% 
+  dplyr::relocate(ww:ww_ci_u, .after = oc_ci_u) %>% 
+  dplyr::relocate(oc:oc_ci_u, .after = initdenres)
+```
+
+## 3.2. Cereal data
+##### Sum area of each density state per region
+```{r message=FALSE}
+cereal_region <- cereal %>% 
+  dplyr::group_by(region, initdenres) %>% 
+  dplyr::summarise(cereal_area = sum(cereal_area_in_denres_state))
+```
+
+
+##### Sum area of each density state across all regions
+```{r}
+cereal_total <- cereal %>% 
+  dplyr::group_by(initdenres) %>% 
+  dplyr::summarise(cereal_area = sum(cereal_area_in_denres_state)) %>% 
+  dplyr::mutate(region="all") %>% 
+  dplyr::relocate(region)
+```
+
+
+##### Sum area of all density states combined to just give regional area
+```{r}
+cereal_allDS_region <- cereal %>% 
+  dplyr::group_by(region) %>% 
+  dplyr::summarise(cereal_area = sum(cereal_area_in_denres_state)) %>% 
+  dplyr::mutate(initdenres="all") %>% 
+  dplyr::relocate(region, initdenres)
+```
+
+
+##### Join 'individual regions' cereal data to 'all regions' cereal data
+```{r}
+cereal_forjoin <- rbind(cereal_region, cereal_total, cereal_allDS_region) %>% 
+  dplyr::mutate(ID = paste(region, initdenres, sep = "_"))
+```
+
+
+
+## 3.3. Scaled-up data
+##### Calculate scaled-up costs for each region
+To do this, add ww yield, productivity costs and opportunity costs onto the cereal data and calculate scaled-up costs.
+```{r calculate-scaled-up-costs}
+yld_pc_oc_scaled <- dplyr::inner_join(cereal_forjoin, yld_oc_pc, by = "ID") %>% 
+  dplyr::mutate(
+    # ww yield
+    ww_reg = ww*cereal_area,
+    ww_reg_ci_l = ww_ci_l*cereal_area,
+    ww_reg_ci_u = ww_ci_u*cereal_area,
+    # productivity cost
+    pc_reg = pc*cereal_area,
+    pc_reg_ci_l = pc_ci_l*cereal_area,
+    pc_reg_ci_u = pc_ci_u*cereal_area,
+    # opportunity cost
+    oc_reg = oc*cereal_area,
+    oc_reg_ci_l = oc_ci_l*cereal_area,
+    oc_reg_ci_u = oc_ci_u*cereal_area,
+    # specify order of factor levels
+    region = factor(
+      region.x, levels = c("north", "central", "east", "all")),
+    initdenres = factor(
+      initdenres.x, levels = c("LD-LR", "LD-HR", "HD-HR", "all"))
+    ) %>% 
+  dplyr::select(-c(region.x, initdenres.x, region.y, initdenres.y, ID)) %>% 
+  dplyr::relocate(region, initdenres) %>% 
+  dplyr::arrange(region, initdenres) %>% 
+  #dplyr::select(-c(ww_mean:oc_ci_u))
+  dplyr::relocate(oc_reg:oc_reg_ci_u, .before = pc_reg)%>% 
+  dplyr::relocate(oc:oc_ci_u, .before = pc) %>% 
+  dplyr::relocate(ww_reg:ww_reg_ci_u, .before = oc) 
+
+yld_pc_oc_scaled
+```
+
+For the last three rows (region = 'all'), 95% confidence intervals indicate variation across regions and soil types. For all other rows, 95% confidence intervals indicate variation across soil types within a region.  
+For opp and prod costs, a negative value means that MIT wins.  
+  
+
+## 3.4. Clean up
+```{r}
+rm(bau_vhig, bau_worstcase, econ_3dr, econ_wwyield, 
+   cereal_region, cereal_total, cereal_allDS_region,
+   oc_pc_annual_region, oc_pc_annual_total, oc_pc_annual_allDR,
+   ww_3dr, yld_oc_pc)
+```
+
+
+
+# 4. Inspect data / summary stats
+## ----
+
+## Qus 1 & 2
+### PC & OC, national scale, 3 den res states  
+```{r}
+yld_pc_oc_scaled %>% 
+  dplyr::filter(region == "all") %>% 
+  dplyr::select(c(region, initdenres, oc_reg:pc_reg_ci_u)) %>% 
+  dplyr::mutate(across(where(is.numeric), round, 0))
+```
+
+For opp and prod costs, a negative value means that MIT wins.  
+95% confidence intervals indicate variation across regions and soil types.  
+
+
+### PC & OC, regional scale, 3 den res states
+```{r}
+yld_pc_oc_scaled %>% 
+  dplyr::filter(!region == "all" & !initdenres == "all") %>% 
+  dplyr::select(c(region, initdenres, oc_reg:pc_reg_ci_u)) %>% 
+  dplyr::mutate(across(where(is.numeric), round, 0))
+```
+
+For opp and prod costs, a negative value means that MIT wins.  
+95% confidence intervals indicate variation across soil types within a region.  
+
+
+### PC & OC, regional scale, across all den res states  
+```{r}
+yld_pc_oc_scaled %>% 
+  dplyr::filter(!region == "all" & initdenres == "all") %>% 
+  dplyr::select(c(region, initdenres, oc_reg:pc_reg_ci_u)) %>% 
+  dplyr::mutate(across(where(is.numeric), round, 0))
+```
+
+For opp and prod costs, a negative value means that MIT wins.  
+95% confidence intervals indicate variation across initdenres levels and soil types.  
+
+
+
+
+## ----
+## Qu 3: At a national scale, how much wheat is lost by switching pre-emptively to MIT, and how much wheat is lost if we continue with BAU in the knowledge that weed density will get worse? 
+For this, use the data frame containing worst-case and current costs.
+
+### Calculate mean annual worst case prod costs per initdenres and region
+In other words, calculate the mean values across a 6-year rotation for each den-res state in each region. Collapse across soil types.
+```{r mean-worstcase-pc-values-per-denres-and-region}
+pc_both_region <- pc_both %>% 
+  group_by(region, initdenres_collapsed, situation) %>%
+  dplyr::summarise(
+    pc_mean = mean(pc*(-1), na.rm = TRUE),
+    pc_ci_l = mean(pc*(-1), na.rm = TRUE) - 
+      (1.96*(sd(pc*(-1), na.rm = TRUE)/sqrt(nobs(pc*(-1))))),
+    pc_ci_u = mean(pc*(-1), na.rm = TRUE) + 
+      (1.96*(sd(pc*(-1), na.rm = TRUE)/sqrt(nobs(pc*(-1)))))
+    ) %>% 
+  dplyr::rename(initdenres = initdenres_collapsed) %>% 
+  dplyr::mutate(initdenres = factor(initdenres,
+                                    levels = c("LD-LR", "LD-HR", "HD-HR"))) %>% 
+  dplyr::arrange(region, initdenres)
+
+pc_both_region
+```
+
+
+For opp and prod costs, a negative value means that MIT wins.  
+95% CIs show variation due to soil type.  
+  
+
+### Calculate mean annual prod costs per initdenres across all regions
+In other words, calculate the mean prod costs across a 6-year rotation for each den-res state, collapsed across all regions and soil types.
+```{r mean-prod-costs-per-denres}
+pc_both_total <- pc_both %>% 
+  group_by(initdenres_collapsed, situation) %>%
+  dplyr::summarise(
+    pc_mean = mean(pc*(-1), na.rm = TRUE),
+    pc_ci_l = mean(pc*(-1), na.rm = TRUE) - 
+      (1.96*(sd(pc*(-1), na.rm = TRUE)/sqrt(nobs(pc*(-1))))),
+    pc_ci_u = mean(pc*(-1), na.rm = TRUE) + 
+      (1.96*(sd(pc*(-1), na.rm = TRUE)/sqrt(nobs(pc*(-1)))))
+    ) %>% 
+  dplyr::mutate(region = "all") %>%
+  dplyr::rename(initdenres = initdenres_collapsed) %>% 
+  dplyr::relocate(region, .before = initdenres) %>% 
+  dplyr::mutate(initdenres = factor(initdenres,
+                                    levels = c("LD-LR", "LD-HR", "HD-HR"))) %>% 
+  dplyr::arrange(region, initdenres)
+
+pc_both_total
+```
+
+For opp and prod costs, a negative value means that MIT wins.  
+95% CIs show variation due to soil type and region.  
+  
+  
+
+
+### Join 'individual regions' prod costs data to 'all regions' prod costs data
+```{r}
+pc_forjoin <- rbind(pc_both_region, pc_both_total)
+rm(pc_both_region, pc_both_total)
+```
+
+
+### Calculate scaled-up worst case prod costs for each region
+To do this, add worst case productivity costs onto the cereal data and calculate scaled-up costs.
+```{r calculate-worstcase-scaled-up-prod-costs}
+pc_worstcase_scaled <- dplyr::inner_join(cereal_forjoin, pc_forjoin, by = c("region", "initdenres")) %>% 
+  dplyr::mutate(
+    # productivity cost
+    pc_reg = pc_mean*cereal_area,
+    pc_reg_ci_l = pc_ci_l*cereal_area,
+    pc_reg_ci_u = pc_ci_u*cereal_area,
+    # specify order of factor levels
+    region = factor(
+      region, levels = c("north", "central", "east", "all")),
+    initdenres = factor(
+      initdenres, levels = c("LD-LR", "LD-HR", "HD-HR"))
+    ) %>% 
+  dplyr::arrange(region, initdenres) %>% 
+  dplyr::select(-c(pc_mean:pc_ci_u))
+
+rm(pc_forjoin)
+```
+
+
+
+
+### Answer - mean pc in all regions, across all denres levels
+```{r}
+pc_worstcase_scaled %>% 
+  dplyr::group_by(region, situation) %>% 
+  dplyr::summarise(
+    pc_mean = mean(pc_reg, na.rm = TRUE),
+    pc_ci_l = mean(pc_reg, na.rm = TRUE) - 
+      (1.96*(sd(pc_reg, na.rm = TRUE)/sqrt(nobs(pc_reg)))),
+    pc_ci_u = mean(pc_reg, na.rm = TRUE) + 
+      (1.96*(sd(pc_reg, na.rm = TRUE)/sqrt(nobs(pc_reg))))
+  ) %>% 
+  dplyr::filter(region == "all")
+```
+
+For opp and prod costs, a negative value means that MIT wins.  
+95% CIs show variation due to initdenres.  
+
+
+### Answer - mean pc in all regions, for each denres level
+```{r}
+pc_worstcase_scaled %>% 
+  dplyr::filter(region == "all") %>% 
+  dplyr::select(-cereal_area) %>% 
+  dplyr::arrange(situation) %>% 
+  dplyr::select(-ID)
+```
+
+For opp and prod costs, a negative value means that MIT wins.  
+Where region = 'all', 95% CIs show variation due to soil type and region.   
+
+
+
+## Qu 4: At a national scale, what are the financial implications of switching pre-emptively to MIT, and what are they if we continue with BAU in the knowledge that weed density will get worse? 
+For this, use the data frame containing worst-case and current costs.
+
+### Calculate mean annual worst case opp costs per initdenres and region
+In other words, calculate the mean values across a 6-year rotation for each den-res state in each region. Collapse across soil types.
+```{r mean-worstcase-oc-values-per-denres-and-region}
+oc_both_region <- oc_both %>% 
+  group_by(region, initdenres_collapsed, situation) %>%
+  dplyr::summarise(
+    oc_mean = mean(oc*(-1), na.rm = TRUE),
+    oc_ci_l = mean(oc*(-1), na.rm = TRUE) - 
+      (1.96*(sd(oc*(-1), na.rm = TRUE)/sqrt(nobs(oc*(-1))))),
+    oc_ci_u = mean(oc*(-1), na.rm = TRUE) + 
+      (1.96*(sd(oc*(-1), na.rm = TRUE)/sqrt(nobs(oc*(-1)))))
+    ) %>% 
+  dplyr::rename(initdenres = initdenres_collapsed) %>% 
+  dplyr::mutate(initdenres = factor(initdenres,
+                                    levels = c("LD-LR", "LD-HR", "HD-HR"))) %>% 
+  dplyr::arrange(region, initdenres)
+
+oc_both_region
+```
+
+
+For opp costs, a negative value means that MIT wins.  
+95% CIs show variation due to soil type.  
+  
+
+### Calculate mean annual opp costs per initdenres across all regions
+In other words, calculate the mean opp costs across a 6-year rotation for each den-res state, collapsed across all regions and soil types.
+```{r mean-opp-costs-per-denres}
+oc_both_total <- oc_both %>% 
+  group_by(initdenres_collapsed, situation) %>%
+  dplyr::summarise(
+    oc_mean = mean(oc*(-1), na.rm = TRUE),
+    oc_ci_l = mean(oc*(-1), na.rm = TRUE) - 
+      (1.96*(sd(oc*(-1), na.rm = TRUE)/sqrt(nobs(oc*(-1))))),
+    oc_ci_u = mean(oc*(-1), na.rm = TRUE) + 
+      (1.96*(sd(oc*(-1), na.rm = TRUE)/sqrt(nobs(oc*(-1)))))
+    ) %>% 
+  dplyr::mutate(region = "all") %>%
+  dplyr::rename(initdenres = initdenres_collapsed) %>% 
+  dplyr::relocate(region, .before = initdenres) %>% 
+  dplyr::mutate(initdenres = factor(initdenres,
+                                    levels = c("LD-LR", "LD-HR", "HD-HR"))) %>% 
+  dplyr::arrange(region, initdenres)
+
+oc_both_total
+```
+
+For opp costs, a negative value means that MIT wins.  
+95% CIs show variation due to soil type and region.  
+  
+  
+
+
+### Join 'individual regions' opp costs data to 'all regions' opp costs data
+```{r}
+oc_forjoin <- rbind(oc_both_region, oc_both_total)
+rm(oc_both_region, oc_both_total)
+```
+
+
+### Calculate scaled-up worst case opp costs for each region
+To do this, add worst case opportunity costs onto the cereal data and calculate scaled-up costs.
+```{r calculate-worstcase-scaled-up-opp-costs}
+oc_worstcase_scaled <- dplyr::inner_join(cereal_forjoin, oc_forjoin, by = c("region", "initdenres")) %>% 
+  dplyr::mutate(
+    # oppuctivity cost
+    oc_reg = oc_mean*cereal_area,
+    oc_reg_ci_l = oc_ci_l*cereal_area,
+    oc_reg_ci_u = oc_ci_u*cereal_area,
+    # specify order of factor levels
+    region = factor(
+      region, levels = c("north", "central", "east", "all")),
+    initdenres = factor(
+      initdenres, levels = c("LD-LR", "LD-HR", "HD-HR"))
+    ) %>% 
+  dplyr::arrange(region, initdenres) %>% 
+  dplyr::select(-c(oc_mean:oc_ci_u))
+
+rm(cereal_forjoin, oc_forjoin)
+```
+
+
+
+
+### Answer - mean oc in all regions, across all denres levels
+```{r}
+oc_worstcase_scaled %>% 
+  dplyr::group_by(region, situation) %>% 
+  dplyr::summarise(
+    oc_mean = mean(oc_reg, na.rm = TRUE),
+    oc_ci_l = mean(oc_reg, na.rm = TRUE) - 
+      (1.96*(sd(oc_reg, na.rm = TRUE)/sqrt(nobs(oc_reg)))),
+    oc_ci_u = mean(oc_reg, na.rm = TRUE) + 
+      (1.96*(sd(oc_reg, na.rm = TRUE)/sqrt(nobs(oc_reg))))
+  ) %>% 
+  dplyr::filter(region == "all")
+```
+
+For opp costs, a negative value means that MIT wins.  
+95% CIs show variation due to initdenres.  
+
+
+### Answer - mean oc in all regions, for each denres level
+```{r}
+oc_worstcase_scaled %>% 
+  dplyr::filter(region == "all") %>% 
+  dplyr::select(-cereal_area) %>% 
+  dplyr::arrange(situation) %>% 
+  dplyr::select(-ID)
+```
+
+For opp costs, a negative value means that MIT wins.  
+Where region = 'all', 95% CIs show variation due to soil type and region.   
+
+
+
+## Calculate cereal area for each county and region
+
+### County areas
+```{r}
+cereal %>%
+  dplyr::select(region, DEFRA_county_or_unitary_authority, my_counties, cereals_area_2021_ha) %>% 
+  distinct(region, DEFRA_county_or_unitary_authority, .keep_all = TRUE) %>%
+  dplyr::group_by(my_counties) %>% 
+  dplyr::summarise(total_area = sum(cereals_area_2021_ha))
+```
+
+### Region areas
+```{r}
+cereal %>%
+  dplyr::select(region, DEFRA_county_or_unitary_authority, cereals_area_2021_ha) %>% 
+  distinct(region, DEFRA_county_or_unitary_authority, .keep_all = TRUE) %>% 
+  dplyr::group_by(region) %>% 
+  dplyr::summarise(total_area = sum(cereals_area_2021_ha))
+```

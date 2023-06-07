@@ -1,0 +1,604 @@
+---
+title: "Sensitivity Analysis - Wheat yield summary stats and plots"
+author: "Alexa Varah"
+date: "17/02/2023"
+output: html_document
+---
+
+# 1. Intro
+This script looks at what happens to wheat yield under different scenarios and initial conditions, for upper and lower limits of the yield penalty. It answers the following questions:  
+
+1. How much less wheat do MIT strategies produce than BAU and CWW strategies?  
+
+2. For different initial denres, if farmers switched to MIT strategies, what would be the per hectare drop in wheat production? 
+
+3. Is it better for wheat production to switch pre-emptively to MIT, or is it better for wheat production to continue with BAU in the knowledge that weed density will get worse?  
+  
+Calculate wheat yield from:  
+* (i) BAU rotations in LD-HR fields  
+* (ii) BAU rotations when LD-HR fields have high weed density  
+* (iii) MIT rotations in LD-HR fields    
+
+Definitions of the variables used here:  
+  
+* **imp** = density estimation imputation (there were 37 (previously 97) imputations for each year of each rotation).    
+* **scenario** = three potential future farm management scenarios: Business As Usual (BAU), Continuous Winter Wheat (CWW) or Mitigation of herbicide-resistant black-grass populations (MIT).  
+* **region** = north, central and east. These were the regions to which we asked farmers to tailor their MIT strategies.  
+* **soiltype** = broad categorisation of soils into heavy/medium or light. These were the soil types to which we asked farmers to tailor their MIT strategies.  
+* **initdenres** = initial density and resistance status of a theoretical field. These were the density and resistance states to which we asked farmers to tailor their MIT strategies. L = low; H = high; D = density; R = resistance.  
+* **yr** = year of rotation (all rotations were 6 years).  
+* **wtd_yield** = weighted crop yield. Only wheat yields are weighted as they are the only crop that responds to black-grass density in ECOMOD.  
+* **ww_yield** = wheat yield. OTher crops set to zero.  
+* **ww_prod_cost_ww** = Productivity costs for wheat.  
+  
+# 2. Set up
+## 2.1. Load packages & functions
+```{r load-packages, message=FALSE}
+rm(list=ls())
+library(tidyverse)
+library(patchwork) # for panel plots
+```
+
+Load function to count complete observations
+```{r}
+nobs <- function(x) length(x[!is.na(x)])
+```
+
+## 2.2. Load data
+```{r load-data}
+ww_3DR_SA <- read.csv("../output/sensitivity analyses/wwyield_data_for_analysis_3DR_SA.csv", 
+                   header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+
+ww_6DR_SA <- read.csv("../output/sensitivity analyses/wwyield_data_for_analysis_6DR_SA.csv",
+                   header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres = factor(initdenres, levels = c("LD-LR", "MD-LR",
+                                               "LD-HR", "MD-HR",
+                                               "HD-HR", "VD-HR")))
+
+ww_allimp_SA <- readRDS("../output/sensitivity analyses/wwyield_data_for_analysis-all_imputations_SA.rds")
+
+ww_3DR <- read.csv("../output/wwyield_data_for_analysis_3DR.csv", 
+                   header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+```
+
+
+# 3. Summary stats for paper
+## 3.1. Qu 1. How much less wheat do MIT strategies produce than BAU and CWW strategies?  
+### Mean annual (across a rotation) wheat yield & productivity costs by scenario
+
+When calculating mean wheat yield, I average across imputations (this is already done - resulting file is 'wwyield_data_for_analysis_3DR.csv') before averaging across rotations. The order in which we do the averaging will affect what information is contained in the standard deviation. If you do it the other way round (find mean rotation wheat yield THEN average this across imputations), the SD will be that of the imputations (tiny) rather than giving an idea of how wheat yield varies throughout the rotation (bigger). By averaging across imputations first, and then finding the rotation mean, the SD will tell us how wheat yield varies through the rotation. 
+```{r}
+ww_3DR_SA %>% 
+  dplyr::group_by(scenario, sensanaly) %>% 
+  dplyr::summarize(
+    ww_mean = mean(ww_yield_mean, na.rm = TRUE),
+    ww_ci_l = mean(ww_yield_mean, na.rm = TRUE) - 
+      (1.96 * sd(ww_yield_mean, na.rm = TRUE) / sqrt(nobs(ww_yield_mean))),
+    ww_ci_u = mean(ww_yield_mean, na.rm = TRUE) + 
+      (1.96 * sd(ww_yield_mean, na.rm = TRUE) / sqrt(nobs(ww_yield_mean))),
+    pc_mean = mean(prod_cost_mean, na.rm = TRUE),
+    pc_ci_l = mean(prod_cost_mean, na.rm = TRUE) - 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean))),
+    pc_ci_u = mean(prod_cost_mean, na.rm = TRUE) + 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean)))
+    )
+```
+
+
+
+## 3.2. Qu 2. For different initial denres, if farmers switched to MIT strategies, what would be the per hectare drop in wheat production? 
+
+### Mean annual (across a rotation) wheat yield & productivity costs by scenario and init den-res
+```{r}
+ww_3DR_SA %>% 
+  dplyr::group_by(scenario, initdenres_collapsed, sensanaly) %>% 
+  dplyr::summarize(
+    ww_mean = mean(ww_yield_mean, na.rm = TRUE),
+    ww_ci_l = mean(ww_yield_mean, na.rm = TRUE) - 
+      (1.96 * sd(ww_yield_mean, na.rm = TRUE) / sqrt(nobs(ww_yield_mean))),
+    ww_ci_u = mean(ww_yield_mean, na.rm = TRUE) + 
+      (1.96 * sd(ww_yield_mean, na.rm = TRUE) / sqrt(nobs(ww_yield_mean))),
+    pc_mean = mean(prod_cost_mean, na.rm = TRUE),
+    pc_ci_l = mean(prod_cost_mean, na.rm = TRUE) - 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean))),
+    pc_ci_u = mean(prod_cost_mean, na.rm = TRUE) + 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean)))
+    )
+```
+
+
+
+### Difference in wheat yield between MIT and BAU for each denres level
+```{r}
+ww_3DR_SA %>% 
+  dplyr::filter(scenario=="MIT") %>%
+  group_by(initdenres_collapsed, sensanaly) %>%
+  dplyr::summarise(
+    pc_mean = mean(prod_cost_mean, na.rm = TRUE),
+    pc_ci_l = mean(prod_cost_mean, na.rm = TRUE) - 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean))),
+    pc_ci_u = mean(prod_cost_mean, na.rm = TRUE) + 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean)))
+    )
+```
+
+
+
+
+### For LD-LR fields, what are the productivity costs by region
+```{r}
+ww_3DR_SA %>% 
+  dplyr::group_by(scenario, region, initdenres_collapsed, sensanaly) %>% 
+  dplyr::summarize(
+    pc_mean = mean(prod_cost_mean, na.rm = TRUE),
+    pc_ci_l = mean(prod_cost_mean, na.rm = TRUE) - 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean))),
+    pc_ci_u = mean(prod_cost_mean, na.rm = TRUE) + 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean)))
+    ) %>% 
+  dplyr::filter(scenario=="MIT" & initdenres_collapsed =="LD-LR") 
+
+```
+
+
+
+# 4. Plots
+## 4.1. Wheat yield
+### 4.1.1. Line graph - annual wheat yield by scenario & initDR3
+
+Plot the wheat yield at each year in the 6 year rotation.  
+First, create a data frame for the plot.  
+```{r}
+smrz_scenario_denres3_SA <- ww_3DR_SA %>% 
+  dplyr::group_by(scenario, year, initdenres_collapsed, sensanaly) %>% 
+  dplyr::summarize(
+    ww_mean = mean(ww_yield_mean, na.rm = TRUE),
+    ww_ci_l = mean(ww_yield_mean, na.rm = TRUE) - 
+      (1.96 * sd(ww_yield_mean, na.rm = TRUE) / sqrt(nobs(ww_yield_mean))),
+    ww_ci_u = mean(ww_yield_mean, na.rm = TRUE) + 
+      (1.96 * sd(ww_yield_mean, na.rm = TRUE) / sqrt(nobs(ww_yield_mean))),
+    pc_mean = mean(prod_cost_mean, na.rm = TRUE),
+    pc_ci_l = mean(prod_cost_mean, na.rm = TRUE) - 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean))),
+    pc_ci_u = mean(prod_cost_mean, na.rm = TRUE) + 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean)))
+    ) %>% 
+  dplyr::arrange(sensanaly, scenario, initdenres_collapsed, year) %>% 
+  dplyr::mutate(ss = paste(scenario, sensanaly, sep="_"))
+```
+
+#### Plot
+Specify the labels for the panels.  
+```{r specify-panel-labels}
+#initDR3.labs <- c("(a) High resistance,\n high density", "(b) High resistance,\n low density", "(c) Low #resistance,\n low density") # new
+#names(initDR3.labs) <- c("HD-HR", "LD-HR", "LD-LR") # original
+initDR3.labs <- c("(a) Low density,\n low resistance", "(b) Low density,\n high resistance", "(c) High density,\n high resistance") # new
+names(initDR3.labs) <- c("LD-LR", "LD-HR", "HD-HR") # original
+```
+
+Specify the plot.
+```{r}
+line_ww_yr_initDR <- ggplot(smrz_scenario_denres3_SA, 
+       aes(x = year, y = ww_mean, group = ss, colour = ss)) +
+  facet_wrap(~initdenres_collapsed, labeller = labeller(initdenres_collapsed = initDR3.labs)) +
+  geom_ribbon(aes(ymin = ww_ci_l, ymax = ww_ci_u, fill = ss), 
+              alpha = 0.1, # controls transparency
+              linetype = "blank" # gets rid of lines outlining the ribbon
+              ) +
+  scale_fill_manual(
+    name = "Scenario and limits",
+    values = c("#005FCC", # BAU, lower
+               "#88CCEE", # BAU, upper
+               "#999933",  # CWW, lower
+               "#DDCC77", # CWW, upper
+               "#882255", # MIT, lower
+               "#CC6677" # MIT, upper
+               ) 
+    ) +
+  geom_line() +  
+  scale_color_manual(
+    name = "Scenario and limits",
+    values = c("#005FCC", # BAU, lower
+               "#88CCEE", # BAU, upper
+               "#999933",  # CWW, lower
+               "#DDCC77", # CWW, upper
+               "#882255", # MIT, lower
+               "#CC6677" # MIT, upper
+               )
+    ) +
+  theme_classic() +
+  labs(x = "Year in rotation", 
+       y = "Wheat yield (t/ha)") +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    plot.title = element_blank(),
+    axis.title=element_text(size=18),
+    axis.text.x=element_text(size=rel(1.7)),
+    axis.text.y=element_text(size=rel(1.7)),
+    legend.title=element_text(size=18),
+    legend.text=element_text(size=16),
+    strip.background = element_rect(color = "white",
+                                    fill = "grey"),# colour of rectangle round region labels
+    strip.text = element_text(size = 16)
+    )
+
+line_ww_yr_initDR
+```
+
+#### Save plot
+DON'T save the plot, it's not useful.
+```{r, eval=FALSE, echo=FALSE}
+#ggsave("../figures/Script 4c_effect of scenario and initDR on GP by year.png", 
+#       height = 5, width = 10, dpi = 300)
+```
+
+
+### 4.1.2. Scatter plot - rotation wheat yield, 3 denres
+Make data frame for the plot.
+```{r}
+# sensitivity analysis
+rotmean_3DR_SA <- ww_3DR_SA %>% 
+  dplyr::group_by(scenario, region, soiltype, initdenres_collapsed, sensanaly) %>% 
+  dplyr::summarize(
+    ww_mean = mean(ww_yield_mean, na.rm = TRUE),
+    ww_ci_l = mean(ww_yield_mean, na.rm = TRUE) - 
+      (1.96 * sd(ww_yield_mean, na.rm = TRUE) / sqrt(nobs(ww_yield_mean))),
+    ww_ci_u = mean(ww_yield_mean, na.rm = TRUE) + 
+      (1.96 * sd(ww_yield_mean, na.rm = TRUE) / sqrt(nobs(ww_yield_mean))),
+    pc_mean = mean(prod_cost_mean, na.rm = TRUE),
+    pc_ci_l = mean(prod_cost_mean, na.rm = TRUE) - 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean))),
+    pc_ci_u = mean(prod_cost_mean, na.rm = TRUE) + 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean)))
+    ) %>% 
+  dplyr::arrange(scenario, region, soiltype, initdenres_collapsed, sensanaly) %>% 
+  dplyr::mutate(ss = paste(scenario, sensanaly, sep="_")) %>% 
+  dplyr::relocate(sensanaly, scenario, region, soiltype, initdenres_collapsed)
+
+# main model run
+rotmean_3DR <- ww_3DR %>% 
+  group_by(scenario, region, soiltype, initdenres_collapsed) %>% # grouping factor for sum
+  dplyr::summarize(
+    ww_mean = mean(ww_yield_mean, na.rm = TRUE),
+    ww_ci_l = mean(ww_yield_mean, na.rm = TRUE) - 
+      (1.96 * sd(ww_yield_mean, na.rm = TRUE) / sqrt(nobs(ww_yield_mean))),
+    ww_ci_u = mean(ww_yield_mean, na.rm = TRUE) + 
+      (1.96 * sd(ww_yield_mean, na.rm = TRUE) / sqrt(nobs(ww_yield_mean))),
+    pc_mean = mean(prod_cost_mean, na.rm = TRUE),
+    pc_ci_l = mean(prod_cost_mean, na.rm = TRUE) - 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean))),
+    pc_ci_u = mean(prod_cost_mean, na.rm = TRUE) + 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean)))
+    ) %>% 
+  dplyr::arrange(scenario, region, soiltype, initdenres_collapsed) %>% 
+  dplyr::mutate(sensanaly = "no",
+                ss = paste(scenario, sensanaly, sep="_")) %>% 
+  dplyr::relocate(sensanaly, scenario, region, soiltype, initdenres_collapsed)
+
+# Join data
+ww_pc <- rbind(rotmean_3DR, rotmean_3DR_SA)  %>% 
+  # Remove '_no' from ss column
+  dplyr::mutate(
+    ID = gsub('_no', '', ss) 
+  ) %>% 
+  dplyr::relocate(ID) %>% 
+  # Ensure factor levels are in the order we want
+  mutate(
+    scenario = factor(scenario),
+    region = factor(region,
+                    levels = c("north", "central","east")),
+    soiltype = factor(soiltype,
+                      levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                        levels = c("LD-LR", "LD-HR", "HD-HR")),
+    ID = factor(ID,
+                levels = c("BAU_lower", "BAU", "BAU_upper",
+                           "MIT_lower", "MIT", "MIT_upper",
+                           "CWW_lower", "CWW", "CWW_upper")),
+    scenario = factor(scenario,
+                      levels = c("BAU", "MIT", "CWW"))
+  ) %>% 
+  dplyr::relocate(sensanaly) %>% 
+  dplyr::select(-ss)
+```
+
+  
+#### Plot  
+Specify the labels for the panels.  
+```{r specify-panel-labels-repeat}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+  
+Specify the plot.  
+```{r scatter-plot-wheat-yield-3DR}
+p2 <- ggplot(ww_pc, aes(initdenres_collapsed, ww_mean, 
+                   colour = ID, 
+                   shape = ID)) + 
+  #geom_point(size = 4) +
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Mean annual wheat yield (t/ha)") +
+  # specify colours for points:
+  scale_color_manual(name = "Scenario & 
+yield penalties",
+                     values = c("#88CCEE", # BAU, lower yield penalty
+                                "#005FCC", # BAU
+                                "#00306F", # BAU, upper yield penalty
+                                
+                                "#DDCC77", # MIT, lower yield penalty
+                                "#999933", # MIT
+                                "#117733", # MIT, upper yield penalty
+                                
+                                "#CC6677", # CWW, lower yield penalty
+                                "#882255", # CWW
+                                "#AA4499"  # CWW, upper yield penalty
+                                )) + 
+  scale_shape_manual(name = "Scenario & 
+yield penalties",
+                     values=c(15, 15, 15,    # BAU 15 = square
+                              16, 16, 16,    # MIT 16 = circle
+                              17, 17, 17)) + # CWW 17 = triangle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 14),
+        strip.text.y = element_text(size = 14),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(1.5)), 
+        axis.text.y=element_text(size=rel(1.5)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=14)#,
+        #panel.background = element_rect(fill = "white", colour = "black"), # white background in main panels
+        #strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
+        #legend.key = element_blank(),# removes grey background behind symbols in legend
+        ) +
+  geom_pointrange(aes(ymin = ww_ci_l, 
+                      ymax = ww_ci_u
+                      ), 
+                  position=position_dodge(width=0.8),
+                  size = 0.9)
+
+p2
+```
+
+  
+  
+#### Save plot
+```{r}
+#, eval=FALSE, echo=FALSE
+#ggsave("../figures/Script 5c_ww yield by initcondit for each scenario.png", 
+#       height = 10, width = 10)
+
+png("../figures/SA_04c_ww by initcondit_all scenarios.png",
+#png("../figures/SA_04c_ww by initcondit_all scenarios_white bkgrd.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(p2)
+dev.off()
+```
+
+  
+  
+### 4.1.3. Scatter plot - rotation wheat yield, 3 denres, NO CWW
+
+#### Plot  
+First, specify the labels for the panels if not done above.  
+```{r specify-panel-labels-repeated, eval=FALSE, echo=FALSE}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+  
+Then specify the plot.  
+```{r scatter-plot-wheat-yield-3DR-noCWW}
+p3 <- ggplot(ww_pc %>% filter(!scenario=="CWW"),
+             aes(initdenres_collapsed, ww_mean, colour = ID, shape = ID)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Mean annual wheat yield (t/ha)") +
+  # specify colours for points:
+  scale_color_manual(name = "Scenario & 
+yield penalties",
+                     values = c("#88CCEE", # BAU, lower yield penalty
+                                "#005FCC", # BAU
+                                "#00306F", # BAU, upper yield penalty
+                                
+                                "#DDCC77", # MIT, lower yield penalty
+                                "#999933", # MIT
+                                "#117733" # MIT, upper yield penalty
+                                )) + 
+  scale_shape_manual(name = "Scenario & 
+yield penalties",
+                     values=c(15, 15, 15,    # BAU 15 = square
+                              16, 16, 16)) + # MIT 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 14),
+        strip.text.y = element_text(size = 14),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(1.5)), 
+        axis.text.y=element_text(size=rel(1.5)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=14)#,
+        #panel.background = element_rect(fill = "white", colour = "black"), # white background in main panels
+        #strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
+        #legend.key = element_blank(),# removes grey background behind symbols in legend
+        ) +
+  geom_pointrange(aes(ymin = ww_ci_l, 
+                      ymax = ww_ci_u
+                      ), 
+                  position=position_dodge(width=0.8),
+                  size = 0.9)
+
+p3
+```
+  
+  
+    
+#### Save plot
+```{r}
+#, eval=FALSE, echo=FALSE
+#ggsave("../figures/Script 5c_ww yield by initcondit for BAU and MIT.png", 
+#       height = 10, width = 10)
+
+png("../figures/SA_04c_ww by initcondit_BAU & MIT.png",
+#png("../figures/SA_04c_ww by initcondit_BAU & MIT_white bkgrd.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(p3)
+dev.off()
+```
+
+
+
+## 4.2. Productivity costs
+### 4.2.1. Scatter plot - regional per ha productivity costs, 3 denres
+  
+This plot shows that, even though it might be worth acting to prevent resistance in LD-HR fields in central regions because the opportunity costs aren't too high, there is still a productivity cost. (This was also the region in which MIT scenarios became more profitable than BAU - in other words, there were no opportunity costs - when the wheat yield penalty increased).   
+  
+I originally worked out productivity costs by doing MIT-BAU. This assumes that the chosen option is BAU. For this plot, I want the chosen option to be MIT, and the foregone option to be BAU. So I just need to reverse the sign on the productivity costs.  
+  
+Make data frame for the plot - need to average over soil type in `gp_oc` data frame.
+```{r}
+forplot <- ww_pc %>% 
+  dplyr::filter(scenario == "MIT") %>% # select just MIT
+  group_by(sensanaly, region, initdenres_collapsed) %>% # grouping factor for sum
+  dplyr::summarize(
+    ww = mean(ww_mean, na.rm = TRUE),
+    ww_ci_l = mean(ww_mean, na.rm = TRUE) - 
+      (1.96 * sd(ww_mean, na.rm = TRUE) / sqrt(nobs(ww_mean))),
+    ww_ci_u = mean(ww_mean, na.rm = TRUE) + 
+      (1.96 * sd(ww_mean, na.rm = TRUE) / sqrt(nobs(ww_mean))),
+    pc = mean(pc_mean, na.rm = TRUE),
+    pc_ci_l = mean(pc_mean, na.rm = TRUE) - 
+      (1.96 * sd(pc_mean, na.rm = TRUE) / sqrt(nobs(pc_mean))),
+    pc_ci_u = mean(pc_mean, na.rm = TRUE) + 
+      (1.96 * sd(pc_mean, na.rm = TRUE) / sqrt(nobs(pc_mean)))
+    ) %>% 
+  dplyr::mutate(
+    grpvar = paste(initdenres_collapsed, sensanaly, sep = "_"),
+    grpvar = gsub('_no', '', grpvar), # remove '_no' from grouping variable
+    region = factor(region, levels = c("north", "central", "east")),
+    grpvar = factor(grpvar, levels = c("LD-LR_lower", "LD-LR", "LD-LR_upper",
+                                       "LD-HR_lower", "LD-HR", "LD-HR_upper",
+                                       "HD-HR_lower", "HD-HR", "HD-HR_upper"))
+    ) %>%
+  dplyr::arrange(region, initdenres_collapsed, sensanaly)
+
+
+# superseded
+pc_region_3dr_SA <- ww_3DR_SA %>% 
+  dplyr::filter(scenario == "MIT") %>% # select just MIT
+  dplyr::group_by(sensanaly, scenario, region, initdenres_collapsed) %>% 
+  dplyr::summarize(
+    pc_mean = mean(prod_cost_mean, na.rm = TRUE),
+    pc_ci_l = mean(prod_cost_mean, na.rm = TRUE) - 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean))),
+    pc_ci_u = mean(prod_cost_mean, na.rm = TRUE) + 
+      (1.96 * sd(prod_cost_mean, na.rm = TRUE) / sqrt(nobs(prod_cost_mean)))
+    ) %>% 
+  dplyr::mutate(
+    grpvar = paste(initdenres_collapsed, sensanaly, sep = "_"),
+    grpvar = gsub('_no', '', grpvar), # remove '_no' from grouping variable
+    region = factor(region, levels = c("north", "central", "east")),
+    grpvar = factor(grpvar, levels = c("LD-LR_lower", "LD-LR", "LD-LR_upper",
+                                       "LD-HR_lower", "LD-HR", "LD-HR_upper",
+                                       "HD-HR_lower", "HD-HR", "HD-HR_upper"))
+    ) %>%
+  dplyr::arrange(scenario, region, initdenres_collapsed, sensanaly)
+```
+  
+  
+#### Plot  
+Specify plot.
+```{r plot-regional-prod-costs-3DR}
+p4 <- ggplot(forplot, 
+             aes(region, pc*(-1), colour = grpvar, shape = grpvar)) +  # change sign on opportunity costs
+  #scale_y_continuous(labels = scales::comma) +
+  #ylim(-80, 450) + #these ylims give same y axis as the opp costs box plot
+  labs(
+    x = "English region", 
+    y = "Mean annual productivity cost, BAU-MIT (t/ha)") + #\n returns to next line
+  scale_color_manual(
+    name = "Initial density-\nresistance state",
+    values = c("#a9e5a8", #LD-LR_lower
+               "#27be25", #LD-LR
+               "#145f13", #LD-LR_upper
+               
+               "#feee85", #LD-HR_lower, alt #fdf50b
+               "#fddd0b", #LD-HR
+               "#cab109", #LD-HR_upper, alt #fdc50b
+               
+               "#eeb5b5", #HD-HR_lower, alt #fdf50b
+               "#c50909", #HD-HR
+               "#760505"  #HD-HR_upper, alt #fdc50b
+               )) + 
+  scale_shape_manual(name = "Initial density-\nresistance state",
+                     values=c(0, 15, 0, # squares (open, closed, open)
+                              1, 16, 1, # circles (open, closed, open)
+                              2, 17, 2  # triangles (open, closed, open)
+                              )) +
+  geom_pointrange(aes(ymin = pc_ci_l*(-1), ymax = pc_ci_u*(-1)),
+                  position = position_dodge(width = 0.2), size = 0.9) +
+  theme_classic() +
+  theme(
+    axis.title = element_text(size=18),
+    axis.text.x = element_text(size=rel(2)),
+    axis.text.y = element_text(size=rel(2)),
+    legend.title=element_text(size=16),
+    legend.text=element_text(size=14)
+    ) +
+  geom_hline(yintercept = 0, colour = "grey")
+
+p4
+```
+  
+  
+  
+Mean annual productivity costs of switching from BAU to MIT rotations (i.e., chosen option is MIT, foregone option is BAU). Points below the line at y=0 indicate that MIT strategies did better than BAU strategies.  
+  
+#### Save plot
+```{r}
+#, eval=FALSE, echo=FALSE
+#ggsave("../figures/Script 5c_ww prod costs by region.png", 
+#              height = 10, width = 10)
+
+png("../figures/SA_04c_ww prod costs by region.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(p4)
+dev.off()
+``` 
+
+
+# 5. Session info
+```{r}
+sessionInfo()
+```
+

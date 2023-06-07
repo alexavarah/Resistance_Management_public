@@ -1,0 +1,830 @@
+---
+title: "Run ECOMOD"
+author: "Alexa Varah"
+date: "2023-02-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Set up
+## 1.1. Load packages
+
+```{r}
+library(tidyverse) # for easy data manipulation; includes dplyr, ggplot & more
+library(readxl) # for reading in Excel workbooks / spreadsheets
+```
+
+
+## 1.2. Load ECOMOD
+File '01. Load ECOMOD.R' contains the ECOMOD function used here.
+``` {r ECOMOD, purl=FALSE}
+source("01. Load ECOMOD_2019 prices_2023-02-07.R")
+```
+
+# 2. MIT
+Because there are crops in the Farmer Focus strategies that ECOMOD can't model (e.g. spring oats), we read in two versions of the FF strategies. One version has yield set to 'actual', in which average yields for spring oats are given. The second version has yield set to 'estimate', so ECOMOD will estimate yields.
+
+## 2.1. Make input files
+```{r load-tidy-MIT}
+## Read in the raw data.
+mit_est = read_xlsx("../data/InputData_FF_ECOMOD&CFT_2021-12-03.xlsx",3) %>% 
+  select(-"lookup_ref") %>%  # remove 'lookup_ref' column
+  mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
+  mutate_at(3, round, 2) # soil texture needs 2 decimal places
+
+mit_act = read_xlsx("../data/InputData_FF_ECOMOD&CFT_2021-12-03.xlsx",4) %>% 
+  select(-"lookup_ref") %>%  # remove 'lookup_ref' column
+  mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
+  mutate_at(3, round, 2) # soil texture needs 2 decimal places
+
+## Create input files for each black-grass density state
+
+# LOW / ABSENT
+mit_l_est <- mit_est %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% c("medium","high","veryhigh"), "low"))) %>%
+  #select(-X) %>% # remove extra 'row identifier' column added by R when reading in the file
+  data.frame()
+
+mit_l_act <- mit_act %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% c("medium","high","veryhigh"), "low"))) %>% 
+  #select(-X) %>% # remove extra 'row identifier' column added by R when reading in the file
+  data.frame()
+
+# MEDIUM
+mit_m_est = mit_l_est %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "low", "medium"))) %>% 
+  data.frame()
+
+mit_m_act = mit_l_act %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "low", "medium"))) %>% 
+  data.frame()
+
+# HIGH
+mit_h_est = mit_l_est %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "low", "high"))) %>% 
+  data.frame()
+
+mit_h_act = mit_l_act %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "low", "high"))) %>% 
+  data.frame()
+
+# VERY HIGH
+mit_v_est = mit_l_est %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "low", "veryhigh"))) %>% 
+  data.frame()
+
+mit_v_act = mit_l_act %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "low", "veryhigh"))) %>% 
+  data.frame()
+```
+
+
+## 2.2. Run ECOMOD - LOW / ABSENT density
+### 2.2.1. Run ECOMOD, low density, yield = "estimate" 
+Replace spring oats with spring barley and ensure soil is to two decimal places or ECOMOD won't run.
+```{r runECOMOD-MIT-lowden-est}
+fn = "../output/mit_ECOMOD_output_L_estimate.csv" # name the output file
+
+# Replace spring oats (not included in ECOMOD) 
+fd = mit_l_est %>% 
+  mutate_at(vars(crop1:crop6), 
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="estimate",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+rm(fn)
+rm(fd)
+rm(mfm)
+rm(mit_l_est)
+```
+
+### 2.2.2. Run ECOMOD, low density, yield = "actual"
+Set up input file (only need to run the rows containing spring oats). Replace spring oats with spring barley and ensure soil is to two decimal places or ECOMOD won't run.
+```{r runECOMOD-MIT-lowden-act}
+fn = "../output/mit_ECOMOD_output_L_actual.csv" # name the output file
+
+fd = mit_l_act %>% 
+  # Extract just the spring oats rows:
+  filter_all(any_vars(grepl("springoats", .))) %>% 
+  # Replace spring oats with spring barley, otherwise ECOMOD won't run:
+  mutate_at(vars(crop1:crop6),
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="actual",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage) 
+rm(fn)
+rm(fd)
+rm(mfm)
+rm(mit_l_act)
+```
+
+### 2.2.3. Combine 'actual' and 'estimate' output
+Add the 'actual' spring oat output into the 'estimate' output file.
+```{r combine-est-act-MIT-lowden}
+# Read in the output obtained from ECOMOD
+est_l <- read.csv('../output/mit_ECOMOD_output_L_estimate.csv', header=T)
+act_l <- read.csv('../output/mit_ECOMOD_output_L_actual.csv', header=T) # this only has rows containing spring oats
+
+# Extract rows 1-4 to deal with those first
+# For these rows, spring oats is the 4th crop and was run as spring barley
+act_l_1to4 <- act_l %>% 
+  filter(Field_no %in% c(1,2,3,4)) %>% 
+  select(!Field_no)
+
+est_l_to_merge <- est_l %>% 
+  select(!Field_no)
+
+low_den_output1 <- rows_update(
+  est_l_to_merge,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  select(act_l_1to4, field_name, totalrotgrossprof, ends_with("4")),
+  by = "field_name"
+)
+
+act_l_5to6 <- act_l %>% 
+  filter(Field_no %in% c(5,6)) %>% 
+  select(!Field_no)
+
+low_den_output <- rows_update(
+  low_den_output1,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  select(act_l_5to6, field_name, totalrotgrossprof, ends_with("5")),
+  by = "field_name"
+)
+
+write.csv(low_den_output,'../output/mit_ECOMOD_output_L_combined.csv')
+
+rm(act_l_1to4)
+rm(est_l_to_merge)
+rm(low_den_output1)
+rm(act_l_5to6)
+rm(act_l)
+rm(est_l)
+```
+
+## 2.3. Run ECOMOD - MEDIUM density
+### 2.3.1. Run ECOMOD, medium density, yield = "estimate"
+Replace spring oats with spring barley and ensure soil is to two decimal places or ECOMOD won't run.
+```{r runECOMOD-MIT-mediumden-est}
+fn = "../output/mit_ECOMOD_output_M_estimate.csv" # name the output file
+
+fd = mit_m_est %>% 
+  mutate_at(vars(crop1:crop6), 
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="estimate",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage) 
+rm(fn)
+rm(fd)
+rm(mfm)
+rm(mit_m_est)
+```
+
+### 2.3.2. Run ECOMOD, medium density, yield = "actual"
+Set up input file (only need to run the rows containing spring oats). Replace spring oats with spring barley and ensure soil is to two decimal places or ECOMOD won't run.
+```{r runECOMOD-MIT-mediumden-act}
+fn = "../output/mit_ECOMOD_output_M_actual.csv" # name the output file
+
+fd = mit_m_act %>% 
+  filter_all(any_vars(grepl("springoats", .))) %>% # extract spring oats rows
+  mutate_at(vars(crop1:crop6), # replace spring oats with spring barley
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="actual",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage) 
+rm(fn)
+rm(fd)
+rm(mfm)
+rm(mit_m_act)
+```
+
+### 2.3.3. Combine 'actual' and 'estimate' output
+Add the 'actual' spring oat output into the 'estimate' output file.
+```{r combine-est-act-MIT-mediumden}
+# Read in the output obtained from ECOMOD
+est_m <- read.csv('../output/mit_ECOMOD_output_M_estimate.csv', header=T)
+act_m <- read.csv('../output/mit_ECOMOD_output_M_actual.csv', header=T) # this only has rows containing spring oats
+
+# Extract rows 1-4 to deal with those first
+# For these rows, spring oats is the 4th crop and was run as spring barley
+act_m_1to4 <- act_m %>% 
+  filter(Field_no %in% c(1,2,3,4)) %>% 
+  select(!Field_no)
+
+est_m_to_merge <- est_m %>% 
+  select(!Field_no)
+
+med_den_output1 <- rows_update(
+  est_m_to_merge,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  select(act_m_1to4, field_name, totalrotgrossprof, ends_with("4")),
+  by = "field_name"
+)
+
+act_m_5to6 <- act_m %>% 
+  filter(Field_no %in% c(5,6)) %>% 
+  select(!Field_no)
+
+med_den_output <- rows_update(
+  med_den_output1,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  select(act_m_5to6, field_name, totalrotgrossprof, ends_with("5")),
+  by = "field_name"
+)
+
+write.csv(med_den_output,'../output/mit_ECOMOD_output_M_combined.csv')
+
+rm(act_m_1to4)
+rm(est_m_to_merge)
+rm(med_den_output1)
+rm(act_m_5to6)
+rm(act_m)
+rm(est_m)
+```
+
+## 2.4. Run ECOMOD - HIGH density
+### 2.4.1. Run ECOMOD, high density, yield = "estimate"
+Replace spring oats with spring barley and ensure soil is to two decimal places or ECOMOD won't run.
+```{r runECOMOD-MIT-highden-est}
+fn = "../output/mit_ECOMOD_output_H_estimate.csv" # name the output file
+
+fd = mit_h_est %>% 
+  mutate_at(vars(crop1:crop6), 
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="estimate",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage) 
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+
+### 2.4.2. Run ECOMOD, high density, yield = "actual"
+Set up input file (only need to run the rows containing spring oats). Replace spring oats with spring barley and ensure soil is to two decimal places or ECOMOD won't run.
+```{r runECOMOD-MIT-highden-act}
+fn = "../output/mit_ECOMOD_output_H_actual.csv" # name the output file
+
+fd = mit_h_act %>% 
+  filter_all(any_vars(grepl("springoats", .))) %>% # extract spring oats rows
+  mutate_at(vars(crop1:crop6), # replace spring oats with spring barley
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="actual",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage) 
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### 2.4.3. Combine 'actual' and 'estimate' output
+Add the 'actual' spring oat output into the 'estimate' output file.
+```{r combine-est-act-MIT-highden}
+# Read in the output obtained from ECOMOD
+est_h <- read.csv('../output/mit_ECOMOD_output_H_estimate.csv', header=T)
+act_h <- read.csv('../output/mit_ECOMOD_output_H_actual.csv', header=T) # this only has rows containing spring oats
+
+# Extract rows 1-4 to deal with those first
+# For these rows, spring oats is the 4th crop and was run as spring barley
+act_h_1to4 <- act_h %>% 
+  filter(Field_no %in% c(1,2,3,4)) %>% 
+  select(!Field_no)
+
+est_h_to_merge <- est_h %>% 
+  select(!Field_no)
+
+high_den_output1 <- rows_update(
+  est_h_to_merge,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  select(act_h_1to4, field_name, totalrotgrossprof, ends_with("4")),
+  by = "field_name"
+)
+
+act_h_5to6 <- act_h %>% 
+  filter(Field_no %in% c(5,6)) %>% 
+  select(!Field_no)
+
+high_den_output <- rows_update(
+  high_den_output1,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  select(act_h_5to6, field_name, totalrotgrossprof, ends_with("5")),
+  by = "field_name"
+)
+
+write.csv(high_den_output,'../output/mit_ECOMOD_output_H_combined.csv')
+
+rm(act_h_1to4)
+rm(est_h_to_merge)
+rm(high_den_output1)
+rm(act_h_5to6)
+rm(mit_h_act)
+rm(mit_h_est)
+rm(act_h)
+rm(est_h)
+```
+
+## 2.5. Run ECOMOD - VERY HIGH density
+### 2.5.1. Run ECOMOD, very high density, yield = "estimate"
+Replace spring oats with spring barley and ensure soil is to two decimal places or ECOMOD won't run.
+```{r runECOMOD-MIT-veryhighden-est}
+fn = "../output/mit_ECOMOD_output_V_estimate.csv" # name the output file
+
+fd = mit_v_est %>% 
+  mutate_at(vars(crop1:crop6), 
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="estimate",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage) 
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### 2.5.2. Run ECOMOD, high density, yield = "actual" 
+Set up input file (only need to run the rows containing spring oats). Replace spring oats with spring barley and ensure soil is to two decimal places or ECOMOD won't run.
+```{r runECOMOD-MIT-veryhighden-act}
+fn = "../output/mit_ECOMOD_output_V_actual.csv" # name the output file
+
+# Set up input file (only need to run the rows containing spring oats).
+# Replace spring oats with spring barley and ensure soil 
+# is to two decimal places or ECOMOD won't run.
+fd = mit_v_act %>% 
+  filter_all(any_vars(grepl("springoats", .))) %>% # extract spring oats rows
+  mutate_at(vars(crop1:crop6), # replace spring oats with spring barley
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="actual",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage) 
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### 2.5.3. Combine 'actual' and 'estimate' output
+Add the 'actual' spring oat output into the 'estimate' output file.
+```{r combine-est-act-MIT-veryhighden}
+# Read in the output obtained from ECOMOD
+est_v <- read.csv('../output/mit_ECOMOD_output_V_estimate.csv', header=T)
+act_v <- read.csv('../output/mit_ECOMOD_output_V_actual.csv', header=T) # this only has rows containing spring oats
+
+# Extract rows 1-4 to deal with those first
+# For these rows, spring oats is the 4th crop and was run as spring barley
+act_v_1to4 <- act_v %>% 
+  filter(Field_no %in% c(1,2,3,4)) %>% 
+  select(!Field_no)
+
+est_v_to_merge <- est_v %>% 
+  select(!Field_no)
+
+vhigh_den_output1 <- rows_update(
+  est_v_to_merge,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  select(act_v_1to4, field_name, totalrotgrossprof, ends_with("4")),
+  by = "field_name"
+)
+
+act_v_5to6 <- act_v %>% 
+  filter(Field_no %in% c(5,6)) %>% 
+  select(!Field_no)
+
+vhigh_den_output <- rows_update(
+  vhigh_den_output1,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  select(act_v_5to6, field_name, totalrotgrossprof, ends_with("5")),
+  by = "field_name"
+)
+
+write.csv(vhigh_den_output,'../output/mit_ECOMOD_output_V_combined.csv')
+
+rm(act_v_1to4)
+rm(est_v_to_merge)
+rm(vhigh_den_output1)
+rm(act_v_5to6)
+rm(mit_v_act)
+rm(mit_v_est)
+rm(act_v)
+rm(est_v)
+
+rm(mit_l_act)
+rm(mit_l_est)
+rm(mit_act)
+rm(mit_est)
+```
+
+# 3. BAU
+## 3.1. Make input files
+```{r load-tidy-BAU}
+# Read in file and sort out a few things initially.
+bau_econdata = read_xlsx("../data/ECOMOD_InputData_BAU.xlsx") %>% 
+  mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
+  mutate_at(3, round, 2) %>%  # soil texture needs 2 decimal places
+  # replace density and resistance abbreviations with even shorter forms:
+  mutate(
+    farm_id = gsub('L-Dsty.L-Res', 'LD-LR', farm_id), 
+    farm_id = gsub('L-Dsty.H-Res', 'LD-HR', farm_id),
+    farm_id = gsub('H-Dsty.H-Res', 'HD-HR', farm_id),
+    farm_id = gsub('\\.', '_', farm_id), # replace . with _
+  )
+
+# Insert the additional scenarios that Rob G can run. 
+# He can differentiate all density states.
+# LD-LR becomes LD-LR and MD-LR
+# LD-HR becomes LD-HR and MD-HR
+# HD-HR becomes HD-HR and VD-HR
+
+# create new rows to be added
+bau_insert.df <- bau_econdata %>% 
+  mutate(
+    farm_id = gsub('LD-LR', 'MD-LR', farm_id), # replace LD-LR with MD-LR
+    farm_id = gsub('LD-HR', 'MD-HR', farm_id),
+    farm_id = gsub('HD-HR', 'VD-HR', farm_id)
+  )
+    
+# join the two data frames
+bau_out.df <- rbind(bau_econdata, bau_insert.df)
+
+# re-order so that new rows are inserted every other row
+n <- nrow(bau_econdata)
+bau_econ.input.data <- bau_out.df[kronecker(1:n, c(0, n), "+"), ]
+
+## Create input files for each black-grass density state
+
+# LOW / ABSENT
+bau_l <- bau_econ.input.data %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% c("medium","high","veryhigh"), "low"))) %>%
+  data.frame()
+
+# MEDIUM
+bau_m <- bau_l %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "low", "medium"))) %>% 
+  data.frame()
+
+# HIGH
+bau_h = bau_m %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "medium", "high"))) %>% 
+  data.frame()
+
+# VERY HIGH
+bau_v = bau_h %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "high", "veryhigh"))) %>% 
+  data.frame()
+```
+
+## 3.2. Run ECOMOD
+### 3.2.1. Run ECOMOD - LOW / ABSENT density
+```{r runECOMOD-BAU-lowden}
+fn = "../output/bau_ECOMOD_output_L.csv" # name the output file
+fd = bau_l
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="estimate",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### 3.2.2. Run ECOMOD - MEDIUM density
+```{r runECOMOD-BAU-mediumden}
+fn = "../output/bau_ECOMOD_output_M.csv" # name the output file
+fd = bau_m
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="estimate",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### 3.2.3. Run ECOMOD - HIGH density
+```{r runECOMOD-BAU-highden}
+fn = "../output/bau_ECOMOD_output_H.csv" # name the output file
+fd = bau_h
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="estimate",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### 3.2.4. Run ECOMOD - VERY HIGH density
+```{r runECOMOD-BAU-veryhighden}
+fn = "../output/bau_ECOMOD_output_V.csv" # name the output file
+fd = bau_v
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="estimate",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### 3.2.5. Clean up
+```{r BAU-clean-up}
+rm(bau_l)
+rm(bau_m)
+rm(bau_h)
+rm(bau_v)
+rm(bau_econdata)
+rm(bau_insert.df)
+rm(bau_out.df)
+rm(bau_econ.input.data)
+rm(n)
+rm(low_den_output)
+rm(med_den_output)
+rm(high_den_output)
+rm(vhigh_den_output)
+```
+
+
+
+# 4. CWW
+## 4.1. Make input files 
+```{r load-tidy-CWW}
+#cww_econdata = read_xlsx("../data/InputData_CWW_ECOMOD&CFT_2021-12-02.xlsx",5) %>%
+cww_econdata = read_xlsx("../data/ECOMOD_InputData_CWW.xlsx") %>% 
+  mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
+  mutate_at(3, round, 2) %>% # soil texture needs 2 decimal places
+  # replace density and resistance abbreviations with even shorter forms:
+  mutate(
+    farm_id = gsub('L-Dsty.L-Res', 'LD-LR', farm_id), 
+    farm_id = gsub('L-Dsty.H-Res', 'LD-HR', farm_id),
+    farm_id = gsub('H-Dsty.H-Res', 'HD-HR', farm_id),
+    farm_id = gsub('\\.', '_', farm_id), # replace . with _
+  )
+  
+# Insert the additional scenarios that Rob G can run. 
+# He can differentiate all density states.
+# LD-LR becomes LD-LR and MD-LR
+# LD-HR becomes LD-HR and MD-HR
+# HD-HR becomes HD-HR and VD-HR
+
+# create new rows to be added
+cww_insert.df <- cww_econdata %>% 
+  mutate(
+    farm_id = gsub('LD-LR', 'MD-LR', farm_id), # replace LD-LR with MD-LR
+    farm_id = gsub('LD-HR', 'MD-HR', farm_id),
+    farm_id = gsub('HD-HR', 'VD-HR', farm_id)
+  )
+
+# join the two dataframes
+cww_out.df <- rbind(cww_econdata, cww_insert.df)
+
+# re-order so that new rows are inserted every other row
+n <- nrow(cww_econdata)
+cww_econ.input.data <- cww_out.df[kronecker(1:n, c(0, n), "+"), ]
+
+
+## Create input files for each black-grass density state
+
+# LOW / ABSENT
+cww_l <- cww_econ.input.data %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% c("medium","high","veryhigh"), "low"))) %>%
+  data.frame()
+
+# MEDIUM
+cww_m <- cww_l %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "low", "medium"))) %>% 
+  data.frame()
+
+# HIGH
+cww_h = cww_m %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "medium", "high"))) %>% 
+  data.frame()
+
+# VERY HIGH
+cww_v = cww_h %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "high", "veryhigh"))) %>% 
+  data.frame()
+```
+
+
+## 4.2. Run ECOMOD - LOW / ABSENT density
+```{r runECOMOD-CWW-lowden}
+fn = "../output/cww_ECOMOD_output_L.csv" # name the output file
+fd = cww_l
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="estimate",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+## 4.3. Run ECOMOD - MEDIUM density
+```{r runECOMOD-CWW-mediumden}
+fn = "../output/cww_ECOMOD_output_M.csv" # name the output file
+fd = cww_m
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="estimate",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+## 4.4. Run ECOMOD - HIGH density
+```{r runECOMOD-CWW-highden}
+fn = "../output/cww_ECOMOD_output_H.csv" # name the output file
+fd = cww_h
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="estimate",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+## 4.5. Run ECOMOD - VERY HIGH density
+```{r runECOMOD-CWW-veryhighden}
+fn = "../output/cww_ECOMOD_output_V.csv" # name the output file
+fd = cww_v
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD(filename=fn,
+                        farmdata=fd,
+                        default=NULL,farm="multiple",soil=2.5,
+                        rotlength=6,rotprob=1/6,
+                        crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+                        bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+                        blackgrass,cropprice,cropyield,yieldoption="estimate",
+                        Nfertprice,Pfertprice,Kfertprice,seedprice,
+                        herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+## 4.6. Clean up
+```{r CWW-clean-up}
+rm(cww_l)
+rm(cww_m)
+rm(cww_h)
+rm(cww_v)
+rm(cww_econdata)
+rm(cww_insert.df)
+rm(cww_out.df)
+rm(cww_econ.input.data)
+rm(n)
+```
+
+

@@ -1,0 +1,73 @@
+"region","initDR","propDR","my_counties","DEFRA_county_or_unitary_authority","DEFRA_region","cereals_area_2021_ha","cereal_area_in_denres_state"
+"east","LDLR",0.162790697674419,"Cambridgeshire","Peterborough","Eastern",14263.35077252,2321.94082343349
+"east","LDLR",0.162790697674419,"Cambridgeshire","Cambridgeshire CC","Eastern",134370.25295295,21874.2272248989
+"east","LDLR",0.162790697674419,"Norfolk","Norwich and East Norfolk","Eastern",8206.48457544,1335.93934949023
+"east","LDLR",0.162790697674419,"Norfolk","North and West Norfolk","Eastern",43255.72017447,7041.6288656114
+"east","LDLR",0.162790697674419,"Norfolk","Breckland and South Norfolk","Eastern",67899.0340676316,11053.3311272889
+"east","LDLR",0.162790697674419,"Bedfordshire","Luton","Eastern",0,0
+"east","LDLR",0.162790697674419,"Bedfordshire","Bedford","Eastern",26179.24838171,4261.73810865047
+"east","LDLR",0.162790697674419,"Bedfordshire","Central Bedfordshire","Eastern",30103.1069046096,4900.505775169
+"east","LDHR",0.581395348837209,"Cambridgeshire","Peterborough","Eastern",14263.35077252,8292.64579797675
+"east","LDHR",0.581395348837209,"Cambridgeshire","Cambridgeshire CC","Eastern",134370.25295295,78122.2400889247
+"east","LDHR",0.581395348837209,"Norfolk","Norwich and East Norfolk","Eastern",8206.48457544,4771.21196246512
+"east","LDHR",0.581395348837209,"Norfolk","North and West Norfolk","Eastern",43255.72017447,25148.6745200407
+"east","LDHR",0.581395348837209,"Norfolk","Breckland and South Norfolk","Eastern",67899.0340676316,39476.1825974602
+"east","LDHR",0.581395348837209,"Bedfordshire","Luton","Eastern",0,0
+"east","LDHR",0.581395348837209,"Bedfordshire","Bedford","Eastern",26179.24838171,15220.4932451802
+"east","LDHR",0.581395348837209,"Bedfordshire","Central Bedfordshire","Eastern",30103.1069046096,17501.8063398893
+"east","HDHR",0.255813953488372,"Cambridgeshire","Peterborough","Eastern",14263.35077252,3648.76415110977
+"east","HDHR",0.255813953488372,"Cambridgeshire","Cambridgeshire CC","Eastern",134370.25295295,34373.7856391269
+"east","HDHR",0.255813953488372,"Norfolk","Norwich and East Norfolk","Eastern",8206.48457544,2099.33326348465
+"east","HDHR",0.255813953488372,"Norfolk","North and West Norfolk","Eastern",43255.72017447,11065.4167888179
+"east","HDHR",0.255813953488372,"Norfolk","Breckland and South Norfolk","Eastern",67899.0340676316,17369.5203428825
+"east","HDHR",0.255813953488372,"Bedfordshire","Luton","Eastern",0,0
+"east","HDHR",0.255813953488372,"Bedfordshire","Bedford","Eastern",26179.24838171,6697.01702787931
+"east","HDHR",0.255813953488372,"Bedfordshire","Central Bedfordshire","Eastern",30103.1069046096,7700.79478955129
+"central","LDLR",0.0163934426229508,"Nottinghamshire","Nottingham","East Midlands",0,0
+"central","LDLR",0.0163934426229508,"Nottinghamshire","North Nottinghamshire","East Midlands",46994.1666802055,770.396175085337
+"central","LDLR",0.0163934426229508,"Nottinghamshire","South Nottinghamshire","East Midlands",20137.61063269,330.124764470328
+"central","LDLR",0.0163934426229508,"Northamptonshire","West Northamptonshire","East Midlands",62629.01349539,1026.70513926869
+"central","LDLR",0.0163934426229508,"Northamptonshire","North Northamptonshire","East Midlands",56843.49340299,931.86054759
+"central","LDLR",0.0163934426229508,"Lincolnshire","Lincolnshire CC","East Midlands",272520.296799062,4467.54584916495
+"central","LDLR",0.0163934426229508,"Warwickshire","Warwickshire CC","West Midlands",74588.7662287,1222.76665948689
+"central","LDLR",0.0163934426229508,"Buckinghamshire","Milton Keynes","South East",14203.60388052,232.845965254426
+"central","LDLR",0.0163934426229508,"Buckinghamshire","Buckinghamshire","South East",46677.8263503578,765.210268038652
+"central","LDLR",0.0163934426229508,"Oxfordshire","Oxfordshire CC","South East",112055.75136557,1836.97953058311
+"central","LDHR",0.60655737704918,"Nottinghamshire","Nottingham","East Midlands",0,0
+"central","LDHR",0.60655737704918,"Nottinghamshire","North Nottinghamshire","East Midlands",46994.1666802055,28504.6584781575
+"central","LDHR",0.60655737704918,"Nottinghamshire","South Nottinghamshire","East Midlands",20137.61063269,12214.6162854021
+"central","LDHR",0.60655737704918,"Northamptonshire","West Northamptonshire","East Midlands",62629.01349539,37988.0901529415
+"central","LDHR",0.60655737704918,"Northamptonshire","North Northamptonshire","East Midlands",56843.49340299,34478.84026083
+"central","LDHR",0.60655737704918,"Lincolnshire","Lincolnshire CC","East Midlands",272520.296799062,165299.196419103
+"central","LDHR",0.60655737704918,"Warwickshire","Warwickshire CC","West Midlands",74588.7662287,45242.3664010148
+"central","LDHR",0.60655737704918,"Buckinghamshire","Milton Keynes","South East",14203.60388052,8615.30071441377
+"central","LDHR",0.60655737704918,"Buckinghamshire","Buckinghamshire","South East",46677.8263503578,28312.7799174301
+"central","LDHR",0.60655737704918,"Oxfordshire","Oxfordshire CC","South East",112055.75136557,67968.2426315752
+"central","HDHR",0.377049180327869,"Nottinghamshire","Nottingham","East Midlands",0,0
+"central","HDHR",0.377049180327869,"Nottinghamshire","North Nottinghamshire","East Midlands",46994.1666802055,17719.1120269627
+"central","HDHR",0.377049180327869,"Nottinghamshire","South Nottinghamshire","East Midlands",20137.61063269,7592.86958281754
+"central","HDHR",0.377049180327869,"Northamptonshire","West Northamptonshire","East Midlands",62629.01349539,23614.2182031798
+"central","HDHR",0.377049180327869,"Northamptonshire","North Northamptonshire","East Midlands",56843.49340299,21432.79259457
+"central","HDHR",0.377049180327869,"Lincolnshire","Lincolnshire CC","East Midlands",272520.296799062,102753.554530794
+"central","HDHR",0.377049180327869,"Warwickshire","Warwickshire CC","West Midlands",74588.7662287,28123.6331681984
+"central","HDHR",0.377049180327869,"Buckinghamshire","Milton Keynes","South East",14203.60388052,5355.4572008518
+"central","HDHR",0.377049180327869,"Buckinghamshire","Buckinghamshire","South East",46677.8263503578,17599.836164889
+"central","HDHR",0.377049180327869,"Oxfordshire","Oxfordshire CC","South East",112055.75136557,42250.5292034116
+"north","LDLR",0.428571428571429,"East Riding of Yorkshire","East Riding of Yorkshire","Yorkshire and The Humber",82458.3456528924,35339.2909940967
+"north","LDLR",0.428571428571429,"North Yorkshire","North and North East Lincolnshire","Yorkshire and The Humber",38591.5006806075,16539.2145774032
+"north","LDLR",0.428571428571429,"North Yorkshire","North Yorkshire CC","Yorkshire and The Humber",132449.555765145,56764.0953279191
+"north","LDLR",0.428571428571429,"South Yorkshire","Barnsley, Doncaster and Rotherham","Yorkshire and The Humber",33548.77223079,14378.0452417671
+"north","LDLR",0.428571428571429,"South Yorkshire","Sheffield","Yorkshire and The Humber",1161.27665159,497.689993538571
+"north","LDLR",0.428571428571429,"South Yorkshire","Bradford","Yorkshire and The Humber",0,0
+"north","LDHR",0.380952380952381,"East Riding of Yorkshire","East Riding of Yorkshire","Yorkshire and The Humber",82458.3456528924,31412.7031058638
+"north","LDHR",0.380952380952381,"North Yorkshire","North and North East Lincolnshire","Yorkshire and The Humber",38591.5006806075,14701.5240688028
+"north","LDHR",0.380952380952381,"North Yorkshire","North Yorkshire CC","Yorkshire and The Humber",132449.555765145,50456.973624817
+"north","LDHR",0.380952380952381,"South Yorkshire","Barnsley, Doncaster and Rotherham","Yorkshire and The Humber",33548.77223079,12780.4846593486
+"north","LDHR",0.380952380952381,"South Yorkshire","Sheffield","Yorkshire and The Humber",1161.27665159,442.391105367619
+"north","LDHR",0.380952380952381,"South Yorkshire","Bradford","Yorkshire and The Humber",0,0
+"north","HDHR",0.19047619047619,"East Riding of Yorkshire","East Riding of Yorkshire","Yorkshire and The Humber",82458.3456528924,15706.3515529319
+"north","HDHR",0.19047619047619,"North Yorkshire","North and North East Lincolnshire","Yorkshire and The Humber",38591.5006806075,7350.76203440142
+"north","HDHR",0.19047619047619,"North Yorkshire","North Yorkshire CC","Yorkshire and The Humber",132449.555765145,25228.4868124085
+"north","HDHR",0.19047619047619,"South Yorkshire","Barnsley, Doncaster and Rotherham","Yorkshire and The Humber",33548.77223079,6390.24232967429
+"north","HDHR",0.19047619047619,"South Yorkshire","Sheffield","Yorkshire and The Humber",1161.27665159,221.195552683809
+"north","HDHR",0.19047619047619,"South Yorkshire","Bradford","Yorkshire and The Humber",0,0

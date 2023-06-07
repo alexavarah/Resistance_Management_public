@@ -1,0 +1,137 @@
+---
+title: "Sensitivity Analyses - Summarise yield data"
+author: "Alexa Varah"
+date: "2023-02-16"
+output: html_document
+---
+
+# 1. Set-up
+
+Load packages
+```{r load-packages}
+rm(list=ls())
+library(tidyverse) # for easy data manipulation; includes dplyr, ggplot & more
+library(gmodels) # to calculate 95% CIs
+```
+
+Load functions
+```{r load-functions}
+# function to count complete observations
+nobs <- function(x) length(x[!is.na(x)])
+```
+
+
+# 2. Load data
+```{r}
+ww_allimp_SA <- readRDS(file = 
+                          "../output/sensitivity analyses/wwyield_data_for_analysis-all_imputations_SA.rds")
+```
+
+# 3. Calculate mean weighted values
+## 3.1. For 6 DR
+### 3.1.1. Calculate
+Work out mean, sd, se and 95% CIs for winter wheat yield. To get the mean value, average across the 37 imputations for each year of each strategy. To do this, group by ID. 
+
+```{r}
+summarised_df_6DR_SA <- ww_allimp_SA %>% 
+  dplyr::rename(prod_cost = wtd_prod_cost_ww) %>% 
+  dplyr::group_by(ID, sensanaly) %>% 
+  dplyr::summarise(across(c("ww_yield","prod_cost"),.fns = list(
+    mean=~mean(.x, na.rm = TRUE), 
+    sd=~sd(.x, na.rm = TRUE), 
+    se=~sd(.x, na.rm = TRUE)/sqrt(nobs(.x)),
+    n=~nobs(.x),
+    ci_l=~mean(.x, na.rm = TRUE) - (1.96 * sd(.x, na.rm = TRUE)/sqrt(nobs(.x))),
+    ci_u=~mean(.x, na.rm = TRUE) + (1.96 * sd(.x, na.rm = TRUE)/sqrt(nobs(.x))))))
+
+#Add back in other columns (i.e. join the other variables I want back onto `summarised_df`). This includes scenario, region, soiltype, initdenres, year, crop, and all non-weighted variables.
+# First, select just the variables I want.
+ww_distinct_6DR_SA <- ww_allimp_SA %>% 
+  select(ID, sensanaly, scenario, region, soiltype, initdenres, year, crop) %>% 
+  distinct(ID, sensanaly, .keep_all=TRUE)
+
+# Then join back on.
+ww_6DR_SA <- inner_join(ww_distinct_6DR_SA, summarised_df_6DR_SA,  by = c("ID","sensanaly")) %>% 
+  arrange(sensanaly, scenario, initdenres, region, soiltype) %>% 
+  dplyr::relocate(sensanaly)
+
+# Clean up
+rm(ww_distinct_6DR_SA, summarised_df_6DR_SA)
+```
+  
+### 3.1.2. Save
+```{r}
+write.csv(ww_6DR_SA,"../output/sensitivity analyses/wwyield_data_for_analysis_6DR_SA.csv", row.names = FALSE)
+```
+
+
+
+## 3.2. For 3 DR
+I originally presented farmers with just three density-resistance states:  
+  
+* LD-LR: low density, low resistance  
+* LD-HR: low density, high resistance  
+* HD-HR: high density, high resistance  
+  
+However, because Rob G's density simulation models and ECOMOD can both differentiate finer density states than this, the analysis was run using sub-categories. 'LD' was separated into low and medium densities, and 'HD' was separated into high and very high densities, meaning we had 6 initial density-resistance states as starting points for our models, rather than 3. To get back to the initial 3 categories I collapse the density-resistance categories back to the original three and calculate mean annual wheat yield for these new levels.  
+
+Use the file containing all imputations for this.  
+
+*Step 1:* Create the collapsed initial density-resistance states.  
+  
+*Step 2:* Calculate the mean wheat yield and productivity costs for the new levels, averaging across them and across imputations. (Using 'summarise' rather than 'mutate' retains only the columns you've grouped by, plus the new column(s), and gets rid of resulting duplicates. 'Mutate' retains all columns and all duplicates).  
+
+
+### 3.2.1. Calculate
+Work out mean wheat yield and productivity costs (&) sd, se, 95% CIs), but for only 3 levels of initial density and resistance rather than 6 levels. To do this, average across the 37 imputations for each year of each strategy, and across den-res sub-levels.  
+```{r}
+summarised_df_3DR_SA <- ww_allimp_SA %>% 
+  dplyr::rename(prod_cost = wtd_prod_cost_ww) %>% 
+  # Step 1: create new den-res categories
+  dplyr::mutate(
+    initdenres_collapsed = fct_recode(initdenres, 
+                                      "LD-LR" = "MD-LR",# LD-LR & MD-LR (best case)
+                                      "LD-HR" = "MD-HR",# LD-HR & MD-HR (intermediate case) 
+                                      "HD-HR" = "VD-HR")# HD-HR & VD-HR (worst case)
+    ) %>% 
+  
+  # Step 2: for ww yield variables, calculate means across the new den-res levels and across imputations
+  dplyr::group_by(sensanaly,scenario,region,soiltype,initdenres_collapsed,year) %>% 
+  dplyr::summarise(across(c("ww_yield","prod_cost"),.fns = list(
+      mean=~mean(.x, na.rm = TRUE), 
+      sd=~sd(.x, na.rm = TRUE), 
+      se=~sd(.x, na.rm = TRUE)/sqrt(nobs(.x)),
+      n=~nobs(.x),
+      ci_l=~mean(.x, na.rm = TRUE) - (1.96 * sd(.x, na.rm = TRUE)/sqrt(nobs(.x))),
+      ci_u=~mean(.x, na.rm = TRUE) + (1.96 * sd(.x, na.rm = TRUE)/sqrt(nobs(.x)))))) %>% 
+  # Step 4: make ID for join
+  dplyr::mutate(
+    ID = factor(paste(scenario, 
+                      substr(region, 1, 1), # just 1st letter of region
+                      substr(soiltype, 1, 1), # 1st letter of soiltype
+                      initdenres_collapsed, year, sep="_"))
+    )
+
+# Add back in other columns 
+# pull out columns I need to join back on
+ww_distinct_3DR_SA <- ww_allimp_SA %>% 
+  dplyr::select(sensanaly, ID, crop) %>% 
+  distinct(sensanaly, ID, .keep_all=TRUE)
+
+# do the join
+ww_3DR_SA <- inner_join(ww_distinct_3DR_SA, summarised_df_3DR_SA,  
+                        by = c("ID","sensanaly")) %>% 
+  dplyr::relocate(crop, .after = year) %>%
+  dplyr::arrange(scenario, initdenres_collapsed, region, soiltype) %>% 
+  dplyr::relocate(sensanaly)
+
+# Clean up
+rm(ww_distinct_3DR_SA, summarised_df_3DR_SA)
+```
+
+### 3.2.2. Save
+```{r}
+write.csv(ww_3DR_SA, 
+          '../output/sensitivity analyses/wwyield_data_for_analysis_3DR_SA.csv', 
+          row.names = FALSE)
+```

@@ -1,0 +1,621 @@
+---
+title: "Sensitivity Analysis - Gross profit summary stats and plots"
+author: "Alexa Varah"
+date: "10/02/2023"
+output: html_document
+---
+
+# 1. Intro
+This script looks at what happens to gross profit under different scenarios and initial conditions.  
+
+Definitions of the variables used here:  
+  
+* **imp** = density estimation imputation (there were 37 (previously 97) imputations for each year of each rotation).    
+* **scenario** = three potential future farm management scenarios: Business As Usual (BAU), Continuous Winter Wheat (CWW) or Mitigation of herbicide-resistant black-grass populations (MIT).  
+* **region** = north, central and east. These were the regions we asked farmers to tailor their MIT strategies to.  
+* **soiltype** = broad categorisation of soils into heavy/medium or light. These were the soil types we asked farmers to tailor their MIT strategies to.  
+* **initdenres** = initial density and resistance status of a theoretical field. These were the density and resistance states we asked farmers to tailor their MIT strategies to. L = low; H = high; D = density; R = resistance.  
+* **yr** = year of rotation (all rotations were 6 years).  
+* **wtd_gp** = weighted gross profit. Gross profit weighted as for yield.  
+  
+# 2. Set up
+
+## 2.1. Load packages & functions
+```{r load-packages, message=FALSE}
+rm(list=ls())
+library(tidyverse)
+library(patchwork) # for panel plots
+```
+
+Load function to count complete observations
+```{r}
+nobs <- function(x) length(x[!is.na(x)])
+```
+
+How can I set options so that when this knits, the output will always show 2 decimal places?
+
+## 2.2. Load data
+```{r load-data}
+econ_3DR_SA <- read.csv("../output/sensitivity analyses/economic_data_for_analysis_3DR_SA.csv", 
+                     header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+
+
+econ_allimp_SA <- read.csv("../output/sensitivity analyses/economic_data_for_analysis-all_imputations_SA.csv",
+                        header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres = factor(initdenres, 
+                        levels = c(
+                          "LD-LR", "MD-LR",
+                          "LD-HR", "MD-HR",
+                          "HD-HR", "VD-HR" 
+                          )))
+
+# main data for plots
+# main model run
+econ_3DR <- read.csv("../output/economic_data_for_analysis_3DR.csv", header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed, 
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+```
+
+# 3. Summarize by scenario and region
+
+## 3.1. For each scenario, calculate yearly means
+```{r, eval=FALSE, echo=FALSE}
+smrz_scenario_3dr_SA <- econ_3DR_SA %>% 
+  group_by(scenario, year, sensanaly) %>% # grouping factor for sum
+  dplyr::mutate(
+    # gross profit           
+    gp = mean(wtd_gp_mean),
+    gp_ci_l = gp - (1.96 * (sd(wtd_gp_mean) / sqrt(length(wtd_gp_mean)))),
+    gp_ci_u = gp + (1.96 * (sd(wtd_gp_mean) / sqrt(length(wtd_gp_mean)))),
+    # opportunity cost
+    oc = mean(wtd_opp_cost_mean),
+    oc_ci_l = oc - 
+      (1.96 * (sd(wtd_opp_cost_mean) / sqrt(length(wtd_opp_cost_mean)))),
+    oc_ci_u = oc + 
+      (1.96 * (sd(wtd_opp_cost_mean) / sqrt(length(wtd_opp_cost_mean))))
+    ) %>%
+  # retain only one row per scenario-year:
+  distinct(scenario, year, sensanaly, .keep_all = TRUE) %>% 
+  dplyr::select(sensanaly, scenario, year, gp:oc_ci_u) %>% 
+  dplyr::arrange(sensanaly, scenario, year)
+```
+
+
+## 3.2. For each scenario and initial den-res state (3 levels), calculate yearly means
+```{r}
+# need this one
+smrz_scenario_initDR_3dr_SA <- econ_3DR_SA %>% 
+  group_by(scenario, year, initdenres_collapsed, sensanaly) %>% # grouping factor for sum
+  dplyr::mutate(
+    # gross profit           
+    gp = mean(wtd_gp_mean),
+    gp_ci_l = gp - (1.96 * (sd(wtd_gp_mean) / sqrt(length(wtd_gp_mean)))),
+    gp_ci_u = gp + (1.96 * (sd(wtd_gp_mean) / sqrt(length(wtd_gp_mean)))),
+    # opportunity cost
+    oc = mean(wtd_opp_cost_mean),
+    oc_ci_l = oc - 
+      (1.96 * (sd(wtd_opp_cost_mean) / sqrt(length(wtd_opp_cost_mean)))),
+    oc_ci_u = oc + 
+      (1.96 * (sd(wtd_opp_cost_mean) / sqrt(length(wtd_opp_cost_mean))))
+    ) %>% 
+  # retain only one row per scenario-year:
+  distinct(scenario, year, initdenres_collapsed, sensanaly, .keep_all = TRUE) %>% 
+  dplyr::select(sensanaly, scenario, year, initdenres_collapsed, gp:oc_ci_u) %>% 
+  dplyr::arrange(sensanaly, scenario, initdenres_collapsed, year)
+```
+
+## 3.3. Calculate annual (across a rotation) means
+```{r, eval=FALSE, echo=FALSE}
+smrz_rotn_3DR_SA <- econ_3DR_SA %>% 
+  group_by(scenario, region, soiltype, initdenres_collapsed, sensanaly) %>% 
+  dplyr::mutate(
+    # gross profit           
+    gp = mean(wtd_gp_mean),
+    gp_ci_l = gp - (1.96 * (sd(wtd_gp_mean) / sqrt(length(wtd_gp_mean)))),
+    gp_ci_u = gp + (1.96 * (sd(wtd_gp_mean) / sqrt(length(wtd_gp_mean)))),
+    # opportunity cost
+    oc = mean(wtd_opp_cost_mean),
+    oc_ci_l = oc - 
+      (1.96 * (sd(wtd_opp_cost_mean) / sqrt(length(wtd_opp_cost_mean)))),
+    oc_ci_u = oc + 
+      (1.96 * (sd(wtd_opp_cost_mean) / sqrt(length(wtd_opp_cost_mean))))
+    ) %>% 
+  # retain only one row per scenario-year:
+  distinct(scenario, region, soiltype, initdenres_collapsed, sensanaly, .keep_all = TRUE) %>% 
+  dplyr::select(sensanaly, scenario, region, soiltype, initdenres_collapsed, gp:oc_ci_u) %>% 
+  dplyr::arrange(sensanaly, scenario, region, soiltype, initdenres_collapsed)
+```
+
+## 3.4. Calculate regional opportunity costs of implementing MIT, 3 denres
+Calculate opportunity costs by region and initial density-resistance state. In other words, summarise across soil type. This will give mean values for each region-initDR combo.  
+```{r calc-oc-regional-3DR, eval=FALSE, echo=FALSE}
+oc_region_3dr_SA <- smrz_rotn_3DR_SA %>%
+  dplyr::filter(scenario=="MIT") %>% # retain just the MIT scenario
+  group_by(initdenres_collapsed, region, sensanaly) %>%
+  dplyr::summarise(
+    oc_reg = mean(oc, na.rm = TRUE),
+    oc_reg_sd = sd(oc),
+    oc_reg_se = oc_reg_sd/sqrt(length(oc)),
+    oc_reg_ci_l = oc_reg - 
+      (1.96 * oc_reg_se),
+    oc_reg_ci_u = oc_reg + 
+      (1.96 * oc_reg_se)
+    ) %>% 
+  arrange(sensanaly, region, initdenres_collapsed) %>%
+  relocate(sensanaly, region)
+``` 
+
+
+
+# 4. Summary stats for paper
+## 4.1. Mean annual (across a rotation) gross profit by scenario
+
+When calculating mean rotation gross profit, I average across imputations (this is already done - resulting file is `econ3DR`) before averaging across rotations. The order in which we do the averaging will affect what information is contained in the standard deviation. If you do it the other way round (find mean rotation gross profit THEN average this across imputations), the SD will be that of the imputations (tiny) rather than giving an idea of how gross profit varies throughout the rotation (bigger). By averaging across imputations first, and then finding the rotation mean, the SD will tell us how gross profit varies through the rotation. 
+```{r}
+econ_3DR_SA %>% 
+  dplyr::group_by(scenario, sensanaly) %>% 
+  dplyr::summarize(
+    gp_mean = mean(wtd_gp_mean, na.rm = TRUE),
+    gp_ci_l = mean(wtd_gp_mean, na.rm = TRUE) - 
+      (1.96 * sd(wtd_gp_mean, na.rm = TRUE) / sqrt(length(wtd_gp_mean))),
+    gp_ci_u = mean(wtd_gp_mean, na.rm = TRUE) + 
+      (1.96 * sd(wtd_gp_mean, na.rm = TRUE) / sqrt(length(wtd_gp_mean)))
+    )
+```
+
+
+
+
+## 4.2. Mean annual (across a rotation) gross profit by scenario and init den-res
+```{r}
+econ_3DR_SA %>% 
+  dplyr::group_by(scenario, initdenres_collapsed, sensanaly) %>% 
+  dplyr::summarize(
+    gp_mean = mean(wtd_gp_mean, na.rm = TRUE),
+    gp_ci_l = mean(wtd_gp_mean, na.rm = TRUE) - 
+      (1.96 * sd(wtd_gp_mean, na.rm = TRUE) / sqrt(length(wtd_gp_mean))),
+    gp_ci_u = mean(wtd_gp_mean, na.rm = TRUE) + 
+      (1.96 * sd(wtd_gp_mean, na.rm = TRUE) / sqrt(length(wtd_gp_mean)))
+    ) 
+```
+
+
+
+## 4.3. Difference in gross profit between MIT and BAU, 3 denres
+```{r}
+econ_3DR_SA %>% 
+  dplyr::filter(scenario=="MIT") %>%
+  group_by(initdenres_collapsed, sensanaly) %>%
+  dplyr::summarise(
+    oc = mean(wtd_opp_cost_mean, na.rm = TRUE),
+    oc_sd = sd(wtd_opp_cost_mean, na.rm = TRUE),
+    oc_se = oc_sd/sqrt(nobs(wtd_opp_cost_mean)),
+    oc_ci_l = oc - (1.96 * oc_se),
+    oc_ci_u = oc + (1.96 * oc_se)
+    )
+```
+
+
+
+# 5. Plot gross profit
+## 5.1. Line graph - annual gross profit by scenario & initDR3
+
+Plot the gross profit at each year in the 6 year rotation.
+
+First, specify the labels for the panels.  
+```{r specify-panel-labels-line-graph}
+initDR3.labs <- c("(a) Low density,\n low resistance", "(b) Low density,\n high resistance", "(c) High density,\n high resistance") # new
+names(initDR3.labs) <- c("LD-LR", "LD-HR", "HD-HR") # original
+```
+
+Then specify the plot.
+```{r}
+# make grouping variable
+ssdf <- smrz_scenario_initDR_3dr_SA %>% 
+                              dplyr::mutate(ss = paste(scenario, sensanaly, sep="_"))
+
+# specify plot
+line_gp_yr_initDR <- ggplot(ssdf, 
+       aes(x = year, y = gp, group = ss, colour = ss)) +
+  facet_wrap(~initdenres_collapsed, labeller = labeller(initdenres_collapsed = initDR3.labs)) +
+  geom_ribbon(aes(ymin = gp_ci_l, ymax = gp_ci_u, fill = ss), 
+              alpha = 0.1, # controls transparency
+              linetype = "blank" # gets rid of upper and lower lines
+              ) +
+  scale_fill_manual(
+    name = "Scenario and limits",
+    values = c("#005FCC", # BAU, lower
+               "#88CCEE", # BAU, upper
+               "#999933",  # CWW, lower
+               "#DDCC77", # CWW, upper
+               "#882255", # MIT, lower
+               "#CC6677" # MIT, upper
+               ) 
+    ) +
+  geom_line() +  
+  scale_color_manual(
+    name = "Scenario and limits",
+    values = c("#005FCC", # BAU, lower
+               "#88CCEE", # BAU, upper
+               "#999933",  # CWW, lower
+               "#DDCC77", # CWW, upper
+               "#882255", # MIT, lower
+               "#CC6677" # MIT, upper
+               )
+    ) +
+  theme_classic() +
+  labs(x = "Year in rotation", 
+       y = "Gross profit (£/ha)") +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    plot.title = element_blank(),
+    axis.title=element_text(size=18),
+    axis.text.x=element_text(size=rel(1.7)),
+    axis.text.y=element_text(size=rel(1.7)),
+    legend.title=element_text(size=18),
+    legend.text=element_text(size=16),
+    strip.background = element_rect(color = "white",
+                                    fill = "grey"),# colour of rectangle round region labels
+    strip.text = element_text(size = 16)
+    ) 
+
+line_gp_yr_initDR
+```
+
+
+
+Save the plot.
+```{r, eval=FALSE, echo=FALSE}
+#ggsave("../figures/Script 4c_effect of scenario and initDR on GP by year.png", 
+#       height = 5, width = 10, dpi = 300) # dpi also accepts “retina” (320 dpi), “print” (300 dpi), “screen” (72 dpi)
+
+png("../figures/SA_03c_effect of scenario and initDR on GP by year.png",
+    height = 5, width = 10, units = "in", res = 300)
+print(line_gp_yr_initDR)
+dev.off()
+```
+
+
+
+## 5.2. Scatter plots
+### 5.2.1. Summarise and join data
+```{r}
+# main model run
+rotmean <- econ_3DR %>% 
+  group_by(scenario, region, soiltype, initdenres_collapsed) %>% # grouping factor for sum
+  dplyr::mutate(
+    # gross profit           
+    gp = mean(wtd_gp_mean),
+    gp_ci_l = gp - (1.96 * (sd(wtd_gp_mean) / sqrt(nobs(wtd_gp_mean)))),
+    gp_ci_u = gp + (1.96 * (sd(wtd_gp_mean) / sqrt(nobs(wtd_gp_mean)))),
+    # opportunity cost
+    oc = mean(wtd_opp_cost_mean),
+    oc_ci_l = oc - 
+      (1.96 * (sd(wtd_opp_cost_mean) / sqrt(length(wtd_opp_cost_mean)))),
+    oc_ci_u = oc + 
+      (1.96 * (sd(wtd_opp_cost_mean) / sqrt(length(wtd_opp_cost_mean))))
+    ) %>% 
+  # retain only one row per scenario-year:
+  distinct(scenario, region, soiltype, initdenres_collapsed, .keep_all = TRUE) %>% 
+  dplyr::select(scenario, region, soiltype, initdenres_collapsed, gp:oc_ci_u) %>% 
+  dplyr::mutate(sensanaly = "no") %>% 
+  dplyr::relocate(sensanaly)
+
+# sensitivity analysis
+rotmean_SA <- econ_3DR_SA %>% 
+  group_by(scenario, region, soiltype, initdenres_collapsed, sensanaly) %>% # grouping factor for sum
+  dplyr::mutate(
+    # gross profit           
+    gp = mean(wtd_gp_mean),
+    gp_ci_l = gp - (1.96 * (sd(wtd_gp_mean) / sqrt(nobs(wtd_gp_mean)))),
+    gp_ci_u = gp + (1.96 * (sd(wtd_gp_mean) / sqrt(nobs(wtd_gp_mean)))),
+    # opportunity cost
+    oc = mean(wtd_opp_cost_mean),
+    oc_ci_l = oc - 
+      (1.96 * (sd(wtd_opp_cost_mean) / sqrt(length(wtd_opp_cost_mean)))),
+    oc_ci_u = oc + 
+      (1.96 * (sd(wtd_opp_cost_mean) / sqrt(length(wtd_opp_cost_mean))))
+    ) %>% 
+  # retain only one row per scenario-year:
+  distinct(scenario, region, soiltype, initdenres_collapsed, sensanaly, .keep_all = TRUE) %>% 
+  dplyr::select(sensanaly, scenario, region, soiltype, initdenres_collapsed, gp:oc_ci_u)
+
+# Join data
+gp_oc <- rbind(rotmean, rotmean_SA)  %>% 
+  # Make new column combining scenario and sensitivity analysis
+  dplyr::mutate(
+    ID = paste(scenario, sensanaly, sep = "_")
+  ) %>% 
+  # Remove '_no' from this column
+  dplyr::mutate(
+    ID = gsub('_no', '', ID) 
+  ) %>% 
+  dplyr::relocate(ID) %>% 
+  # Ensure factor levels are in the order we want
+  mutate(
+    scenario = factor(scenario),
+    region = factor(region,
+                    levels = c("north", "central","east")),
+    soiltype = factor(soiltype,
+                      levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                        levels = c("LD-LR", "LD-HR", "HD-HR")),
+    ID = factor(ID,
+                levels = c("BAU_lower", "BAU", "BAU_upper",
+                           "MIT_lower", "MIT", "MIT_upper",
+                           "CWW_lower", "CWW", "CWW_upper")),
+    scenario = factor(scenario,
+                      levels = c("BAU", "MIT", "CWW"))
+  ) %>% 
+  dplyr::relocate(sensanaly)
+```
+
+
+
+### 5.2.2. Scatter plot - rotation gross profit, 3 denres, all scenarios
+
+First, specify the labels for the panels.  
+```{r specify-panel-labels-plot1}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+
+Then specify the plot.
+```{r plot-gp-sensanaly}
+plot1 <- ggplot(gp_oc, aes(initdenres_collapsed, gp, colour = ID, shape = ID)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance", 
+       y = "Mean annual gross profit (£/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario & 
+yield penalties",
+                     values = c("#88CCEE", # BAU, lower yield penalty
+                                "#005FCC", # BAU
+                                "#00306F", # BAU, upper yield penalty
+                                
+                                "#DDCC77", # MIT, lower yield penalty
+                                "#999933", # MIT
+                                "#117733", # MIT, upper yield penalty
+                                
+                                "#CC6677", # CWW, lower yield penalty
+                                "#882255", # CWW
+                                "#AA4499"  # CWW, upper yield penalty
+                                )) + 
+  scale_shape_manual(name = "Scenario & 
+yield penalties",
+                     values=c(15, 15, 15,    # BAU 15 = square
+                              16, 16, 16,    # MIT 16 = circle
+                              17, 17, 17)) + # CWW 17 = triangle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 14),
+        strip.text.y = element_text(size = 14),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(1.5)), 
+        axis.text.y=element_text(size=rel(1.5)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=14)
+        
+  ) +
+  geom_pointrange(aes(ymin = gp_ci_l, 
+                      ymax = gp_ci_u),
+                  position=position_dodge(.8)
+  ) 
+
+plot1
+```
+
+
+Save plot.
+```{r save-plot1, eval=FALSE, echo=FALSE}
+#ggsave("figures/SensAnaly_Gross profit.png", height = 10, width = 10)
+
+png("../figures/SA_05_gp by initcondit_all scenarios.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(plot1)
+dev.off()
+```
+
+
+
+
+
+### 5.2.3. Scatter plot - rotation gross profit, 3 denres, NO CWW
+If not done above, specify the labels for the panels.  
+```{r specify-panel-labels-plot2}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+
+Then specify the plot.
+```{r plot-gp-sensanaly-noCWW}
+plot2 <- ggplot(gp_oc %>% filter(!scenario=="CWW"), 
+                aes(initdenres_collapsed, gp, 
+                    colour = ID, shape = ID)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance", 
+       y = "Mean annual gross profit (£/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario & 
+yield penalties",
+                     values = c("#88CCEE", # BAU, lower yield penalty
+                                "#005FCC", # BAU
+                                "#00306F", # BAU, upper yield penalty
+                                
+                                "#DDCC77", # MIT, lower yield penalty
+                                "#999933", # MIT
+                                "#117733" # MIT, upper yield penalty
+                                )) + 
+  scale_shape_manual(name = "Scenario & 
+yield penalties",
+                     values=c(15, 15, 15,    # BAU 15 = square
+                              16, 16, 16)) + # MIT 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 16),
+        strip.text.y = element_text(size = 16),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(1.7)),
+        axis.text.y=element_text(size=rel(1.7)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=16)
+        
+  ) +
+  geom_pointrange(aes(ymin = gp_ci_l, 
+                      ymax = gp_ci_u), 
+                  position=position_dodge(width=0.6),
+                  size = 0.9) 
+
+plot2
+```
+
+Save plot.
+```{r save-plot2, eval=FALSE, echo=FALSE}
+#ggsave("figures/SA_05_gp by initcondit_BAU & MIT.png", height = 10, width = 10)
+
+png("../figures/SA_05_gp by initcondit_BAU & MIT.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(plot2)
+dev.off()
+```
+
+
+# 6. Plot opportunity costs
+## 6.1. Scatter plot - regional per ha opportunity costs, 3 denres
+  
+This plot shows that it might be worth acting to prevent resistance in LD-HR fields in central regions as the opportunity costs aren't too high. This was also the region in which MIT scenarios became more profitable than BAU (in other words, there were no opportunity costs) when the wheat yield penalty increased.  
+  
+I originally worked out opportunity costs by doing MIT-BAU. This assumes that the chosen option is BAU. For this plot, I want the chosen option to be MIT, and the foregone option to be BAU. So I just need to reverse the sign on the opportunity costs.  
+
+Make data frame for the plot - need to average over soil type in `gp_oc` data frame.
+```{r}
+forplot <- gp_oc %>% 
+  group_by(sensanaly, scenario, region, initdenres_collapsed) %>% # grouping factor for sum
+  dplyr::mutate(
+    # gross profit           
+    gp_mean = mean(gp),
+    gp_cil = gp - (1.96 * (sd(gp) / sqrt(nobs(gp)))),
+    gp_ciu = gp + (1.96 * (sd(gp) / sqrt(nobs(gp)))),
+    # opportunity cost
+    oc_mean = mean(oc),
+    oc_cil = oc - 
+      (1.96 * (sd(oc) / sqrt(length(oc)))),
+    oc_ciu = oc + 
+      (1.96 * (sd(oc) / sqrt(length(oc))))
+    ) %>% 
+  # retain only one row per scenario-year:
+  distinct(sensanaly, scenario, region, soiltype, initdenres_collapsed, .keep_all = TRUE) %>% 
+  dplyr::select(sensanaly, scenario, region, initdenres_collapsed, gp_mean:oc_ciu) %>% 
+  dplyr::mutate(
+    grpvar = paste(initdenres_collapsed, sensanaly, sep = "_"),
+    grpvar = gsub('_no', '', grpvar), # remove '_no' from grouping variable
+    region = factor(region, levels = c("north", "central", "east")),
+    grpvar = factor(grpvar, levels = c("LD-LR_lower", "LD-LR", "LD-LR_upper",
+                                       "LD-HR_lower", "LD-HR", "LD-HR_upper",
+                                       "HD-HR_lower", "HD-HR", "HD-HR_upper"))
+    ) %>%
+  dplyr::filter(scenario == "MIT") %>% # select just MIT
+  dplyr::arrange(scenario, region, initdenres_collapsed, sensanaly)
+```
+
+
+```{r plot-regional-opp-costs-3DR}
+# make new variable combining initdenres and whether it's upper or lower limit
+scatt_oc_by_reg_and_initDR <- ggplot(forplot, aes(
+  region, oc_mean*(-1), # change sign on opportunity costs
+  colour = grpvar, 
+  shape = grpvar)
+  ) +
+  #scale_y_continuous(labels = scales::comma) +
+  #ylim(-80, 450) + #these ylims give same y axis as the opp costs box plot
+  labs(
+    x = "English region", 
+    y = "Mean annual opportunity cost, BAU-MIT (£/ha)") +
+  scale_color_manual(
+    name = "Initial density-\nresistance state",
+    values = c("#a9e5a8", #LD-LR_lower
+               "#27be25", #LD-LR
+               "#145f13", #LD-LR_upper
+               
+               "#feee85", #LD-HR_lower, alt #fdf50b
+               "#fddd0b", #LD-HR
+               "#cab109", #LD-HR_upper, alt #fdc50b
+               
+               "#eeb5b5", #HD-HR_lower, alt #fdf50b
+               "#c50909", #HD-HR
+               "#760505"  #HD-HR_upper, alt #fdc50b
+               )) + 
+  scale_shape_manual(
+    name = "Initial density-\nresistance state",
+    values=c(0, 15, 0, # squares (open, closed, open)
+             1, 16, 1, # circles (open, closed, open)
+             2, 17, 2  # triangles (open, closed, open)
+             )) +
+  geom_pointrange(
+    aes(ymin = oc_cil*(-1), ymax = oc_ciu*(-1)), 
+    position = position_dodge(width=0.4),
+    size = 0.9
+    ) +
+  theme_classic() +
+  theme(
+    axis.title = element_text(size=18),
+    axis.text.x = element_text(size=rel(2)),
+    axis.text.y = element_text(size=rel(2)),
+    legend.title=element_text(size=16),
+    legend.text=element_text(size=14),
+    #legend.position = c(0.2,0.85)#,
+    #legend.background = element_rect(fill = "white", color = "black")
+    ) +
+  geom_hline(yintercept = 0, colour = "grey")
+
+scatt_oc_by_reg_and_initDR
+```
+  
+
+
+
+Save the plot.
+```{r, eval=FALSE, echo=FALSE}
+#ggsave("../figures/Script 4c_opp costs by region.png", 
+#              height = 10, width = 10)
+
+png("../figures/SA_05_opp costs by region.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(scatt_oc_by_reg_and_initDR)
+dev.off()
+``` 
+
+# 7. Session info
+```{r}
+sessionInfo()
+```
+

@@ -1,0 +1,220 @@
+---
+title: "Wheat yield - worst case"
+author: "Alexa Varah"
+date: "07/03/2022"
+output: html_document
+---
+
+# 1. Intro
+This script explores the extremes. The extreme is continuing doing BAU and eventually driving resistance and density to the point where there is very high density black-grass in all grid cells in a field.
+
+I want to answer the question: As density in a field increases to the worst levels (i.e. very high density everywhere), does it ever become better for wheat yields to be doing MIT strategies? Is there a situation where we should act preemptively?
+In other words, is it better for wheat production to switch pre-emptively to MIT, or is it better for wheat production to continue with BAU in the knowledge that weed density will get worse?  
+
+To answer this, I look at the productivity costs of switching out of BAU and into MIT for worst-case (very high density) conditions. Current productivity costs are *BAU, current density – MIT, current density*, which I calculated in script 06a and are therefore already in the CSV file 'wwyield_data_for_analysis_3DR.csv'; worst-case productivity costs, calculated here, are *BAU, worst-case density – MIT, current density*.
+
+I calculate productivity costs by doing MIT-BAU. This assumes that the chosen option is BAU. For this plot, I want the chosen option to be MIT, and the foregone option to be BAU. So I just need to reverse the sign on the productivity costs. 
+
+**Assumptions:** every grid cell in a field is in very high density. This follows on from the worst-case scenario we explored in the previous paper. We don't assert that it is a situation that's ever likely to happen: we're just exploring it as the worst possible case.
+
+I'm not including CWW in this analysis as Rob G and my models show that it's nether financially better than BAU nor does it control black-grass populations. 
+
+For this analysis I need calculate wheat yield from:  
+* (i) BAU rotations in LD-HR fields  
+* (ii) BAU rotations when LD-HR fields have high weed density  
+* (iii) MIT rotations in LD-HR fields  
+
+# 2. Set up
+```{r setup, include=FALSE, cache=FALSE}
+options(scipen = 1, digits = 2) #set to two decimal (this mostly works)
+```
+
+## 2.1. Load packages
+```{r load-packages, message=FALSE}
+rm(list=ls())
+library(tidyverse) # for data manipulation; includes dplyr, ggplot2 & more
+```
+
+## 2.2. Load functions
+This counts complete observations
+```{r}
+nobs <- function(x) length(x[!is.na(x)])
+```
+
+## 2.3. Load data
+I'm only loading the very high model run for the BAU economic data. This is because I am assuming that continuing with BAU strategies has driven ALL grid cells in a field to have very high densities of black-grass. This means there will be no weighting of yield or gross profit as there's no density state distribution within a field.
+```{r load-data}
+# BAU - ECOMOD very high density model run
+bau_vhig <- read.csv("../output/bau_ECOMOD_output_V.csv", header=TRUE) %>% 
+  dplyr::select(-Field_no) %>% # remove unnecessary column
+  dplyr::rename_with(stringr::str_replace, 
+              # add '.' b4 the number in 'crop' colnames:
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  dplyr::rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# BAU & MIT, current density
+ww_3DR <- read.csv("../output/wwyield_data_for_analysis_3DR.csv", header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR"))) %>% 
+  dplyr::filter(!scenario == "CWW") %>% 
+  droplevels()
+```
+
+
+# 3. Tidy data
+
+Tidy BAU worst case data (i.e. very high model run only).
+Reshape from wide to long. I'll also need to create some new columns for soil type, region etc. Also collapse density-resistance levels and calculate mean rotation gross profit.  
+```{r BAU-worstcase-reshape-tidy-calc-mean-yield, message=FALSE}
+bau_worstcase <- bau_vhig %>%
+  # reshape
+  tidyr::pivot_longer(
+    cols = c(2:85),
+    names_to = c(".value", "year"),
+    names_sep = '\\.'
+    ) %>% 
+  dplyr::select(-meanrotgrossprof) %>% 
+  dplyr::arrange(field_name) %>% 
+  # make columns for soil, region, initial density etc
+  dplyr::mutate(
+    initdenres = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    # extract characters between 1st and 2nd underscore ('x[2]' pulls out the 
+    # 2nd split string when split on underscores):
+    soiltype = sapply(strsplit(field_name, "_"), function(x) x[2]), 
+    soiltype = substr(soiltype, start = 1, stop = 1), # extract 1st character
+    region = sub('_.*', '', field_name), # extract chrs before first '_'
+    region = tolower(region),
+    # recode soil type and region, and specify order of factor levels
+    soiltype = dplyr::recode(soiltype,
+                      "h" = "heavy",
+                      "m" = "medium",
+                      "l" = "light"),
+    soiltype = factor(soiltype,
+                      levels = c("heavy", "medium", "light")
+                      ),
+    region = dplyr::recode(region,
+                    "n" = "north",
+                    "c" = "central",
+                    "e" = "east"),
+    region = factor(region,
+                    levels = c("north", "central", "east")
+                    ),
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "BAU"
+    ) %>%
+  # make it easier to look at
+  dplyr::relocate(scenario, initcondit, 
+                  initdenres, region, soiltype) %>% 
+  dplyr::select(-field_name) %>% 
+  
+  # Collapse den-res levels
+  dplyr::mutate(
+    initdenres_collapsed = fct_recode(
+      initdenres, 
+      "LD-LR" = "MD-LR",# LD-LR & MD-LR (best case)
+      "LD-HR" = "MD-HR",# LD-HR & MD-HR (intermediate case) 
+      "HD-HR" = "VD-HR"),# HD-HR & VD-HR (worst case)
+    initdenres_collapsed = factor(initdenres_collapsed,
+      levels = c("LD-LR", "LD-HR", "HD-HR"))
+    ) %>% 
+  # Calculate mean wheat yield across rotation
+  # ...first, for any crop that isn't wheat, assign zero yield
+  dplyr::mutate(ww_yield = ifelse(stringr::str_detect(crop,'wheat'),yield,0)) %>% 
+  # ...then calculate mean wheat yield across the new den-res levels 
+  # (include 'crop' in the grouping command just to retain that variable - 
+  # it doesn't change the calculations if I omit it)
+  group_by(scenario, region, soiltype, initdenres_collapsed, year, crop) %>% 
+  dplyr::summarise(ww_yield_mean = mean(ww_yield)) %>%
+  arrange(scenario, region, soiltype, initdenres_collapsed, year) %>% 
+  dplyr::mutate(
+    situation="Worst case",
+    year = as.integer(year)
+    )
+```
+  
+
+
+# 4. Create data frame for plot
+
+Create two new data frames, one for each type of opportunity cost (current, worst-case).
+
+## 4.1. Create dataframe of *BAU, current density – MIT, current density* prod costs
+To do this, from `ww_3DR`, just extract current productivity costs and average across a rotation.  
+The *confidence intervals* around the rotation mean productivity costs will reflect the difference between wheat yield obtained from, for example, BAU winter wheat in year 1 and MIT fallow in year 1. So the CIs will be large, as in individual years the productivity costs may be very large.
+```{r, message=FALSE}
+prodcosts_current <- ww_3DR %>% 
+  dplyr::filter(scenario=="MIT") %>% 
+  dplyr::select(scenario, region, soiltype, initdenres_collapsed, 
+                year, prod_cost_mean, ww_yield_mean) %>% 
+  dplyr::group_by(scenario, region, soiltype, initdenres_collapsed) %>% 
+  dplyr::summarise(
+    pc = mean(prod_cost_mean),
+    pc_ci_l = pc - (1.96 * (sd(prod_cost_mean)/sqrt(nobs(prod_cost_mean)))),
+    pc_ci_u = pc + (1.96 * (sd(prod_cost_mean)/sqrt(nobs(prod_cost_mean))))
+    ) %>% 
+  arrange(scenario, region, soiltype, initdenres_collapsed) %>% 
+  dplyr::mutate(situation="Current") %>% 
+  ungroup() %>% 
+  dplyr::select(-scenario)
+```
+
+
+## 4.2. Create dataframe of *BAU, worst case – MIT, current density* prod costs
+
+1. Join worst-case BAU yield data and current MIT yield data.  
+2. Calculate the productivity cost.  
+3. Find the rotation mean.  
+```{r, message=FALSE}
+# 1. Extract current MIT yield data
+mit_current <- ww_3DR %>% 
+  dplyr::filter(scenario=="MIT") %>% 
+  dplyr::select(scenario, region, soiltype, initdenres_collapsed, 
+                year, crop, ww_yield_mean) %>% 
+  dplyr::arrange(scenario, region, soiltype, initdenres_collapsed, year) %>% 
+  dplyr::mutate(situation="Current") %>% 
+  dplyr::mutate(year = as.integer(year))
+
+# 2. Join current MIT data to worst case BAU data, calculate opp cost, calculate rotation mean
+prodcosts_worstcase <- rbind(bau_worstcase, mit_current) %>% 
+  # calculate prod cost
+  dplyr::group_by(region, soiltype, initdenres_collapsed, year) %>% 
+  dplyr::mutate(prod_cost = ww_yield_mean - ww_yield_mean[scenario == "BAU"]) %>% 
+  # calculate rotation mean
+  dplyr::filter(scenario=="MIT") %>% 
+  dplyr::group_by(region, soiltype, initdenres_collapsed) %>% 
+  dplyr::summarise(
+    pc = mean(prod_cost),
+    pc_ci_l = pc - (1.96 * (sd(prod_cost) / sqrt(nobs(prod_cost)))),
+    pc_ci_u = pc + (1.96 * (sd(prod_cost) / sqrt(nobs(prod_cost))))
+    ) %>% 
+  arrange(region, soiltype, initdenres_collapsed) %>% 
+  dplyr::mutate(situation="Worst case")
+```
+
+
+## 4.3. Join data frames
+
+```{r}
+pc_both <- rbind(prodcosts_current, prodcosts_worstcase) 
+rm(bau_vhig, mit_current, prodcosts_current, prodcosts_worstcase)
+```
+
+### Save this for use in script '07. Scaling up' and for the Plots script.
+```{r, eval=FALSE, echo=FALSE}
+write.csv(pc_both, 
+          '../output/prod costs_worst case vs current.csv', 
+          row.names = FALSE)
+```
+
+ 
+# 5. Session info
+```{r}
+sessionInfo()
+```
+

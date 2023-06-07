@@ -1,0 +1,328 @@
+---
+title: "Calculate mean densities"
+author: "Alexa Varah"
+date: "2022-11-22"
+output: html_document
+---
+
+# 1. Intro / rationale
+**Calculating mean proportion of high and very high density**
+To estimate the black-grass density resulting from the different strategies (crop rotations), Rob G ran 37 imputations per strategy. This produced 37 simulated density states at each yearly time step for each strategy. In this script, I calculate the mean proportion of high and very high density squares in a field by averaging across imputations. The steps are as follows:  
+  
+Step 1: sum the proportion of squares in high and very high density (-> hvh).  
+Step 2: calculate mean proportion of hvh over imputations for each strategy in each year, plus SD and SE.
+
+**Do the same for just 3 initial density-resistance levels**  
+In addition, I will calculate mean proportion of hvh for just three initial density-resistance levels, by collapsing the initial 6 density-resistance levels as follows:  
+  
+* LD-LR = LD-LR & MD-LR (best case)  
+* LD-HR = LD-HR & MD-HR (intermediate case)  
+* HD-HR = HD-HR & VD-HR (worst case)  
+  
+Step 1: sum high and very high density proportions (-> hvh).  
+Step 2: create the collapsed subcategories of density-resistance levels.  
+Step 3: calculate mean proportion of hvh over imputations for each strategy in each year, plus SD and SE.
+  
+**Why work with just high and very high density states?**
+I calculate mean proportions of the two highest density states (high and very high) per field. This is because two highest density states are economically important (affecting wheat yield and thus also gross profit), whereas the two lower density states are not (they have zero yield penalty on winter wheat crops, Varah et al 2020).  
+An alternative would be to use the mean density state across the whole field. I discounted this approach because a mean state of 3 (high), for example, could signify that the whole field had a high density of black-grass; alternatively, it could mean that part of the field had absent (0), low (1) or medium (2) density black-grass and part of the field had very high (4) densities of black-grass. These two situations have different implications for field-scale wheat yield and profit.
+
+# 2. Set-up
+## 2.1. Load packages
+```{r}
+rm(list=ls())
+library(tidyverse) 
+```
+
+## 2.2. Load functions
+Function to count complete observations
+```{r}
+nobs <- function(x) length(x[!is.na(x)])
+```
+
+## 2.3. Load data
+```{r}
+# tidied simulated density data, all 37 imputations
+res_tidy <- readRDS(file = "../output/simulation_results_tidy.rds") %>%  
+  dplyr::mutate( 
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    initden = factor(initden, levels = c("VD", "HD", "MD", "LD")),
+    initres = factor(initres),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium", "light")),
+    initdenres = factor(initdenres, # specify order of levels
+                        levels = c("VD-HR", "HD-HR", "MD-HR", 
+                                   "MD-LR", "LD-HR", "LD-LR")),
+    initcondit = factor(initcondit, levels = c(
+      "n_h_VD-HR", "n_m_VD-HR", "n_l_VD-HR", 
+      "c_h_VD-HR", "c_m_VD-HR", "c_l_VD-HR",
+      "e_h_VD-HR", "e_m_VD-HR", "e_l_VD-HR",
+      
+      "n_h_HD-HR", "n_m_HD-HR", "n_l_HD-HR",
+      "c_h_HD-HR", "c_m_HD-HR", "c_l_HD-HR",
+      "e_h_HD-HR", "e_m_HD-HR", "e_l_HD-HR",
+      
+      "n_h_MD-HR", "n_m_MD-HR", "n_l_MD-HR",
+      "c_h_MD-HR", "c_m_MD-HR", "c_l_MD-HR",
+      "e_h_MD-HR", "e_m_MD-HR", "e_l_MD-HR",
+      
+      "n_h_MD-LR", "n_m_MD-LR", "n_l_MD-LR",
+      "c_h_MD-LR", "c_m_MD-LR", "c_l_MD-LR",
+      "e_h_MD-LR", "e_m_MD-LR", "e_l_MD-LR",
+      
+      "n_h_LD-HR", "n_m_LD-HR", "n_l_LD-HR",
+      "c_h_LD-HR", "c_m_LD-HR", "c_l_LD-HR",
+      "e_h_LD-HR", "e_m_LD-HR", "e_l_LD-HR",
+      
+      "n_h_LD-LR", "n_m_LD-LR", "n_l_LD-LR",
+      "c_h_LD-LR", "c_m_LD-LR", "c_l_LD-LR",
+      "e_h_LD-LR", "e_m_LD-LR", "e_l_LD-LR")),
+    strategy = factor(strategy)
+  )
+
+# tidied simulated density data run all at high initial density, 
+# all 37 imputations
+res_tidy_hd <- readRDS(file = "../output/simulation_results_tidy_hd.rds") %>% 
+  dplyr::mutate( 
+    scenario = factor(scenario),
+    initden = factor(initden),
+    initres = factor(initres),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium", "light")),
+    initdenres = factor(initdenres),
+    initcondit = factor(initcondit),
+    strategy = factor(strategy)
+  )
+
+
+# input data (crop rotations etc) that I gave to Rob:
+rotation_data <- readRDS("../data/rotation_data_for_Rob_2022-09-28.rds") %>% 
+  dplyr::mutate(
+    strategy_from_Excel = strategy,
+    strategy = str_replace_all(strategy_ID_for_Rob, "D_","D-"),
+    strategy = str_replace_all(strategy, "FF","MIT"),
+    strategy = factor(strategy),
+    joinID = paste(strategy, rotation_year, sep="_"),
+    scenario = str_replace_all(scenario, "FF","MIT"),
+    scenario = factor(scenario)
+    ) %>% 
+  dplyr::filter(!rotation_year==0) 
+```
+
+
+# **************************************************************************
+
+# 3. Calculate mean density, mean proportion hvh, mean difference across scenarios
+## 3.1. Calculate means, 3DR
+Check levels of initial conditions.
+```{r}
+levels(res_tidy$initdenres)
+```
+
+
+```{r}
+means_3dr <- res_tidy %>%
+  # sum the proportions of high and very high density black-grass:
+  rowwise() %>% 
+  dplyr::mutate(hvh = sum(c_across(h:v), na.rm = T)) %>%  # new category: h & vh
+  ungroup() %>% 
+  dplyr::rename(mds = mds.ms) %>% 
+  # calculate difference in density between scenarios
+  group_by(imp, initcondit, year) %>% 
+  mutate(mds_diff = mds - mds[scenario == "BAU"],
+         hvh_diff = hvh - hvh[scenario == "BAU"]) %>% 
+  ungroup() %>% 
+  dplyr::mutate(
+    initDR3 = forcats::fct_recode(initdenres, # collapse categories
+                                  "LD-LR" = "MD-LR", # new, old
+                                  "LD-HR" = "MD-HR", 
+                                  "HD-HR" = "VD-HR"),
+    initDR3 = factor(initDR3, levels = c("LD-LR", "LD-HR", "HD-HR"))
+                ) %>% 
+  # calculate mean for each year of each strategy:
+  group_by(scenario, year, initDR3, region, soiltype) %>% # grouping factor for sum 
+  dplyr::mutate(
+    # mds
+    mds_mean = mean(mds),# calculate mean values
+    mds_ci_l = mds_mean - (1.96 * (sd(mds) / sqrt(length(mds)))),
+    mds_ci_u = mds_mean + (1.96 * (sd(mds) / sqrt(length(mds)))),
+    #hvh
+    hvh_mean = mean(hvh),# calculate mean values
+    hvh_ci_l = hvh_mean - (1.96 * (sd(hvh) / sqrt(length(hvh)))),
+    hvh_ci_u = hvh_mean + (1.96 * (sd(hvh) / sqrt(length(hvh)))),
+    #pdec
+    pdec_mean = mean(pdec),# calculate mean values
+    pdec_ci_l = pdec_mean - (1.96 * (sd(pdec) / sqrt(length(pdec)))),
+    pdec_ci_u = pdec_mean + (1.96 * (sd(pdec) / sqrt(length(pdec)))),
+    #pinc
+    pinc_mean = mean(pinc),# calculate mean values
+    pinc_ci_l = pinc_mean - (1.96 * (sd(pinc) / sqrt(length(pinc)))),
+    pinc_ci_u = pinc_mean + (1.96 * (sd(pinc) / sqrt(length(pinc)))),
+    # mds diff
+    mds_diff_mean = mean(mds_diff),# calculate mean values
+    mds_diff_ci_l = mds_diff_mean - (1.96 * (sd(mds_diff) / sqrt(length(mds_diff)))),
+    mds_diff_ci_u = mds_diff_mean + (1.96 * (sd(mds_diff) / sqrt(length(mds_diff)))),
+    #hvh diff
+    hvh_diff_mean = mean(hvh_diff),# calculate mean values
+    hvh_diff_ci_l = hvh_diff_mean - (1.96 * (sd(hvh_diff) / sqrt(length(hvh_diff)))),
+    hvh_diff_ci_u = hvh_diff_mean + (1.96 * (sd(hvh_diff) / sqrt(length(hvh_diff))))
+                ) %>%  
+  # retain only one row per strategy-year:
+  distinct(scenario, year, initDR3, region, soiltype, .keep_all = TRUE) %>% 
+  # specify column locations and data formats:
+  dplyr::select(-c(imp, joinID, strategy, mds:v, initcondit, initdenres, 
+                   initden, initres, mds, mds.vs, hvh, pdec, pinc)) %>% 
+  dplyr::relocate(initDR3, .after = year) %>% 
+  dplyr::relocate(mds_mean:hvh_diff_ci_u, .after = soiltype) %>% 
+  dplyr::relocate(c(year, initDR3), .after = scenario) %>% 
+  arrange(scenario, initDR3, region, soiltype) %>% 
+  mutate(
+    strategy = paste(region, soiltype, initDR3, sep = "_"),
+    joinID = paste(scenario, initDR3, region, soiltype, year, sep = "_")
+    )
+```
+
+
+## 3.2. Add crop rotation data, 3DR
+```{r}
+summarised_density_3dr <- left_join(means_3dr, rotation_data, 
+                             by = "joinID") %>% 
+  dplyr::select(
+    scenario.x, year, initDR3, region, soiltype, strategy.x,
+    mds_mean, mds_ci_l, mds_ci_u,
+    hvh_mean, hvh_ci_l, hvh_ci_u, 
+    pdec_mean, pdec_ci_l, pdec_ci_u,
+    pinc_mean, pinc_ci_l, pinc_ci_u,
+    mds_diff_mean, mds_diff_ci_l, mds_diff_ci_u,
+    hvh_diff_mean, hvh_diff_ci_l, hvh_diff_ci_u,
+    field, crop, cult_cat, h_bc_app, a_gly, spray_days, 
+    c_date, d_date, h_date, model_run
+  ) %>% 
+  dplyr::rename(
+    scenario = scenario.x,
+    strategy = strategy.x,
+    actives = h_bc_app,
+    autumn_gly = a_gly,
+    cultivn_date = c_date,
+    drill_date = d_date,
+    harvest_date = h_date
+  )
+```
+
+## 3.3. Save output
+```{r}
+saveRDS(summarised_density_3dr, file = "../output/density_data_summarised_3dr.rds")
+```
+
+
+
+## 3.4. Clear up
+```{r}
+rm(means_3dr)
+```
+
+# **************************************************************************
+
+# 4. Calculate means (all initial HD)
+
+## 4.1. Calculate mean (HD)
+Check levels of initial conditions.
+```{r}
+levels(res_tidy_hd$initdenres)
+```
+  
+
+
+Calculate mean proportion of high and very high density squares in a field. I'll average across imputations and collapse initial density-resistance levels. 
+  
+Step 1: sum high and very high density proportions (-> hvh).  
+Step 2: create the collapsed subcategories of density-resistance levels.  
+Step 3: calculate mean proportion of hvh over imputations for each strategy in each year, plus SD and SE.
+```{r}
+means_3dr_hd <- res_tidy_hd %>%
+  # sum the proportions of high and very high density black-grass:
+  rowwise() %>% 
+  dplyr::mutate(hvh = sum(c_across(h:v), na.rm = T)) %>%  # new category: h & vh
+  ungroup() %>% 
+  # calculate difference in density between scenarios
+  # (mds.ms is the mean state, mds.vs is the variance around this mean state) 
+  group_by(imp, initcondit, year) %>% 
+  mutate(mds_diff = mds.ms - mds.ms[scenario == "BAU"],
+         hvh_diff = hvh - hvh[scenario == "BAU"]) %>% 
+  ungroup() %>% 
+  dplyr::mutate(
+    initDR3 = forcats::fct_recode(initdenres, # collapse categories
+                                  "LD-LR" = "MD-LR", # new, old
+                                  "LD-HR" = "MD-HR", 
+                                  "HD-HR" = "VD-HR"),
+    initDR3 = factor(initDR3, levels = c("HD-HR", "LD-HR", "LD-LR"))
+                ) %>% 
+  # calculate mean for each year of each strategy:
+  group_by(scenario, year, initDR3, region, soiltype) %>% # grouping factor for sum 
+  dplyr::mutate(
+    # mds
+    mds_mean = mean(mds.ms),# calculate mean values
+    mds_ci_l = mds_mean - (1.96 * (sd(mds.ms) / sqrt(length(mds.ms)))),
+    mds_ci_u = mds_mean + (1.96 * (sd(mds.ms) / sqrt(length(mds.ms)))),
+    #hvh
+    hvh_mean = mean(hvh),# calculate mean values
+    hvh_ci_l = hvh_mean - (1.96 * (sd(hvh) / sqrt(length(hvh)))),
+    hvh_ci_u = hvh_mean + (1.96 * (sd(hvh) / sqrt(length(hvh)))),
+    # mds diff
+    mds_diff_mean = mean(mds_diff),# calculate mean values
+    mds_diff_ci_l = mds_diff_mean - (1.96 * (sd(mds_diff) / sqrt(length(mds_diff)))),
+    mds_diff_ci_u = mds_diff_mean + (1.96 * (sd(mds_diff) / sqrt(length(mds_diff)))),
+    #hvh diff
+    hvh_diff_mean = mean(hvh_diff),# calculate mean values
+    hvh_diff_ci_l = hvh_diff_mean - (1.96 * (sd(hvh_diff) / sqrt(length(hvh_diff)))),
+    hvh_diff_ci_u = hvh_diff_mean + (1.96 * (sd(hvh_diff) / sqrt(length(hvh_diff))))
+                ) %>%  
+  # retain only one row per strategy-year:
+  distinct(scenario, year, initDR3, region, soiltype, .keep_all = TRUE) %>% 
+  # specify column locations and data formats:
+  dplyr::select(-c(imp, joinID, strategy, mds.ms:v, initcondit, initdenres, 
+                   initden, initres, hvh, pinc, pdec, mds_diff, hvh_diff)) %>% 
+  dplyr::relocate(initDR3, .after = year) %>% 
+  dplyr::relocate(c(year,mds_mean:hvh_diff_ci_u), .after = soiltype) %>% 
+  dplyr::relocate(initDR3, .after = scenario) %>% 
+  arrange(scenario, initDR3, region, soiltype) %>% 
+  mutate(
+    strategy = paste(region, soiltype, initDR3, sep = "_"),
+    joinID = paste(scenario, initDR3, region, soiltype, year, sep = "_")
+    )
+```
+
+
+## 4.2. Add crop rotation data (HD)
+```{r}
+summarised_density_3dr_hd <- left_join(means_3dr_hd, rotation_data, 
+                             by = "joinID") %>% 
+  dplyr::select(
+    scenario.x, year, initDR3, region, soiltype, strategy.x,
+    mds_mean, mds_ci_l, mds_ci_u,
+    hvh_mean, hvh_ci_l, hvh_ci_u, 
+    mds_diff_mean, mds_diff_ci_l, mds_diff_ci_u,
+    hvh_diff_mean, hvh_diff_ci_l, hvh_diff_ci_u,
+    field, crop, cult_cat, h_bc_app, a_gly, spray_days, 
+    c_date, d_date, h_date, model_run
+  ) %>% 
+  dplyr::rename(
+    scenario = scenario.x,
+    strategy = strategy.x,
+    actives = h_bc_app,
+    autumn_gly = a_gly,
+    cultivn_date = c_date,
+    drill_date = d_date,
+    harvest_date = h_date
+  )
+```
+
+## 4.3. Save output (HD)
+```{r}
+saveRDS(summarised_density_3dr_hd, file = "../output/density_data_summarised_3dr_hd.rds")
+```
+
+## 4.4. Clear up (HD)
+```{r}
+rm(means_3dr_hd)
+```

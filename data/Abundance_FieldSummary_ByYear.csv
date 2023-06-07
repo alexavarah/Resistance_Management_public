@@ -1,0 +1,811 @@
+year,County,FarmCode,Postcode,FieldName,FieldNumber,crop,Pcode,UNIQUE,a,l,m,h,v,Density.Score,n,Density.States
+2014,Cambridgeshire,midload,CB25_9LQ,chivers.top.left,1,ww,CB25_9LQ_grid_1,CB25_9LQ_grid_1_2014,2,91,26,37,8,1.743902439,164,5
+2014,Cambridgeshire,midload,CB25_9LQ,chivers.bottom.right,2,ww,CB25_9LQ_grid_2,CB25_9LQ_grid_2_2014,7,104,33,14,0,1.341772152,158,4
+2014,Cambridgeshire,temple,CB7_4SS,sandy.ground,1,ww,CB7_4SS_grid_1,CB7_4SS_grid_1_2014,86,112,0,0,0,0.565656566,198,2
+2014,Cambridgeshire,temple,CB7_4SS,sedgefen,2,ww,CB7_4SS_grid_2,CB7_4SS_grid_2_2014,80,42,3,0,0,0.384,125,3
+2014,Warwickshire,squab.hall,CV33_9QB,field.3,1,ww,CV33_9QB_grid_1,CV33_9QB_grid_1_2014,33,157,14,3,0,0.937198068,207,4
+2014,Warwickshire,squab.hall,CV33_9QB,field.5,2,ww,CV33_9QB_grid_2,CV33_9QB_grid_2_2014,5,57,10,2,0,1.121621622,74,4
+2014,Warwickshire,gaydon.hill,CV35_0HQ,shooters.bank,1,ww,CV35_0HQ_grid_1,CV35_0HQ_grid_1_2014,0,128,44,13,11,1.525510204,196,4
+2014,Warwickshire,gaydon.hill,CV35_0HQ,mushroom.field,2,ww,CV35_0HQ_grid_2,CV35_0HQ_grid_2_2014,0,27,74,92,38,2.61038961,231,4
+2014,Warwickshire,croft,CV37_7NF,big.meadow,1,ww,CV37_7NF_grid_1,CV37_7NF_grid_1_2014,5,160,13,0,0,1.04494382,178,3
+2014,Warwickshire,croft,CV37_7NF,new.bridge,2,ww,CV37_7NF_grid_2,CV37_7NF_grid_2_2014,23,129,5,0,0,0.885350318,157,3
+2014,Nottinghamshire,magpie.hall,DN22_0LB,s15,1,ww,DN22_0LB_grid_1,DN22_0LB_grid_1_2014,0,16,34,79,100,3.148471616,229,4
+2014,Nottinghamshire,magpie.hall,DN22_0LB,s16,2,ww,DN22_0LB_grid_2,DN22_0LB_grid_2_2014,0,33,11,29,26,2.484848485,99,4
+2014,Lincolnshire,grange,DN36_5UP,stones,1,ww,DN36_5UP_grid_1,DN36_5UP_grid_1_2014,67,103,16,6,5,0.878172589,197,5
+2014,Lincolnshire,grange,DN36_5UP,grimoldbys,2,ww,DN36_5UP_grid_2,DN36_5UP_grid_2_2014,0,23,21,25,54,2.894308943,123,4
+2014,Lincolnshire,grange.faulding,DN40_3PX,glebe.22,1,ww,DN40_3PX_grid_1,DN40_3PX_grid_1_2014,0,112,52,19,23,1.77184466,206,4
+2014,Lincolnshire,grange.faulding,DN40_3PX,glebe.24,2,ww,DN40_3PX_grid_2,DN40_3PX_grid_2_2014,0,24,74,125,13,2.538135593,236,4
+2014,South Yorks,highfields,DN5_7UJ,common.hill,1,ww,DN5_7UJ_grid_1,DN5_7UJ_grid_1_2014,0,20,51,92,67,2.895652174,230,4
+2014,South Yorks,highfields,DN5_7UJ,rig.field,2,ww,DN5_7UJ_grid_2,DN5_7UJ_grid_2_2014,17,63,34,20,7,1.553191489,141,5
+2014,South Yorks,manor.robinson,DN7_5TG,front.field,1,ww,DN7_5TG_grid_1,DN7_5TG_grid_1_2014,0,50,37,39,55,2.546961326,181,4
+2014,South Yorks,manor.robinson,DN7_5TG,buckleys,2,ww,DN7_5TG_grid_2,DN7_5TG_grid_2_2014,0,62,40,102,31,2.434042553,235,4
+2014,Buckinghamshire,moorleys,HP18_9QQ,wells.road,1,ww,HP18_9QQ_grid_1,HP18_9QQ_grid_1_2014,0,0,13,53,205,3.708487085,271,3
+2014,Buckinghamshire,moorleys,HP18_9QQ,cow.road,2,ww,HP18_9QQ_grid_2,HP18_9QQ_grid_2_2014,1,26,31,9,4,1.845070423,71,5
+2014,East Riding of Yorkshire,new.headlands,HU11_4QA,dottoms,1,ww,HU11_4QA_grid_1,HU11_4QA_grid_1_2014,0,16,25,69,94,3.181372549,204,4
+2014,East Riding of Yorkshire,new.headlands,HU11_4QA,back.of.beans,2,ww,HU11_4QA_grid_2,HU11_4QA_grid_2_2014,0,95,47,44,26,2.004716981,212,4
+2014,East Riding of Yorkshire,grange.patchett,HU15_1RG,back.field,1,ww,HU15_1RG_grid_1,HU15_1RG_grid_1_2014,42,178,20,4,0,0.942622951,244,4
+2014,East Riding of Yorkshire,grange.patchett,HU15_1RG,15.acre.greenoak,2,ww,HU15_1RG_grid_2,HU15_1RG_grid_2_2014,6,122,6,0,0,1,134,3
+2014,East Riding of Yorkshire,bransholme.dairy,HU7_4YP,field.3,1,ww,HU7_4YP_grid_1,HU7_4YP_grid_1_2014,15,156,31,10,6,1.247706422,218,5
+2014,East Riding of Yorkshire,bransholme.dairy,HU7_4YP,field.2,2,ww,HU7_4YP_grid_2,HU7_4YP_grid_2_2014,6,98,31,21,7,1.539877301,163,5
+2014,Norfolk,hill,IP25_7EF,arable,1,ww,IP25_7EF_grid_1,IP25_7EF_grid_1_2014,87,47,4,2,0,0.435714286,140,4
+2014,Norfolk,hill,IP25_7EF,bush.meadow,2,ww,IP25_7EF_grid_2,IP25_7EF_grid_2_2014,0,15,31,53,72,3.064327485,171,4
+2014,Leicestershire,welldale,LE12_6JD,20.acre.railway,1,ww,LE12_6JD_grid_1,LE12_6JD_grid_1_2014,16,74,21,2,1,1.105263158,114,5
+2014,Leicestershire,welldale,LE12_6JD,17.acre.middle,2,ww,LE12_6JD_grid_2,LE12_6JD_grid_2_2014,39,88,17,14,20,1.370786517,178,5
+2014,Northamptonshire,fox.and.hounds,LE16_7UG,19.acre,1,ww,LE16_7UG_grid_1,LE16_7UG_grid_1_2014,0,107,56,8,0,1.421052632,171,3
+2014,Northamptonshire,fox.and.hounds,LE16_7UG,25.acre,2,ww,LE16_7UG_grid_2,LE16_7UG_grid_2_2014,3,123,31,2,0,1.201257862,159,4
+2014,Northamptonshire,poplars,LE16_8TB,seeds,1,ww,LE16_8TB_grid_1,LE16_8TB_grid_1_2014,0,105,51,8,1,1.424242424,165,4
+2014,Northamptonshire,poplars,LE16_8TB,18.acre,2,ww,LE16_8TB_grid_2,LE16_8TB_grid_2_2014,0,39,83,34,5,2.031055901,161,4
+2014,Lincolnshire,hall,LN1_2LL,top.cliffe,1,ww,LN1_2LL_grid_1,LN1_2LL_grid_1_2014,47,50,9,6,0,0.767857143,112,4
+2014,Lincolnshire,hall,LN1_2LL,45.acre,2,ww,LN1_2LL_grid_2,LN1_2LL_grid_2_2014,177,70,23,10,0,0.521428571,280,4
+2014,Lincolnshire,cooper,LN11_0NX,no.7a,1,ww,LN11_0NX_grid_1,LN11_0NX_grid_1_2014,0,1,61,103,15,2.733333333,180,4
+2014,Lincolnshire,cooper,LN11_0NX,no.17,2,ww,LN11_0NX_grid_2,LN11_0NX_grid_2_2014,0,5,29,84,18,2.845588235,136,4
+2014,Lincolnshire,willoughby,LN13_9TD,garden,1,ww,LN13_9TD_grid_1,LN13_9TD_grid_1_2014,0,47,20,28,64,2.685534591,159,4
+2014,Lincolnshire,willoughby,LN13_9TD,thors.manor.3,2,ww,LN13_9TD_grid_2,LN13_9TD_grid_2_2014,0,72,37,24,6,1.741007194,139,4
+2014,Lincolnshire,leggott.m,LN4_4QQ,bridge.leggott,1,ww,LN4_4QQ_grid_1,LN4_4QQ_grid_1_2014,0,0,12,56,62,3.384615385,130,3
+2014,Lincolnshire,leggott.m,LN4_4QQ,2x11,2,ww,LN4_4QQ_grid_2,LN4_4QQ_grid_2_2014,0,36,22,34,20,2.339285714,112,4
+2014,Lincolnshire,leggott.c,LN5_0RD,capps,1,ww,LN5_0RD_grid_1,LN5_0RD_grid_1_2014,0,92,34,23,4,1.60130719,153,4
+2014,Lincolnshire,leggott.c,LN5_0RD,horsewoods.top,2,ww,LN5_0RD_grid_2,LN5_0RD_grid_2_2014,0,74,71,71,46,2.339694656,262,4
+2014,Lincolnshire,brantedge,LN5_0SP,woolfits,1,ww,LN5_0SP_grid_1,LN5_0SP_grid_1_2014,7,93,19,20,1,1.392857143,140,5
+2014,Lincolnshire,brantedge,LN5_0SP,44.acre,2,ww,LN5_0SP_grid_2,LN5_0SP_grid_2_2014,0,75,47,41,26,2.095238095,189,4
+2014,Bedfordshire,watergate,LU7_9LN,stable,1,ww,LU7_9LN_grid_1,LU7_9LN_grid_1_2014,35,110,9,0,0,0.831168831,154,3
+2014,Bedfordshire,watergate,LU7_9LN,denmans.close,2,ww,LU7_9LN_grid_2,LU7_9LN_grid_2_2014,1,46,14,19,8,1.852272727,88,5
+2014,Bedfordshire,hermitage,MK16_0HR,clay.hill,1,ww,MK16_0HR_grid_1,MK16_0HR_grid_1_2014,1,67,31,12,0,1.486486486,111,4
+2014,Bedfordshire,hermitage,MK16_0HR,slade,2,ww,MK16_0HR_grid_2,MK16_0HR_grid_2_2014,1,68,21,11,0,1.415841584,101,4
+2014,Buckingham,chetwode.manor,MK18_4BB,hermitage,1,ww,MK18_4BB_grid_1,MK18_4BB_grid_1_2014,0,11,30,33,21,2.673684211,95,4
+2014,Buckingham,chetwode.manor,MK18_4BB,court,2,ww,MK18_4BB_grid_2,MK18_4BB_grid_2_2014,0,8,32,41,93,3.25862069,174,4
+2014,Bedfordshire,boxhedge,MK43_0AT,big.boxhedge,1,ww,MK43_0AT_grid_1,MK43_0AT_grid_1_2014,0,1,2,61,249,3.782747604,313,4
+2014,Bedfordshire,boxhedge,MK43_0AT,jollys,2,ww,MK43_0AT_grid_2,MK43_0AT_grid_2_2014,0,1,34,127,55,3.087557604,217,4
+2014,Bedfordshire,lodge,MK44_1EJ,little.great.close,1,ww,MK44_1EJ_grid_1,MK44_1EJ_grid_1_2014,0,45,56,87,13,2.338308458,201,4
+2014,Bedfordshire,lodge,MK44_1EJ,middle.lodge,2,ww,MK44_1EJ_grid_2,MK44_1EJ_grid_2_2014,0,29,42,56,11,2.355072464,138,4
+2014,Bedfordshire,north.end,MK44_1QT,mowing.ground,1,ww,MK44_1QT_grid_1,MK44_1QT_grid_1_2014,0,20,25,20,7,2.194444444,72,4
+2014,Bedfordshire,north.end,MK44_1QT,gilberts,2,ww,MK44_1QT_grid_2,MK44_1QT_grid_2_2014,7,176,71,34,9,1.535353535,297,5
+2014,Bedfordshire,green.end,MK44_2BU,common.green.end,1,ww,MK44_2BU_grid_1,MK44_2BU_grid_1_2014,0,155,20,6,0,1.17679558,181,3
+2014,Bedfordshire,green.end,MK44_2BU,big.gomish,2,ww,MK44_2BU_grid_2,MK44_2BU_grid_2_2014,15,93,65,84,6,1.897338403,263,5
+2014,Bedfordshire,elliott.farms,MK44_2EE,fence.field,1,ww,MK44_2EE_grid_1,MK44_2EE_grid_1_2014,0,0,25,68,41,3.119402985,134,3
+2014,Bedfordshire,elliott.farms,MK44_2EE,bottom.rosses,2,ww,MK44_2EE_grid_2,MK44_2EE_grid_2_2014,0,79,72,25,24,1.97,200,4
+2014,Bedfordshire,rectory,MK44_2PD,maizys.laze,1,ww,MK44_2PD_grid_1,MK44_2PD_grid_1_2014,0,59,41,2,0,1.441176471,102,3
+2014,Bedfordshire,rectory,MK44_2PD,bilses.hill,2,ww,MK44_2PD_grid_2,MK44_2PD_grid_2_2014,0,157,52,16,0,1.373333333,225,3
+2014,Nottinghamshire,hollygate,NG12_2JW,long.7.acre,1,ww,NG12_2JW_grid_1,NG12_2JW_grid_1_2014,0,31,30,11,6,1.897435897,78,4
+2014,Nottinghamshire,hollygate,NG12_2JW,orchard.field,2,ww,NG12_2JW_grid_2,NG12_2JW_grid_2_2014,151,47,4,9,5,0.472222222,216,5
+2014,Nottinghamshire,rectory.copley,NG13_9LF,corner.13.acre,1,ww,NG13_9LF_grid_1,NG13_9LF_grid_1_2014,28,64,13,17,5,1.267716535,127,5
+2014,Nottinghamshire,rectory.copley,NG13_9LF,top.end.mill.lane,2,ww,NG13_9LF_grid_2,NG13_9LF_grid_2_2014,2,38,22,35,11,2.138888889,108,5
+2014,Nottinghamshire,staunton.charltons,NG13_9PE,lark,1,ww,NG13_9PE_grid_1,NG13_9PE_grid_1_2014,0,105,64,73,25,2.06741573,267,4
+2014,Nottinghamshire,staunton.charltons,NG13_9PE,pudding,2,ww,NG13_9PE_grid_2,NG13_9PE_grid_2_2014,0,62,36,19,9,1.801587302,126,4
+2014,Lincolnshire,barn,NG32_3HX,allotment,1,sprwheat,NG32_3HX_grid_1,NG32_3HX_grid_1_2014,0,69,9,0,0,1.115384615,78,2
+2014,Lincolnshire,barn,NG32_3HX,rutland.south,2,sprwheat,NG32_3HX_grid_2,NG32_3HX_grid_2_2014,0,6,33,39,117,3.369230769,195,4
+2014,Lincolnshire,cranwell.hall,NG34_8NG,field.60,1,ww,NG34_8NG_grid_1,NG34_8NG_grid_1_2014,0,2,13,17,330,3.864640884,362,4
+2014,Lincolnshire,cranwell.hall,NG34_8NG,field.40,2,ww,NG34_8NG_grid_2,NG34_8NG_grid_2_2014,0,24,12,12,143,3.434554974,191,4
+2014,Northamptonshire,white.house,NN29_7JT,threadgold,1,ww,NN29_7JT_grid_1,NN29_7JT_grid_1_2014,0,190,3,0,0,1.015544041,193,2
+2014,Northamptonshire,white.house,NN29_7JT,front.field,2,ww,NN29_7JT_grid_2,NN29_7JT_grid_2_2014,23,48,7,0,0,0.794871795,78,3
+2014,Northamptonshire,bfc.agronomy,NN6_8NN,mawland.smiths,1,ww,NN6_8NN_grid_1,NN6_8NN_grid_1_2014,0,5,44,125,66,3.05,240,4
+2014,Northamptonshire,bfc.agronomy,NN6_8NN,fifty.acre,2,ww,NN6_8NN_grid_2,NN6_8NN_grid_2_2014,2,176,57,20,35,1.689655172,290,5
+2014,Norfolk,kerdiston.house,NR10_4RP,jollies,1,ww,NR10_4RP_grid_1,NR10_4RP_grid_1_2014,23,145,13,2,0,0.967213115,183,4
+2014,Norfolk,kerdiston.house,NR10_4RP,treasures,2,ww,NR10_4RP_grid_2,NR10_4RP_grid_2_2014,0,85,31,10,0,1.404761905,126,3
+2014,Norfolk,flordon.hall,NR15_1RT,24.acre,1,ww,NR15_1RT_grid_1,NR15_1RT_grid_1_2014,0,65,67,91,9,2.189655172,232,4
+2014,Norfolk,flordon.hall,NR15_1RT,bracon.close,2,ww,NR15_1RT_grid_2,NR15_1RT_grid_2_2014,8,99,5,0,0,0.973214286,112,3
+2014,Norfolk,friars,NR15_2QL,pillbox,1,ww,NR15_2QL_grid_1,NR15_2QL_grid_1_2014,30,108,9,14,21,1.384615385,182,5
+2014,Norfolk,friars,NR15_2QL,ollands,2,ww,NR15_2QL_grid_2,NR15_2QL_grid_2_2014,71,86,0,0,0,0.547770701,157,2
+2014,Norfolk,villa,NR16_1SN,glebe.30,1,ww,NR16_1SN_grid_1,NR16_1SN_grid_1_2014,133,85,7,1,0,0.451327434,226,4
+2014,Norfolk,honingham.thorpe.farms,NR17_1NJ,sherrards.green,1,ww,NR17_1NJ_grid_1,NR17_1NJ_grid_1_2014,56,36,2,1,0,0.452631579,95,4
+2014,Norfolk,honingham.thorpe.farms,NR17_1NJ,far.field,2,ww,NR17_1NJ_grid_2,NR17_1NJ_grid_2_2014,8,161,16,0,0,1.043243243,185,3
+2014,Warwickshire,bourton,OX17_1AS,angels.piece,1,ww,OX17_1AS_grid_1,OX17_1AS_grid_1_2014,0,0,0,1,121,3.991803279,122,2
+2014,Warwickshire,bourton,OX17_1AS,banbury.road,2,ww,OX17_1AS_grid_2,OX17_1AS_grid_2_2014,5,179,8,6,1,1.090452261,199,5
+2014,Northamptonshire,clattercote,OX17_1QB,barn.ground,1,ww,OX17_1QB_grid_1,OX17_1QB_grid_1_2014,76,203,13,7,0,0.836120401,299,4
+2014,Northamptonshire,clattercote,OX17_1QB,clattercote.meadow,2,ww,OX17_1QB_grid_2,OX17_1QB_grid_2_2014,0,7,38,31,13,2.561797753,89,4
+2014,Oxfordshire,perdiswell,OX20_1QJ,gym,1,ww,OX20_1QJ_grid_1,OX20_1QJ_grid_1_2014,6,107,65,9,0,1.411764706,187,4
+2014,Oxfordshire,perdiswell,OX20_1QJ,begbroke.A44,2,ww,OX20_1QJ_grid_2,OX20_1QJ_grid_2_2014,1,59,51,92,105,2.782467532,308,5
+2014,Oxfordshire,souldern.grounds,OX25_6LU,slade,1,ww,OX25_6LU_grid_1,OX25_6LU_grid_1_2014,0,0,1,17,236,3.92519685,254,3
+2014,Oxfordshire,souldern.grounds,OX25_6LU,ramground,2,ww,OX25_6LU_grid_2,OX25_6LU_grid_2_2014,0,35,46,34,107,2.959459459,222,4
+2014,Oxfordshire,twelve.acre.farm,OX29_4BH,carters,1,ww,OX29_4BH_grid_1,OX29_4BH_grid_1_2014,0,0,5,16,98,3.781512605,119,3
+2014,Oxfordshire,twelve.acre.farm,OX29_4BH,emmas,2,ww,OX29_4BH_grid_2,OX29_4BH_grid_2_2014,0,4,12,36,21,3.01369863,73,4
+2014,Oxfordshire,model,OX49_5DX,stokewell.ground,1,ww,OX49_5DX_grid_1,OX49_5DX_grid_1_2014,0,24,46,8,2,1.85,80,4
+2014,Oxfordshire,model,OX49_5DX,sids.and.the.linings,2,ww,OX49_5DX_grid_2,OX49_5DX_grid_2_2014,0,17,66,178,15,2.692028986,276,4
+2014,Lincolnshire,churchview,PE10_0RZ,picks,1,ww,PE10_0RZ_grid_1,PE10_0RZ_grid_1_2014,10,140,27,3,0,1.127777778,180,4
+2014,Lincolnshire,churchview,PE10_0RZ,cumfrey,2,ww,PE10_0RZ_grid_2,PE10_0RZ_grid_2_2014,0,37,58,57,45,2.558375635,197,4
+2014,Lincolnshire,charlton,PE12_6QG,rookery.one.and.two,1,ww,PE12_6QG_grid_1,PE12_6QG_grid_1_2014,0,133,44,15,22,1.654205607,214,4
+2014,Lincolnshire,charlton,PE12_6QG,rookery.bottom,2,ww,PE12_6QG_grid_2,PE12_6QG_grid_2_2014,0,51,45,56,17,2.230769231,169,4
+2014,Lincolnshire,lighthouse,PE12_9YT,corridor,1,ww,PE12_9YT_grid_1,PE12_9YT_grid_1_2014,0,96,63,28,30,1.963133641,217,4
+2014,Lincolnshire,lighthouse,PE12_9YT,roundabout,2,ww,PE12_9YT_grid_2,PE12_9YT_grid_2_2014,172,99,6,3,0,0.428571429,280,4
+2014,Cambridgeshire,cotton,PE19_6PU,m15,1,ww,PE19_6PU_grid_1,PE19_6PU_grid_1_2014,0,15,36,127,14,2.729166667,192,4
+2014,Cambridgeshire,cotton,PE19_6PU,c8,2,ww,PE19_6PU_grid_2,PE19_6PU_grid_2_2014,37,114,36,20,9,1.305555556,216,5
+2014,Cambridgeshire,worlicks,PE26_2XF,opposite.cottage,1,ww,PE26_2XF_grid_1,PE26_2XF_grid_1_2014,5,93,48,37,37,2.036363636,220,5
+2014,Cambridgeshire,worlicks,PE26_2XF,bridge.ground,2,ww,PE26_2XF_grid_2,PE26_2XF_grid_2_2014,0,81,24,23,56,2.293478261,184,4
+2014,Cambridgeshire,wennington.lodge,PE28_2LP,bridge,1,ww,PE28_2LP_grid_1,PE28_2LP_grid_1_2014,1,104,57,27,11,1.715,200,5
+2014,Cambridgeshire,wennington.lodge,PE28_2LP,behind.the.cotts,2,ww,PE28_2LP_grid_2,PE28_2LP_grid_2_2014,9,132,71,26,3,1.510373444,241,5
+2014,Cambridgeshire,barnfield,PE28_3LY,big.orchard,1,ww,PE28_3LY_grid_1,PE28_3LY_grid_1_2014,0,12,33,72,62,3.027932961,179,4
+2014,Cambridgeshire,barnfield,PE28_3LY,hill.field,2,ww,PE28_3LY_grid_2,PE28_3LY_grid_2_2014,0,7,15,29,116,3.520958084,167,4
+2014,Cambridgeshire,manor.williams,PE28_5RR,back.of.hovels,1,ww,PE28_5RR_grid_1,PE28_5RR_grid_1_2014,1,1,27,107,61,3.147208122,197,5
+2014,Cambridgeshire,manor.williams,PE28_5RR,chapmans,2,ww,PE28_5RR_grid_2,PE28_5RR_grid_2_2014,0,70,30,2,0,1.333333333,102,3
+2014,Norfolk,cannister,PE32_2LW,lower.norrels.garden,1,ww,PE32_2LW_grid_1,PE32_2LW_grid_1_2014,0,13,18,41,28,2.84,100,4
+2014,Norfolk,cannister,PE32_2LW,barn.field,2,ww,PE32_2LW_grid_2,PE32_2LW_grid_2_2014,0,22,20,45,20,2.588785047,107,4
+2014,Cambridgeshire,burnt.house,PE7_2HP,joans.drove,1,ww,PE7_2HP_grid_1,PE7_2HP_grid_1_2014,38,139,22,16,5,1.140909091,220,5
+2014,Cambridgeshire,burnt.house,PE7_2HP,mecks.centre,2,ww,PE7_2HP_grid_2,PE7_2HP_grid_2_2014,25,105,11,2,0,0.93006993,143,4
+2014,Bedfordshire,fullers.hill,SG19_3BP,pink.cottage.close,1,ww,SG19_3BP_grid_1,SG19_3BP_grid_1_2014,19,220,37,2,0,1.079136691,278,4
+2014,Bedfordshire,fullers.hill,SG19_3BP,middle.diff.align,2,ww,SG19_3BP_grid_2,SG19_3BP_grid_2_2014,0,43,37,53,48,2.585635359,181,4
+2014,East Riding of Yorkshire,manor.house,YO25_8DX,16.acre,1,ww,YO25_8DX_grid_1,YO25_8DX_grid_1_2014,23,116,25,4,0,1.05952381,168,4
+2014,East Riding of Yorkshire,manor.house,YO25_8DX,44.acre.the.bottoms,2,ww,YO25_8DX_grid_2,YO25_8DX_grid_2_2014,80,140,47,20,3,1.055172414,290,5
+2014,East Riding of Yorkshire,newsome.lodge,YO25_8EJ,front,1,ww,YO25_8EJ_grid_1,YO25_8EJ_grid_1_2014,8,45,30,46,28,2.261146497,157,5
+2014,North Yorkshire,overton,YO30_1AA,overton.6,1,ww,YO30_1AA_grid_1,YO30_1AA_grid_1_2014,108,0,0,0,0,0,108,1
+2014,North Yorkshire,overton,YO30_1AA,overton.5,2,ww,YO30_1AA_grid_2,YO30_1AA_grid_2_2014,244,0,0,0,0,0,244,1
+2014,North Yorkshire,hall.bank,YO30_1AN,eds,1,ww,YO30_1AN_grid_1,YO30_1AN_grid_1_2014,198,76,2,0,0,0.289855072,276,3
+2014,North Yorkshire,greens,YO32_2RE,Field.2,1,ww,YO32_2RE_grid_1,YO32_2RE_grid_1_2014,5,70,31,38,2,1.739726027,146,5
+2014,North Yorkshire,greens,YO32_2RE,Field.1,2,ww,YO32_2RE_grid_2,YO32_2RE_grid_2_2014,3,70,24,3,0,1.27,100,4
+2014,North Yorkshire,hallmoor,YO32_2RQ,hallmoor.5,1,ww,YO32_2RQ_grid_1,YO32_2RQ_grid_1_2014,95,106,0,0,0,0.527363184,201,2
+2014,North Yorkshire,spinks,YO61_1ET,south,1,ww,YO61_1ET_grid_1,YO61_1ET_grid_1_2014,49,112,45,11,0,1.082949309,217,4
+2014,North Yorkshire,spinks,YO61_1ET,north,2,ww,YO61_1ET_grid_2,YO61_1ET_grid_2_2014,93,11,1,0,0,0.123809524,105,3
+2014,North Yorkshire,raskelf,YO61_3LG,24.acre,1,ww,YO61_3LG_grid_1,YO61_3LG_grid_1_2014,0,119,54,29,7,1.636363636,209,4
+2014,North Yorkshire,raskelf,YO61_3LG,45.acre.nr.duffields,2,ww,YO61_3LG_grid_2,YO61_3LG_grid_2_2014,0,36,96,74,2,2.201923077,208,4
+2014,North Yorkshire,birch,YO62_5YD,newton.grange.23,1,ww,YO62_5YD_grid_1,YO62_5YD_grid_1_2014,82,80,2,0,0,0.512195122,164,3
+2014,North Yorkshire,birch,YO62_5YD,newton.grange.bottom,2,ww,YO62_5YD_grid_2,YO62_5YD_grid_2_2014,139,77,0,0,0,0.356481481,216,2
+2015,Cambridgeshire,midload,CB25_9LQ,chivers.top.left,1,ww,CB25_9LQ_grid_1,CB25_9LQ_grid_1_2015,38,116,11,0,0,0.836363636,165,3
+2015,Cambridgeshire,midload,CB25_9LQ,chivers.bottom.right,2,ww,CB25_9LQ_grid_2,CB25_9LQ_grid_2_2015,6,85,48,9,0,1.405405405,148,4
+2015,Cambridgeshire,temple,CB7_4SS,sedgefen,2,potatoes,CB7_4SS_grid_2,CB7_4SS_grid_2_2015,92,31,0,0,0,0.25203252,123,2
+2015,Cambridgeshire,temple,CB7_4SS,Temple.Farm,3,ww,CB7_4SS_grid_3,CB7_4SS_grid_3_2015,140,2,0,0,0,0.014084507,142,2
+2015,Warwickshire,squab.hall,CV33_9QB,field.3,1,wbar,CV33_9QB_grid_1,CV33_9QB_grid_1_2015,185,23,0,0,0,0.110576923,208,2
+2015,Warwickshire,squab.hall,CV33_9QB,field.5,2,wbar,CV33_9QB_grid_2,CV33_9QB_grid_2_2015,71,3,0,0,0,0.040540541,74,2
+2015,Warwickshire,squab.hall,CV33_9QB,Near.Ufton,3,ww,CV33_9QB_grid_3,CV33_9QB_grid_3_2015,37,122,24,14,0,1.076142132,197,4
+2015,Warwickshire,gaydon.hill,CV35_0HQ,shooters.bank,1,sp bar,CV35_0HQ_grid_1,CV35_0HQ_grid_1_2015,14,171,19,2,0,1.04368932,206,4
+2015,Warwickshire,gaydon.hill,CV35_0HQ,mushroom.field,2,sp bar,CV35_0HQ_grid_2,CV35_0HQ_grid_2_2015,9,201,21,0,0,1.051948052,231,3
+2015,Warwickshire,gaydon.hill,CV35_0HQ,garage.field,3,ww,CV35_0HQ_grid_3,CV35_0HQ_grid_3_2015,0,34,68,51,14,2.269461078,167,4
+2015,Warwickshire,croft,CV37_7NF,croft,3,ww,CV37_7NF_grid_3,CV37_7NF_grid_3_2015,29,100,6,0,0,0.82962963,135,3
+2015,Lincolnshire,grange,DN36_5UP,glasshouse,3,ww,DN36_5UP_grid_3,DN36_5UP_grid_3_2015,0,54,54,31,56,2.456410256,195,4
+2015,Lincolnshire,grange.faulding,DN40_3PX,glebe.22,1,wbar,DN40_3PX_grid_1,DN40_3PX_grid_1_2015,58,105,13,8,15,1.08040201,199,5
+2015,Lincolnshire,grange.faulding,DN40_3PX,22.acre,3,ww,DN40_3PX_grid_3,DN40_3PX_grid_3_2015,0,93,102,33,3,1.766233766,231,4
+2015,South Yorks,highfields,DN5_7UJ,common.hill,1,spr bar,DN5_7UJ_grid_1,DN5_7UJ_grid_1_2015,16,132,44,34,6,1.49137931,232,5
+2015,South Yorks,highfields,DN5_7UJ,rig.field,2,spr bar,DN5_7UJ_grid_2,DN5_7UJ_grid_2_2015,19,150,30,0,0,1.055276382,199,3
+2015,South Yorks,highfields,DN5_7UJ,Highfields.Farm,3,ww,DN5_7UJ_grid_3,DN5_7UJ_grid_3_2015,30,110,11,0,0,0.874172185,151,3
+2015,South Yorks,manor.robinson,DN7_5TG,front.field,1,ww,DN7_5TG_grid_1,DN7_5TG_grid_1_2015,13,37,31,44,56,2.513812155,181,5
+2015,Buckinghamshire,moorleys,HP18_9QQ,wells.road,1,sp bar,HP18_9QQ_grid_1,HP18_9QQ_grid_1_2015,52,214,4,1,0,0.830258303,271,4
+2015,Buckinghamshire,moorleys,HP18_9QQ,cow.road,2,sp bar,HP18_9QQ_grid_2,HP18_9QQ_grid_2_2015,4,67,0,0,0,0.943661972,71,2
+2015,Buckinghamshire,moorleys,HP18_9QQ,moorleys,3,ww,HP18_9QQ_grid_3,HP18_9QQ_grid_3_2015,0,109,59,7,0,1.417142857,175,3
+2015,East Riding of Yorkshire,new.headlands,HU11_4QA,dottoms,1,spr bar,HU11_4QA_grid_1,HU11_4QA_grid_1_2015,0,130,59,11,1,1.417910448,201,4
+2015,East Riding of Yorkshire,new.headlands,HU11_4QA,back.of.beans,2,spr bar,HU11_4QA_grid_2,HU11_4QA_grid_2_2015,20,101,59,26,6,1.514150943,212,5
+2015,East Riding of Yorkshire,grange.patchett,HU15_1RG,19.acre,3,ww,HU15_1RG_grid_3,HU15_1RG_grid_3_2015,60,125,0,0,0,0.675675676,185,2
+2015,East Riding of Yorkshire,bransholme.dairy,HU7_4YP,field.2,2,ww,HU7_4YP_grid_2,HU7_4YP_grid_2_2015,12,88,28,3,6,1.291970803,137,5
+2015,Norfolk,hill,IP25_7EF,bush.meadow,2,ww,IP25_7EF_grid_2,IP25_7EF_grid_2_2015,11,148,12,0,0,1.005847953,171,3
+2015,Leicestershire,welldale,LE12_6JD,20.acre.railway,1,spr bar,LE12_6JD_grid_1,LE12_6JD_grid_1_2015,39,74,1,0,0,0.666666667,114,3
+2015,Leicestershire,welldale,LE12_6JD,17.acre.middle,2,spr bar,LE12_6JD_grid_2,LE12_6JD_grid_2_2015,89,11,0,0,0,0.11,100,2
+2015,Leicestershire,welldale,LE12_6JD,stack.field,3,ww,LE12_6JD_grid_3,LE12_6JD_grid_3_2015,16,61,23,7,0,1.196261682,107,4
+2015,Northamptonshire,fox.and.hounds,LE16_7UG,noseley,3,ww,LE16_7UG_grid_3,LE16_7UG_grid_3_2015,31,156,37,17,1,1.17768595,242,5
+2015,Northamptonshire,poplars,LE16_8TB,seeds,1,wbar,LE16_8TB_grid_1,LE16_8TB_grid_1_2015,112,45,0,0,0,0.286624204,157,2
+2015,Northamptonshire,poplars,LE16_8TB,Near.Wilbarston,3,ww,LE16_8TB_grid_3,LE16_8TB_grid_3_2015,32,109,26,18,5,1.236842105,190,5
+2015,Lincolnshire,hall,LN1_2LL,top.cliffe,1,w bar,LN1_2LL_grid_1,LN1_2LL_grid_1_2015,68,41,2,1,0,0.428571429,112,4
+2015,Lincolnshire,hall,LN1_2LL,45.acre,2,w bar,LN1_2LL_grid_2,LN1_2LL_grid_2_2015,203,76,0,1,0,0.282142857,280,3
+2015,Lincolnshire,hall,LN1_2LL,middle.briest,3,ww,LN1_2LL_grid_3,LN1_2LL_grid_3_2015,70,49,3,0,0,0.450819672,122,3
+2015,Lincolnshire,cooper,LN11_0NX,no.7a,1,spr wh,LN11_0NX_grid_1,LN11_0NX_grid_1_2015,0,59,60,35,17,2.058479532,171,4
+2015,Lincolnshire,cooper,LN11_0NX,no.19,3,ww,LN11_0NX_grid_3,LN11_0NX_grid_3_2015,0,22,73,50,9,2.298701299,154,4
+2015,Lincolnshire,willoughby,LN13_9TD,garden,1,spr bar,LN13_9TD_grid_1,LN13_9TD_grid_1_2015,6,71,40,28,3,1.668918919,148,5
+2015,Lincolnshire,willoughby,LN13_9TD,pigpen,3,ww,LN13_9TD_grid_3,LN13_9TD_grid_3_2015,0,11,29,19,11,2.428571429,70,4
+2015,Lincolnshire,leggott.m,LN4_4QQ,bridge.leggott,1,spr wh,LN4_4QQ_grid_1,LN4_4QQ_grid_1_2015,0,45,44,30,11,2.053846154,130,4
+2015,Lincolnshire,leggott.m,LN4_4QQ,2x11,2,sbeet,LN4_4QQ_grid_2,LN4_4QQ_grid_2_2015,6,88,18,0,0,1.107142857,112,3
+2015,Lincolnshire,clare_clegott,LN5_0RD,horsewoods.3rd,3,ww,LN5_0RD_grid_3,LN5_0RD_grid_3_2015,2,187,28,5,0,1.162162162,222,4
+2015,Lincolnshire,brantedge,LN5_0SP,sewage.works,3,ww,LN5_0SP_grid_3,LN5_0SP_grid_3_2015,65,109,1,0,0,0.634285714,175,3
+2015,Bedfordshire,watergate,LU7_9LN,stable,1,ww,LU7_9LN_grid_1,LU7_9LN_grid_1_2015,6,71,44,33,0,1.675324675,154,4
+2015,Bedfordshire,watergate,LU7_9LN,denmans.close,2,spr bar,LU7_9LN_grid_2,LU7_9LN_grid_2_2015,35,55,0,0,0,0.611111111,90,2
+2015,Bedfordshire,hermitage,MK16_0HR,moulsoe.cross,3,ww,MK16_0HR_grid_3,MK16_0HR_grid_3_2015,11,118,3,0,0,0.939393939,132,3
+2015,Buckingham,chetwode.manor,MK18_4BB,hill.ground,3,ww,MK18_4BB_grid_3,MK18_4BB_grid_3_2015,1,29,33,39,10,2.25,112,5
+2015,Bedfordshire,boxhedge,MK43_0AT,big.boxhedge,1,spr bar,MK43_0AT_grid_1,MK43_0AT_grid_1_2015,74,230,0,0,0,0.756578947,304,2
+2015,Bedfordshire,boxhedge,MK43_0AT,jollys,2,spr bar,MK43_0AT_grid_2,MK43_0AT_grid_2_2015,0,197,19,0,0,1.087962963,216,2
+2015,Bedfordshire,boxhedge,MK43_0AT,pounds.lane,3,ww,MK43_0AT_grid_3,MK43_0AT_grid_3_2015,15,97,0,0,0,0.866071429,112,2
+2015,Bedfordshire,lodge,MK44_1EJ,middle.lodge,2,spr w,MK44_1EJ_grid_2,MK44_1EJ_grid_2_2015,81,57,0,0,0,0.413043478,138,2
+2015,Bedfordshire,lodge,MK44_1EJ,rootys,3,ww,MK44_1EJ_grid_3,MK44_1EJ_grid_3_2015,0,35,30,51,5,2.214876033,121,4
+2015,Bedfordshire,north.end,MK44_1QT,mowing.ground,1,sp bar,MK44_1QT_grid_1,MK44_1QT_grid_1_2015,3,63,6,0,0,1.041666667,72,3
+2015,Bedfordshire,north.end,MK44_1QT,gilberts,2,sp bar,MK44_1QT_grid_2,MK44_1QT_grid_2_2015,94,201,2,0,0,0.69023569,297,3
+2015,Bedfordshire,north.end,MK44_1QT,NorthEnd.Farm,3,ww,MK44_1QT_grid_3,MK44_1QT_grid_3_2015,24,111,24,10,0,1.118343195,169,4
+2015,Bedfordshire,green.end,MK44_2BU,great.skimish.field,3,ww,MK44_2BU_grid_3,MK44_2BU_grid_3_2015,14,114,42,25,15,1.585714286,210,5
+2015,Bedfordshire,elliott.farms,MK44_2EE,fence.field,1,ww,MK44_2EE_grid_1,MK44_2EE_grid_1_2015,0,43,80,29,11,2.049079755,163,4
+2015,Bedfordshire,elliott.farms,MK44_2EE,top.rosses.by.house,3,ww,MK44_2EE_grid_3,MK44_2EE_grid_3_2015,16,188,1,0,0,0.926829268,205,3
+2015,Bedfordshire,rectory,MK44_2PD,bairds,3,ww,MK44_2PD_grid_3,MK44_2PD_grid_3_2015,4,107,13,10,0,1.21641791,134,4
+2015,Nottinghamshire,hollygate,NG12_2JW,long.7.acre,1,wbar,NG12_2JW_grid_1,NG12_2JW_grid_1_2015,0,67,12,0,0,1.151898734,79,2
+2015,Nottinghamshire,hollygate,NG12_2JW,orchard.field,2,wbar,NG12_2JW_grid_2,NG12_2JW_grid_2_2015,185,26,5,0,0,0.166666667,216,3
+2015,Nottinghamshire,hollygate,NG12_2JW,20.acre,3,ww,NG12_2JW_grid_3,NG12_2JW_grid_3_2015,69,49,21,11,2,0.868421053,152,5
+2015,Nottinghamshire,rectory.copley,NG13_9LF,corner.13.acre,1,ww,NG13_9LF_grid_1,NG13_9LF_grid_1_2015,61,62,1,0,0,0.516129032,124,3
+2015,Nottinghamshire,staunton.charltons,NG13_9PE,lark,1,spr wh,NG13_9PE_grid_1,NG13_9PE_grid_1_2015,38,229,0,0,0,0.857677903,267,2
+2015,Nottinghamshire,staunton.charltons,NG13_9PE,barn.meadow,3,ww,NG13_9PE_grid_3,NG13_9PE_grid_3_2015,3,93,0,0,0,0.96875,96,2
+2015,Lincolnshire,barn,NG32_3HX,allotment,1,ww,NG32_3HX_grid_1,NG32_3HX_grid_1_2015,0,0,4,31,43,3.5,78,3
+2015,Lincolnshire,barn,NG32_3HX,rutland.south,2,spr bar,NG32_3HX_grid_2,NG32_3HX_grid_2_2015,73,90,4,2,0,0.615384615,169,4
+2015,Lincolnshire,cranwell.hall,NG34_8NG,Cranwell,3,ww,NG34_8NG_grid_3,NG34_8NG_grid_3_2015,0,15,60,53,21,2.536912752,149,4
+2015,Northamptonshire,white.house,NN29_7JT,whitehouse,3,ww,NN29_7JT_grid_3,NN29_7JT_grid_3_2015,90,130,4,0,0,0.616071429,224,3
+2015,Northamptonshire,bfc.agronomy,NN6_8NN,ram.close,3,ww,NN6_8NN_grid_3,NN6_8NN_grid_3_2015,200,80,7,0,0,0.327526132,287,3
+2015,Norfolk,kerdiston.house,NR10_4RP,jollies,1,w oats,NR10_4RP_grid_1,NR10_4RP_grid_1_2015,16,128,28,4,0,1.113636364,176,4
+2015,Norfolk,kerdiston.house,NR10_4RP,point.house,3,ww,NR10_4RP_grid_3,NR10_4RP_grid_3_2015,87,98,5,0,0,0.568421053,190,3
+2015,Norfolk,flordon.hall,NR15_1RT,bracon.close,2,ww,NR15_1RT_grid_2,NR15_1RT_grid_2_2015,3,89,20,0,0,1.151785714,112,3
+2015,Norfolk,friars,NR15_2QL,ollands,2,wbar,NR15_2QL_grid_2,NR15_2QL_grid_2_2015,52,98,0,0,0,0.653333333,150,2
+2015,Norfolk,friars,NR15_2QL,goose,3,ww,NR15_2QL_grid_3,NR15_2QL_grid_3_2015,64,47,4,0,0,0.47826087,115,3
+2015,Norfolk,villa,NR16_1SN,glebe.30,1,sbeet,NR16_1SN_grid_1,NR16_1SN_grid_1_2015,219,7,0,0,0,0.030973451,226,2
+2015,Norfolk,honingham.thorpe.farms,NR17_1NJ,sherrards.green,1,ww,NR17_1NJ_grid_1,NR17_1NJ_grid_1_2015,46,33,9,6,1,0.768421053,95,5
+2015,Norfolk,honingham.thorpe.farms,NR17_1NJ,far.field,2,wbar,NR17_1NJ_grid_2,NR17_1NJ_grid_2_2015,4,163,18,0,0,1.075675676,185,3
+2015,Warwickshire,bourton,OX17_1AS,angels.piece,1,sp bar,OX17_1AS_grid_1,OX17_1AS_grid_1_2015,0,0,5,46,70,3.537190083,121,3
+2015,Warwickshire,bourton,OX17_1AS,banbury.road,2,sp bar,OX17_1AS_grid_2,OX17_1AS_grid_2_2015,18,175,7,0,0,0.945,200,3
+2015,Warwickshire,bourton,OX17_1AS,tip.field,3,ww,OX17_1AS_grid_3,OX17_1AS_grid_3_2015,14,140,31,20,5,1.342857143,210,5
+2015,Northamptonshire,clattercote,OX17_1QB,stokes,3,ww,OX17_1QB_grid_3,OX17_1QB_grid_3_2015,59,88,12,1,0,0.71875,160,4
+2015,Oxfordshire,perdiswell,OX20_1QJ,gym,1,sp bar,OX20_1QJ_grid_1,OX20_1QJ_grid_1_2015,75,92,2,0,0,0.568047337,169,3
+2015,Oxfordshire,perdiswell,OX20_1QJ,begbroke.A44,2,sp bar,OX20_1QJ_grid_2,OX20_1QJ_grid_2_2015,77,223,9,0,0,0.779935275,309,3
+2015,Oxfordshire,perdiswell,OX20_1QJ,motox,3,ww,OX20_1QJ_grid_3,OX20_1QJ_grid_3_2015,71,137,15,5,0,0.798245614,228,4
+2015,Oxfordshire,souldern.grounds,OX25_6LU,slade,1,sp bar,OX25_6LU_grid_1,OX25_6LU_grid_1_2015,0,41,125,88,0,2.18503937,254,3
+2015,Oxfordshire,souldern.grounds,OX25_6LU,ramground,2,sp bar,OX25_6LU_grid_2,OX25_6LU_grid_2_2015,12,17,14,2,0,1.133333333,45,4
+2015,Oxfordshire,souldern.grounds,OX25_6LU,Viaduct.dry.lays,3,ww,OX25_6LU_grid_3,OX25_6LU_grid_3_2015,8,63,16,1,0,1.113636364,88,4
+2015,Oxfordshire,twelve.acre.farm,OX29_4BH,mushroom,3,ww,OX29_4BH_grid_3,OX29_4BH_grid_3_2015,80,127,37,14,0,0.941860465,258,4
+2015,Oxfordshire,model,OX49_5DX,stokewell.ground,1,ww,OX49_5DX_grid_1,OX49_5DX_grid_1_2015,8,94,0,0,0,0.921568627,102,2
+2015,Oxfordshire,model,OX49_5DX,sids.and.the.linings,2,sp bar,OX49_5DX_grid_2,OX49_5DX_grid_2_2015,0,150,106,17,2,1.530909091,275,4
+2015,Oxfordshire,model,OX49_5DX,clare,3,ww,OX49_5DX_grid_3,OX49_5DX_grid_3_2015,4,185,23,0,0,1.089622642,212,3
+2015,Lincolnshire,churchview,PE10_0RZ,picks,1,sbeet,PE10_0RZ_grid_1,PE10_0RZ_grid_1_2015,68,112,0,0,0,0.622222222,180,2
+2015,Lincolnshire,churchview,PE10_0RZ,turners,3,ww,PE10_0RZ_grid_3,PE10_0RZ_grid_3_2015,1,40,43,49,47,2.561111111,180,5
+2015,Lincolnshire,charlton,PE12_6QG,rookery.one.and.two,1,spr wh,PE12_6QG_grid_1,PE12_6QG_grid_1_2015,2,65,63,71,13,2.130841121,214,5
+2015,Lincolnshire,charlton,PE12_6QG,rookery.bottom,2,w bar,PE12_6QG_grid_2,PE12_6QG_grid_2_2015,69,86,8,3,0,0.668674699,166,4
+2015,Lincolnshire,lighthouse,PE12_9YT,lighthouse,3,ww,PE12_9YT_grid_3,PE12_9YT_grid_3_2015,1,154,55,18,0,1.394736842,228,4
+2015,Cambridgeshire,cotton,PE19_6PU,c8,2,spr wh,PE19_6PU_grid_2,PE19_6PU_grid_2_2015,148,60,7,1,0,0.356481481,216,4
+2015,Cambridgeshire,cotton,PE19_6PU,Cotton.Farm,3,ww,PE19_6PU_grid_3,PE19_6PU_grid_3_2015,125,16,0,0,0,0.113475177,141,2
+2015,Cambridgeshire,worlicks,PE26_2XF,opposite.cottage,1,potatoes,PE26_2XF_grid_1,PE26_2XF_grid_1_2015,6,93,88,12,1,1.545,200,5
+2015,Cambridgeshire,worlicks,PE26_2XF,16.acre,3,ww,PE26_2XF_grid_3,PE26_2XF_grid_3_2015,0,17,45,52,9,2.430894309,123,4
+2015,Cambridgeshire,wennington.lodge,PE28_2LP,bridge,1,ww,PE28_2LP_grid_1,PE28_2LP_grid_1_2015,15,150,21,11,3,1.185,200,5
+2015,Cambridgeshire,barnfield,PE28_3LY,hill.field,2,sp wh,PE28_3LY_grid_2,PE28_3LY_grid_2_2015,0,44,55,51,17,2.245508982,167,4
+2015,Cambridgeshire,barnfield,PE28_3LY,sinkers.hole,3,ww,PE28_3LY_grid_3,PE28_3LY_grid_3_2015,0,9,19,14,26,2.838235294,68,4
+2015,Cambridgeshire,manor.williams,PE28_5RR,top.of.lambs.lane.east,3,ww,PE28_5RR_grid_3,PE28_5RR_grid_3_2015,0,47,11,2,0,1.25,60,3
+2015,Norfolk,cannister,PE32_2LW,lower.norrels.garden,1,ww,PE32_2LW_grid_1,PE32_2LW_grid_1_2015,0,4,18,37,41,3.15,100,4
+2015,Cambridgeshire,burnt.house,PE7_2HP,fletchers,3,ww,PE7_2HP_grid_3,PE7_2HP_grid_3_2015,140,42,0,0,0,0.230769231,182,2
+2015,Bedfordshire,fullers.hill,SG19_3BP,pink.cottage.close,1,spr wh,SG19_3BP_grid_1,SG19_3BP_grid_1_2015,103,172,3,0,0,0.64028777,278,3
+2015,Bedfordshire,fullers.hill,SG19_3BP,middle.diff.align,2,spr wh,SG19_3BP_grid_2,SG19_3BP_grid_2_2015,52,128,0,0,0,0.711111111,180,2
+2015,Bedfordshire,fullers.hill,SG19_3BP,dick.and.dolls,3,ww,SG19_3BP_grid_3,SG19_3BP_grid_3_2015,15,113,60,44,2,1.594017094,234,5
+2015,East Riding of Yorkshire,manor.house,YO25_8DX,44.acre.the.bottoms,2,ww,YO25_8DX_grid_2,YO25_8DX_grid_2_2015,59,180,10,0,0,0.803212851,249,3
+2015,North Yorkshire,overton,YO30_1AA,church,3,ww,YO30_1AA_grid_3,YO30_1AA_grid_3_2015,131,2,0,0,0,0.015037594,133,2
+2015,North Yorkshire,hall.bank,YO30_1AN,new.parks,2,ww,YO30_1AN_grid_2,YO30_1AN_grid_2_2015,186,3,0,0,0,0.015873016,189,2
+2015,North Yorkshire,greens,YO32_2RE,Field.2,1,ww,YO32_2RE_grid_1,YO32_2RE_grid_1_2015,0,28,25,11,2,1.803030303,66,4
+2015,North Yorkshire,greens,YO32_2RE,Field.1,2,ww,YO32_2RE_grid_2,YO32_2RE_grid_2_2015,9,50,23,11,7,1.57,100,5
+2015,North Yorkshire,hallmoor,YO32_2RQ,hall.moor.8,2,ww,YO32_2RQ_grid_2,YO32_2RQ_grid_2_2015,87,28,0,0,0,0.243478261,115,2
+2015,North Yorkshire,spinks,YO61_1ET,south,1,ww,YO61_1ET_grid_1,YO61_1ET_grid_1_2015,114,58,10,0,0,0.428571429,182,3
+2015,North Yorkshire,spinks,YO61_1ET,north,2,wbar,YO61_1ET_grid_2,YO61_1ET_grid_2_2015,98,7,0,0,0,0.066666667,105,2
+2015,North Yorkshire,raskelf,YO61_3LG,24.acre,1,ww,YO61_3LG_grid_1,YO61_3LG_grid_1_2015,50,142,13,4,0,0.861244019,209,4
+2015,North Yorkshire,raskelf,YO61_3LG,45.acre.nr.duffields,2,ww,YO61_3LG_grid_2,YO61_3LG_grid_2_2015,1,67,64,53,10,2.020512821,195,5
+2015,North Yorkshire,birch,YO62_5YD,newton.grange.23,1,ww,YO62_5YD_grid_1,YO62_5YD_grid_1_2015,62,92,10,0,0,0.682926829,164,3
+2015,North Yorkshire,birch,YO62_5YD,newton.grange.bottom,2,ww,YO62_5YD_grid_2,YO62_5YD_grid_2_2015,163,57,0,0,0,0.259090909,220,2
+2016,Cambridgeshire,midload,CB25_9LQ,bentons,3,ww,CB25_9LQ_grid_3,CB25_9LQ_grid_3_2016,0,132,48,10,6,1.43877551,196,4
+2016,Cambridgeshire,temple,CB7_4SS,sandy.ground,1,ww,CB7_4SS_grid_1,CB7_4SS_grid_1_2016,94,104,0,0,0,0.525252525,198,2
+2016,Cambridgeshire,temple,CB7_4SS,sedgefen,2,ww,CB7_4SS_grid_2,CB7_4SS_grid_2_2016,28,96,1,0,0,0.784,125,3
+2016,Warwickshire,squab.hall,CV33_9QB,Barnwell.Farm,4,ww,CV33_9QB_grid_4,CV33_9QB_grid_4_2016,0,29,28,24,16,2.278350515,97,4
+2016,Warwickshire,gaydon.hill,CV35_0HQ,garage.field,3,spr bar,CV35_0HQ_grid_3,CV35_0HQ_grid_3_2016,4,125,28,9,1,1.269461078,167,5
+2016,Warwickshire,gaydon.hill,CV35_0HQ,colt.house,4,ww,CV35_0HQ_grid_4,CV35_0HQ_grid_4_2016,0,0,15,58,90,3.460122699,163,3
+2016,Warwickshire,croft,CV37_7NF,tubbs.end.8,4,ww,CV37_7NF_grid_4,CV37_7NF_grid_4_2016,0,91,61,54,33,2.121338912,239,4
+2016,Nottinghamshire,magpie.hall,DN22_0LB,6.acre,3,ww,DN22_0LB_grid_3,DN22_0LB_grid_3_2016,3,53,0,0,0,0.946428571,56,2
+2016,Lincolnshire,grange,DN36_5UP,stones,1,ww,DN36_5UP_grid_1,DN36_5UP_grid_1_2016,41,110,19,13,16,1.261306533,199,5
+2016,Lincolnshire,grange,DN36_5UP,grimoldbys,2,ww,DN36_5UP_grid_2,DN36_5UP_grid_2_2016,0,50,43,13,0,1.650943396,106,3
+2016,Lincolnshire,grange.faulding,DN40_3PX,glebe.24,2,wbar,DN40_3PX_grid_2,DN40_3PX_grid_2_2016,7,220,8,1,0,1.012711864,236,4
+2016,Lincolnshire,grange.faulding,DN40_3PX,22.acre,3,wbar,DN40_3PX_grid_3,DN40_3PX_grid_3_2016,0,199,23,8,1,1.181818182,231,4
+2016,South Yorks,highfields,DN5_7UJ,rig.field,2,spr bar,DN5_7UJ_grid_2,DN5_7UJ_grid_2_2016,11,100,63,26,0,1.52,200,4
+2016,South Yorks,highfields,DN5_7UJ,Highfields.Farm,3,spr bar,DN5_7UJ_grid_3,DN5_7UJ_grid_3_2016,44,102,0,0,0,0.698630137,146,2
+2016,South Yorks,manor.robinson,DN7_5TG,buckleys,2,ww,DN7_5TG_grid_2,DN7_5TG_grid_2_2016,0,27,21,51,136,3.259574468,235,4
+2016,Buckinghamshire,moorleys,HP18_9QQ,moorleys,3,spr bar,HP18_9QQ_grid_3,HP18_9QQ_grid_3_2016,22,150,3,0,0,0.891428571,175,3
+2016,Buckinghamshire,moorleys,HP18_9QQ,rixons,4,ww,HP18_9QQ_grid_4,HP18_9QQ_grid_4_2016,4,112,19,9,0,1.229166667,144,4
+2016,East Riding of Yorkshire,new.headlands,HU11_4QA,dottoms,1,spr bar,HU11_4QA_grid_1,HU11_4QA_grid_1_2016,0,123,72,3,0,1.393939394,198,3
+2016,East Riding of Yorkshire,new.headlands,HU11_4QA,back.of.beans,2,spr bar,HU11_4QA_grid_2,HU11_4QA_grid_2_2016,3,165,28,16,0,1.268867925,212,4
+2016,East Riding of Yorkshire,grange.patchett,HU15_1RG,back.field,1,ww,HU15_1RG_grid_1,HU15_1RG_grid_1_2016,20,164,39,19,2,1.258196721,244,5
+2016,East Riding of Yorkshire,grange.patchett,HU15_1RG,15.acre.greenoak,2,ww,HU15_1RG_grid_2,HU15_1RG_grid_2_2016,0,94,17,2,0,1.185840708,113,3
+2016,East Riding of Yorkshire,bransholme.dairy,HU7_4YP,field.3,1,ww,HU7_4YP_grid_1,HU7_4YP_grid_1_2016,0,63,77,47,31,2.211009174,218,4
+2016,Norfolk,hill,IP25_7EF,arable,1,ww,IP25_7EF_grid_1,IP25_7EF_grid_1_2016,60,64,0,0,0,0.516129032,124,2
+2016,Leicestershire,welldale,LE12_6JD,12.acre.brook,4,ww,LE12_6JD_grid_4,LE12_6JD_grid_4_2016,13,86,20,0,0,1.058823529,119,3
+2016,Northamptonshire,fox.and.hounds,LE16_7UG,Sedgeleys,4,ww,LE16_7UG_grid_4,LE16_7UG_grid_4_2016,23,60,0,0,0,0.722891566,83,2
+2016,Northamptonshire,poplars,LE16_8TB,18.acre,2,sprbar,LE16_8TB_grid_2,LE16_8TB_grid_2_2016,0,130,24,5,0,1.213836478,159,3
+2016,Lincolnshire,hall,LN1_2LL,clay.hills,4,ww,LN1_2LL_grid_4,LN1_2LL_grid_4_2016,157,75,4,0,0,0.351694915,236,3
+2016,Lincolnshire,cooper,LN11_0NX,no.7a,1,wbar,LN11_0NX_grid_1,LN11_0NX_grid_1_2016,0,0,4,99,68,3.374269006,171,3
+2016,Lincolnshire,cooper,LN11_0NX,no.17,2,ww,LN11_0NX_grid_2,LN11_0NX_grid_2_2016,0,38,70,28,0,1.926470588,136,3
+2016,Lincolnshire,cooper,LN11_0NX,no.19,3,spr bar,LN11_0NX_grid_3,LN11_0NX_grid_3_2016,0,13,12,70,59,3.136363636,154,4
+2016,Lincolnshire,willoughby,LN13_9TD,pigpen,3,spr bar,LN13_9TD_grid_3,LN13_9TD_grid_3_2016,0,57,12,1,0,1.2,70,3
+2016,Lincolnshire,willoughby,LN13_9TD,stone.bridge,4,ww,LN13_9TD_grid_4,LN13_9TD_grid_4_2016,0,40,35,22,2,1.858585859,99,4
+2016,Lincolnshire,leggott.m,LN4_4QQ,2x11,2,ww,LN4_4QQ_grid_2,LN4_4QQ_grid_2_2016,0,30,40,25,1,1.96875,96,4
+2016,Lincolnshire,clare_clegott,LN5_0RD,capps,1,ww,LN5_0RD_grid_1,LN5_0RD_grid_1_2016,0,67,43,43,0,1.843137255,153,3
+2016,Lincolnshire,brantedge,LN5_0SP,woolfits,1,ww,LN5_0SP_grid_1,LN5_0SP_grid_1_2016,0,69,25,31,15,1.942857143,140,4
+2016,Lincolnshire,brantedge,LN5_0SP,44.acre,2,spr wh,LN5_0SP_grid_2,LN5_0SP_grid_2_2016,0,135,19,26,0,1.394444444,180,3
+2016,Lincolnshire,brantedge,LN5_0SP,sewage.works,3,spr bar,LN5_0SP_grid_3,LN5_0SP_grid_3_2016,175,0,0,0,0,0,175,1
+2016,Bedfordshire,watergate,LU7_9LN,stable,1,ww,LU7_9LN_grid_1,LU7_9LN_grid_1_2016,38,110,6,0,0,0.792207792,154,3
+2016,Bedfordshire,watergate,LU7_9LN,homefield,3,ww,LU7_9LN_grid_3,LU7_9LN_grid_3_2016,27,64,10,0,0,0.831683168,101,3
+2016,Bedfordshire,hermitage,MK16_0HR,clay.hill,1,ww,MK16_0HR_grid_1,MK16_0HR_grid_1_2016,0,44,25,33,14,2.146551724,116,4
+2016,Bedfordshire,hermitage,MK16_0HR,slade,2,ww,MK16_0HR_grid_2,MK16_0HR_grid_2_2016,0,10,34,31,12,2.517241379,87,4
+2016,Bedfordshire,hermitage,MK16_0HR,moulsoe.cross,3,ww,MK16_0HR_grid_3,MK16_0HR_grid_3_2016,0,124,8,0,0,1.060606061,132,2
+2016,Buckingham,chetwode.manor,MK18_4BB,hermitage,1,ww,MK18_4BB_grid_1,MK18_4BB_grid_1_2016,0,19,14,20,39,2.858695652,92,4
+2016,Buckingham,chetwode.manor,MK18_4BB,court,2,ww,MK18_4BB_grid_2,MK18_4BB_grid_2_2016,0,10,29,126,9,2.770114943,174,4
+2016,Bedfordshire,boxhedge,MK43_0AT,pounds.lane,3,wbar,MK43_0AT_grid_3,MK43_0AT_grid_3_2016,99,13,0,0,0,0.116071429,112,2
+2016,Bedfordshire,boxhedge,MK43_0AT,E.of.N.Crawley,4,ww,MK43_0AT_grid_4,MK43_0AT_grid_4_2016,0,103,1,0,0,1.009615385,104,2
+2016,Bedfordshire,lodge,MK44_1EJ,little.great.close,1,ww,MK44_1EJ_grid_1,MK44_1EJ_grid_1_2016,0,58,105,37,2,1.915841584,202,4
+2016,Bedfordshire,lodge,MK44_1EJ,rootys,3,spr wh,MK44_1EJ_grid_3,MK44_1EJ_grid_3_2016,6,114,1,0,0,0.958677686,121,3
+2016,Bedfordshire,north.end,MK44_1QT,mowing.ground,1,spr bar,MK44_1QT_grid_1,MK44_1QT_grid_1_2016,0,67,6,0,0,1.082191781,73,2
+2016,Bedfordshire,north.end,MK44_1QT,gilberts,2,spr bar,MK44_1QT_grid_2,MK44_1QT_grid_2_2016,35,256,6,0,0,0.902356902,297,3
+2016,Bedfordshire,north.end,MK44_1QT,NorthEnd.Farm,3,ww,MK44_1QT_grid_3,MK44_1QT_grid_3_2016,21,112,27,9,0,1.142011834,169,4
+2016,Bedfordshire,green.end,MK44_2BU,common.green.end,1,ww,MK44_2BU_grid_1,MK44_2BU_grid_1_2016,0,102,54,14,2,1.511627907,172,4
+2016,Bedfordshire,green.end,MK44_2BU,big.gomish,2,ww,MK44_2BU_grid_2,MK44_2BU_grid_2_2016,23,206,26,10,0,1.086792453,265,4
+2016,Bedfordshire,elliott.farms,MK44_2EE,bottom.rosses,2,ww,MK44_2EE_grid_2,MK44_2EE_grid_2_2016,0,32,38,32,25,2.393700787,127,4
+2016,Bedfordshire,elliott.farms,MK44_2EE,top.rosses.by.house,3,ww,MK44_2EE_grid_3,MK44_2EE_grid_3_2016,0,104,66,35,0,1.663414634,205,3
+2016,Bedfordshire,rectory,MK44_2PD,maizys.laze,1,ww,MK44_2PD_grid_1,MK44_2PD_grid_1_2016,0,48,46,7,0,1.594059406,101,3
+2016,Bedfordshire,rectory,MK44_2PD,bilses.hill,2,ww,MK44_2PD_grid_2,MK44_2PD_grid_2_2016,0,210,15,0,0,1.066666667,225,2
+2016,Nottinghamshire,hollygate,NG12_2JW,20.acre,3,wbar,NG12_2JW_grid_3,NG12_2JW_grid_3_2016,79,76,4,0,0,0.528301887,159,3
+2016,Nottinghamshire,hollygate,NG12_2JW,tree.field,4,ww,NG12_2JW_grid_4,NG12_2JW_grid_4_2016,33,54,1,0,0,0.636363636,88,3
+2016,Nottinghamshire,rectory.copley,NG13_9LF,opposite.yard,3,ww,NG13_9LF_grid_3,NG13_9LF_grid_3_2016,0,27,23,21,13,2.238095238,84,4
+2016,Nottinghamshire,staunton.charltons,NG13_9PE,lark,1,ww,NG13_9PE_grid_1,NG13_9PE_grid_1_2016,8,233,23,0,0,1.056818182,264,3
+2016,Nottinghamshire,staunton.charltons,NG13_9PE,pudding,2,ww,NG13_9PE_grid_2,NG13_9PE_grid_2_2016,0,79,44,3,0,1.396825397,126,3
+2016,Nottinghamshire,staunton.charltons,NG13_9PE,barn.meadow,3,spr w,NG13_9PE_grid_3,NG13_9PE_grid_3_2016,2,91,3,0,0,1.010416667,96,3
+2016,Lincolnshire,barn,NG32_3HX,allotment,1,wbar,NG32_3HX_grid_1,NG32_3HX_grid_1_2016,0,58,15,5,0,1.320512821,78,3
+2016,Lincolnshire,barn,NG32_3HX,rutland.north,3,ww,NG32_3HX_grid_3,NG32_3HX_grid_3_2016,9,119,4,0,0,0.962121212,132,3
+2016,Lincolnshire,cranwell.hall,NG34_8NG,Cranwell,3,wbar,NG34_8NG_grid_3,NG34_8NG_grid_3_2016,0,81,49,17,3,1.613333333,150,4
+2016,Northamptonshire,white.house,NN29_7JT,threadgold,1,ww,NN29_7JT_grid_1,NN29_7JT_grid_1_2016,0,164,19,0,0,1.103825137,183,2
+2016,Northamptonshire,white.house,NN29_7JT,front.field,2,ww,NN29_7JT_grid_2,NN29_7JT_grid_2_2016,5,65,7,1,0,1.051282051,78,4
+2016,Northamptonshire,bfc.agronomy,NN6_8NN,mawland.smiths,1,wbar,NN6_8NN_grid_1,NN6_8NN_grid_1_2016,0,195,39,5,0,1.205020921,239,3
+2016,Northamptonshire,bfc.agronomy,NN6_8NN,fifty.acre,2,wbar,NN6_8NN_grid_2,NN6_8NN_grid_2_2016,116,161,8,0,0,0.621052632,285,3
+2016,Norfolk,kerdiston.house,NR10_4RP,jollies,1,ww,NR10_4RP_grid_1,NR10_4RP_grid_1_2016,10,147,18,2,0,1.06779661,177,4
+2016,Norfolk,kerdiston.house,NR10_4RP,point.house,3,wbar,NR10_4RP_grid_3,NR10_4RP_grid_3_2016,52,121,5,0,0,0.735955056,178,3
+2016,Norfolk,flordon.hall,NR15_1RT,24.acre,1,ww,NR15_1RT_grid_1,NR15_1RT_grid_1_2016,2,224,6,0,0,1.017241379,232,3
+2016,Norfolk,friars,NR15_2QL,pillbox,1,ww,NR15_2QL_grid_1,NR15_2QL_grid_1_2016,99,82,1,0,0,0.461538462,182,3
+2016,Norfolk,friars,NR15_2QL,goose,3,ww,NR15_2QL_grid_3,NR15_2QL_grid_3_2016,101,13,0,0,0,0.114035088,114,2
+2016,Norfolk,villa,NR16_1SN,glebe.30,1,spr trit,NR16_1SN_grid_1,NR16_1SN_grid_1_2016,226,0,0,0,0,0,226,1
+2016,Norfolk,honingham.thorpe.farms,NR17_1NJ,sherrards.green,1,wbar,NR17_1NJ_grid_1,NR17_1NJ_grid_1_2016,29,60,6,0,0,0.757894737,95,3
+2016,Norfolk,honingham.thorpe.farms,NR17_1NJ,stack.yard,3,ww,NR17_1NJ_grid_3,NR17_1NJ_grid_3_2016,92,64,13,0,0,0.532544379,169,3
+2016,Warwickshire,bourton,OX17_1AS,angels.piece,1,spr bar,OX17_1AS_grid_1,OX17_1AS_grid_1_2016,0,54,61,3,0,1.56779661,118,3
+2016,Warwickshire,bourton,OX17_1AS,midmeadow,4,ww,OX17_1AS_grid_4,OX17_1AS_grid_4_2016,0,92,21,0,0,1.185840708,113,2
+2016,Northamptonshire,clattercote,OX17_1QB,barn.ground,1,ww,OX17_1QB_grid_1,OX17_1QB_grid_1_2016,9,227,42,17,5,1.273333333,300,5
+2016,Northamptonshire,clattercote,OX17_1QB,clattercote.meadow,2,ww,OX17_1QB_grid_2,OX17_1QB_grid_2_2016,0,0,0,38,52,3.577777778,90,2
+2016,Oxfordshire,perdiswell,OX20_1QJ,motox,3,spr bar,OX20_1QJ_grid_3,OX20_1QJ_grid_3_2016,177,51,0,0,0,0.223684211,228,2
+2016,Oxfordshire,perdiswell,OX20_1QJ,south.bank,4,ww,OX20_1QJ_grid_4,OX20_1QJ_grid_4_2016,0,179,72,11,0,1.358778626,262,3
+2016,Oxfordshire,souldern.grounds,OX25_6LU,slade,1,sp bar,OX25_6LU_grid_1,OX25_6LU_grid_1_2016,0,39,60,74,81,2.775590551,254,4
+2016,Oxfordshire,souldern.grounds,OX25_6LU,ramground,2,sp bar,OX25_6LU_grid_2,OX25_6LU_grid_2_2016,2,123,82,13,0,1.481818182,220,4
+2016,Oxfordshire,souldern.grounds,OX25_6LU,Viaduct.dry.lays,3,wosr,OX25_6LU_grid_3,OX25_6LU_grid_3_2016,8,63,16,1,0,1.113636364,88,4
+2016,Oxfordshire,twelve.acre.farm,OX29_4BH,carters,1,ww,OX29_4BH_grid_1,OX29_4BH_grid_1_2016,0,0,0,3,116,3.974789916,119,2
+2016,Oxfordshire,twelve.acre.farm,OX29_4BH,emmas,2,ww,OX29_4BH_grid_2,OX29_4BH_grid_2_2016,0,3,9,19,39,3.342857143,70,4
+2016,Oxfordshire,model,OX49_5DX,stokewell.ground,1,ww,OX49_5DX_grid_1,OX49_5DX_grid_1_2016,1,50,37,9,7,1.721153846,104,5
+2016,Oxfordshire,model,OX49_5DX,clare,3,ww,OX49_5DX_grid_3,OX49_5DX_grid_3_2016,0,112,90,11,1,1.537383178,214,4
+2016,Lincolnshire,churchview,PE10_0RZ,picks,1,ww,PE10_0RZ_grid_1,PE10_0RZ_grid_1_2016,0,90,64,26,0,1.644444444,180,3
+2016,Lincolnshire,churchview,PE10_0RZ,cumfrey,2,ww,PE10_0RZ_grid_2,PE10_0RZ_grid_2_2016,0,2,34,51,116,3.384236453,203,4
+2016,Lincolnshire,charlton,PE12_6QG,rookery.one.and.two,1,spr wh,PE12_6QG_grid_1,PE12_6QG_grid_1_2016,0,28,40,93,17,2.556179775,178,4
+2016,Lincolnshire,charlton,PE12_6QG,rookery.bottom,2,ww,PE12_6QG_grid_2,PE12_6QG_grid_2_2016,0,164,2,0,0,1.012048193,166,2
+2016,Lincolnshire,lighthouse,PE12_9YT,corridor,1,ww,PE12_9YT_grid_1,PE12_9YT_grid_1_2016,0,65,126,64,5,2.034615385,260,4
+2016,Cambridgeshire,worlicks,PE26_2XF,opposite.cottage,1,ww,PE26_2XF_grid_1,PE26_2XF_grid_1_2016,0,15,16,34,155,3.495454545,220,4
+2016,Cambridgeshire,worlicks,PE26_2XF,bridge.ground,2,ww,PE26_2XF_grid_2,PE26_2XF_grid_2_2016,0,66,23,43,52,2.440217391,184,4
+2016,Cambridgeshire,wennington.lodge,PE28_2LP,bridge,1,ww,PE28_2LP_grid_1,PE28_2LP_grid_1_2016,20,168,12,0,0,0.96,200,3
+2016,Cambridgeshire,wennington.lodge,PE28_2LP,behind.the.cotts,2,spr bar,PE28_2LP_grid_2,PE28_2LP_grid_2_2016,2,174,50,15,0,1.323651452,241,4
+2016,Cambridgeshire,barnfield,PE28_3LY,hill.field,2,spr bar,PE28_3LY_grid_2,PE28_3LY_grid_2_2016,24,137,0,0,0,0.850931677,161,2
+2016,Cambridgeshire,barnfield,PE28_3LY,sinkers.hole,3,spr bar,PE28_3LY_grid_3,PE28_3LY_grid_3_2016,0,42,17,8,0,1.492537313,67,3
+2016,Cambridgeshire,barnfield,PE28_3LY,barnfield,4,ww,PE28_3LY_grid_4,PE28_3LY_grid_4_2016,0,13,15,11,1,2,40,4
+2016,Cambridgeshire,manor.williams,PE28_5RR,chapmans,2,ww,PE28_5RR_grid_2,PE28_5RR_grid_2_2016,0,68,24,7,0,1.383838384,99,3
+2016,Cambridgeshire,manor.williams,PE28_5RR,top.of.lambs.lane.east,3,spr bar,PE28_5RR_grid_3,PE28_5RR_grid_3_2016,8,52,0,0,0,0.866666667,60,2
+2016,Norfolk,cannister,PE32_2LW,lower.norrels.garden,1,ww,PE32_2LW_grid_1,PE32_2LW_grid_1_2016,0,0,4,14,82,3.78,100,3
+2016,Norfolk,cannister,PE32_2LW,barn.field,2,ww,PE32_2LW_grid_2,PE32_2LW_grid_2_2016,0,27,48,29,3,2.074766355,107,4
+2016,Cambridgeshire,burnt.house,PE7_2HP,joans.drove,1,ww,PE7_2HP_grid_1,PE7_2HP_grid_1_2016,17,146,29,20,8,1.345454545,220,5
+2016,Cambridgeshire,burnt.house,PE7_2HP,mecks.centre,2,ww,PE7_2HP_grid_2,PE7_2HP_grid_2_2016,2,117,11,12,1,1.251748252,143,5
+2016,NA,RSPB,NA,NA,1,spr bar,RSPB_grid_1,RSPB_grid_1_2016,0,2,23,100,15,2.914285714,140,4
+2016,NA,RSPB,NA,NA,2,ww,RSPB_grid_2,RSPB_grid_2_2016,0,1,3,17,166,3.860962567,187,4
+2016,Bedfordshire,fullers.hill,SG19_3BP,pink.cottage.close,1,ww,SG19_3BP_grid_1,SG19_3BP_grid_1_2016,0,147,100,28,3,1.59352518,278,4
+2016,Bedfordshire,fullers.hill,SG19_3BP,dick.and.dolls,3,spr bar,SG19_3BP_grid_3,SG19_3BP_grid_3_2016,122,110,0,0,0,0.474137931,232,2
+2016,East Riding of Yorkshire,manor.house,YO25_8DX,16.acre,1,ww,YO25_8DX_grid_1,YO25_8DX_grid_1_2016,0,137,17,0,0,1.11038961,154,2
+2016,North Yorkshire,overton,YO30_1AA,overton.6,1,ww,YO30_1AA_grid_1,YO30_1AA_grid_1_2016,107,3,0,0,0,0.027272727,110,2
+2016,North Yorkshire,hall.bank,YO30_1AN,eds,1,ww,YO30_1AN_grid_1,YO30_1AN_grid_1_2016,214,63,0,0,0,0.227436823,277,2
+2016,North Yorkshire,hall.bank,YO30_1AN,new.parks,2,ww,YO30_1AN_grid_2,YO30_1AN_grid_2_2016,184,5,0,0,0,0.026455026,189,2
+2016,North Yorkshire,hallmoor,YO32_2RQ,hallmoor.5,1,ww,YO32_2RQ_grid_1,YO32_2RQ_grid_1_2016,139,60,0,0,0,0.301507538,199,2
+2016,North Yorkshire,spinks,YO61_1ET,north,2,wbar,YO61_1ET_grid_2,YO61_1ET_grid_2_2016,78,26,0,1,0,0.276190476,105,3
+2016,North Yorkshire,raskelf,YO61_3LG,raskelf,3,ww,YO61_3LG_grid_3,YO61_3LG_grid_3_2016,23,132,23,6,0,1.065217391,184,4
+2016,North Yorkshire,birch,YO62_5YD,newton.grange.bottom,2,wbar,YO62_5YD_grid_2,YO62_5YD_grid_2_2016,141,51,0,0,0,0.265625,192,2
+2017,Warwickshire,squab.hall,CV33_9QB,field.3,1,ww,CV33_9QB_grid_1,CV33_9QB_grid_1_2017,10,145,51,3,0,1.224880383,209,4
+2017,Warwickshire,squab.hall,CV33_9QB,field.5,2,ww,CV33_9QB_grid_2,CV33_9QB_grid_2_2017,0,61,9,4,0,1.22972973,74,3
+2017,Warwickshire,gaydon.hill,CV35_0HQ,shooters.bank,1,ww,CV35_0HQ_grid_1,CV35_0HQ_grid_1_2017,79,117,8,0,0,0.651960784,204,3
+2017,Warwickshire,gaydon.hill,CV35_0HQ,mushroom.field,2,ww,CV35_0HQ_grid_2,CV35_0HQ_grid_2_2017,10,213,2,0,0,0.964444444,225,3
+2017,Nottinghamshire,magpie.hall,DN22_0LB,s15,1,ww,DN22_0LB_grid_1,DN22_0LB_grid_1_2017,46,158,2,6,1,0.863849765,213,5
+2017,Nottinghamshire,magpie.hall,DN22_0LB,s16,2,ww,DN22_0LB_grid_2,DN22_0LB_grid_2_2017,20,77,0,0,0,0.793814433,97,2
+2017,Lincolnshire,grange.faulding,DN40_3PX,glebe.22,1,wb,DN40_3PX_grid_1,DN40_3PX_grid_1_2017,91,76,1,0,0,0.464285714,168,3
+2017,South Yorks,manor.robinson,DN7_5TG,front.field,1,ww,DN7_5TG_grid_1,DN7_5TG_grid_1_2017,0,72,61,38,3,1.83908046,174,4
+2017,Buckinghamshire,moorleys,HP18_9QQ,wells.road,1,ww,HP18_9QQ_grid_1,HP18_9QQ_grid_1_2017,0,141,81,47,2,1.667896679,271,4
+2017,Buckinghamshire,moorleys,HP18_9QQ,cow.road,2,ww,HP18_9QQ_grid_2,HP18_9QQ_grid_2_2017,0,18,21,24,5,2.235294118,68,4
+2017,East Riding of Yorkshire,grange.patchett,HU15_1RG,19.acre,3,ww,HU15_1RG_grid_3,HU15_1RG_grid_3_2017,34,132,1,0,0,0.80239521,167,3
+2017,East Riding of Yorkshire,bransholme.dairy,HU7_4YP,field.3,1,ww,HU7_4YP_grid_1,HU7_4YP_grid_1_2017,1,65,74,62,30,2.237068966,232,5
+2017,East Riding of Yorkshire,bransholme.dairy,HU7_4YP,field.2,2,ww,HU7_4YP_grid_2,HU7_4YP_grid_2_2017,18,117,20,0,0,1.012903226,155,3
+2017,Norfolk,hill,IP25_7EF,arable,1,wb,IP25_7EF_grid_1,IP25_7EF_grid_1_2017,54,83,4,0,0,0.645390071,141,3
+2017,Norfolk,hill,IP25_7EF,bush.meadow,2,ww,IP25_7EF_grid_2,IP25_7EF_grid_2_2017,0,124,44,3,0,1.292397661,171,3
+2017,Leicestershire,welldale,LE12_6JD,20.acre.railway,1,ww,LE12_6JD_grid_1,LE12_6JD_grid_1_2017,81,29,0,0,0,0.263636364,110,2
+2017,Leicestershire,welldale,LE12_6JD,17.acre.middle,2,ww,LE12_6JD_grid_2,LE12_6JD_grid_2_2017,118,43,0,0,0,0.267080745,161,2
+2017,Northamptonshire,fox.and.hounds,LE16_7UG,19.acre,1,ww,LE16_7UG_grid_1,LE16_7UG_grid_1_2017,0,93,45,2,0,1.35,140,3
+2017,Northamptonshire,fox.and.hounds,LE16_7UG,25.acre,2,ww,LE16_7UG_grid_2,LE16_7UG_grid_2_2017,0,67,48,18,0,1.631578947,133,3
+2017,Northamptonshire,fox.and.hounds,LE16_7UG,noseley,3,ww,LE16_7UG_grid_3,LE16_7UG_grid_3_2017,8,189,27,1,0,1.093333333,225,4
+2017,Northamptonshire,poplars,LE16_8TB,seeds,1,ww,LE16_8TB_grid_1,LE16_8TB_grid_1_2017,15,128,9,0,0,0.960526316,152,3
+2017,Lincolnshire,hall,LN1_2LL,top.cliffe,1,ww,LN1_2LL_grid_1,LN1_2LL_grid_1_2017,86,18,1,0,0,0.19047619,105,3
+2017,Lincolnshire,hall,LN1_2LL,45.acre,2,ww,LN1_2LL_grid_2,LN1_2LL_grid_2_2017,259,18,2,0,0,0.078853047,279,3
+2017,Lincolnshire,hall,LN1_2LL,middle.briest,3,ww,LN1_2LL_grid_3,LN1_2LL_grid_3_2017,111,11,0,0,0,0.090163934,122,2
+2017,Lincolnshire,willoughby,LN13_9TD,thors.manor.3,2,wba,LN13_9TD_grid_2,LN13_9TD_grid_2_2017,18,110,3,0,0,0.885496183,131,3
+2017,Lincolnshire,willoughby,LN13_9TD,stone.bridge,4,wb,LN13_9TD_grid_4,LN13_9TD_grid_4_2017,12,69,17,1,0,1.070707071,99,4
+2017,Lincolnshire,leggott.m,LN4_4QQ,bridge.leggott,1,sw,LN4_4QQ_grid_1,LN4_4QQ_grid_1_2017,0,76,49,5,0,1.453846154,130,3
+2017,Lincolnshire,leggott.m,LN4_4QQ,2x11,2,sw,LN4_4QQ_grid_2,LN4_4QQ_grid_2_2017,9,98,5,0,0,0.964285714,112,3
+2017,Lincolnshire,leggott.c,LN5_0RD,capps,1,ww,LN5_0RD_grid_1,LN5_0RD_grid_1_2017,1,54,17,24,45,2.411347518,141,5
+2017,Lincolnshire,leggott.c,LN5_0RD,horsewoods.top,2,ww,LN5_0RD_grid_2,LN5_0RD_grid_2_2017,0,250,8,0,0,1.031007752,258,2
+2017,Bedfordshire,watergate,LU7_9LN,denmans.close,2,ww,LU7_9LN_grid_2,LU7_9LN_grid_2_2017,2,69,11,0,0,1.109756098,82,3
+2017,Buckingham,chetwode.manor,MK18_4BB,hill.ground,3,wb,MK18_4BB_grid_3,MK18_4BB_grid_3_2017,23,84,1,0,0,0.796296296,108,3
+2017,Bedfordshire,boxhedge,MK43_0AT,big.boxhedge,1,ww,MK43_0AT_grid_1,MK43_0AT_grid_1_2017,1,289,11,2,0,1.04620462,303,4
+2017,Bedfordshire,boxhedge,MK43_0AT,jollys,2,ww,MK43_0AT_grid_2,MK43_0AT_grid_2_2017,0,66,126,27,0,1.821917808,219,3
+2017,Bedfordshire,boxhedge,MK43_0AT,E.of.N.Crawley,4,wb,MK43_0AT_grid_4,MK43_0AT_grid_4_2017,68,31,1,0,1,0.366336634,101,4
+2017,Bedfordshire,lodge,MK44_1EJ,little.great.close,1,ww,MK44_1EJ_grid_1,MK44_1EJ_grid_1_2017,0,73,89,26,1,1.761904762,189,4
+2017,Bedfordshire,lodge,MK44_1EJ,middle.lodge,2,ww,MK44_1EJ_grid_2,MK44_1EJ_grid_2_2017,2,124,9,0,0,1.051851852,135,3
+2017,Bedfordshire,north.end,MK44_1QT,NorthEnd.Farm,3,ww,MK44_1QT_grid_3,MK44_1QT_grid_3_2017,42,87,24,16,0,1.082840237,169,4
+2017,Bedfordshire,green.end,MK44_2BU,big.gomish,2,ww,MK44_2BU_grid_2,MK44_2BU_grid_2_2017,17,154,64,33,9,1.505415162,277,5
+2017,Bedfordshire,green.end,MK44_2BU,great.skimish.field,3,ww,MK44_2BU_grid_3,MK44_2BU_grid_3_2017,17,190,2,0,0,0.928229665,209,3
+2017,Bedfordshire,elliott.farms,MK44_2EE,fence.field,1,ww,MK44_2EE_grid_1,MK44_2EE_grid_1_2017,0,171,1,0,0,1.005813953,172,2
+2017,Bedfordshire,elliott.farms,MK44_2EE,top.rosses.by.house,3,ww,MK44_2EE_grid_3,MK44_2EE_grid_3_2017,6,161,33,0,0,1.135,200,3
+2017,Bedfordshire,rectory,MK44_2PD,bilses.hill,2,ww,MK44_2PD_grid_2,MK44_2PD_grid_2_2017,0,159,61,0,0,1.277272727,220,2
+2017,Nottinghamshire,hollygate,NG12_2JW,long.7.acre,1,ww,NG12_2JW_grid_1,NG12_2JW_grid_1_2017,2,72,0,0,0,0.972972973,74,2
+2017,Nottinghamshire,hollygate,NG12_2JW,orchard.field,2,ww,NG12_2JW_grid_2,NG12_2JW_grid_2_2017,105,96,6,4,0,0.568720379,211,4
+2017,Nottinghamshire,hollygate,NG12_2JW,tree.field,4,ww,NG12_2JW_grid_4,NG12_2JW_grid_4_2017,22,51,5,4,3,1,85,5
+2017,Nottinghamshire,rectory.copley,NG13_9LF,corner.13.acre,1,ww,NG13_9LF_grid_1,NG13_9LF_grid_1_2017,18,83,16,2,0,1.016806723,119,4
+2017,Nottinghamshire,staunton.charltons,NG13_9PE,lark,1,sw,NG13_9PE_grid_1,NG13_9PE_grid_1_2017,116,135,0,0,0,0.537848606,251,2
+2017,Nottinghamshire,staunton.charltons,NG13_9PE,pudding,2,sw,NG13_9PE_grid_2,NG13_9PE_grid_2_2017,18,102,5,0,0,0.896,125,3
+2017,Nottinghamshire,staunton.charltons,NG13_9PE,barn.meadow,3,ww,NG13_9PE_grid_3,NG13_9PE_grid_3_2017,0,42,35,19,0,1.760416667,96,3
+2017,Lincolnshire,barn,NG32_3HX,rutland.south,2,ww,NG32_3HX_grid_2,NG32_3HX_grid_2_2017,43,105,4,0,0,0.743421053,152,3
+2017,Lincolnshire,barn,NG32_3HX,rutland.north,3,ww,NG32_3HX_grid_3,NG32_3HX_grid_3_2017,115,24,0,0,0,0.172661871,139,2
+2017,Northamptonshire,bfc.agronomy,NN6_8NN,ram.close,3,ww,NN6_8NN_grid_3,NN6_8NN_grid_3_2017,241,34,0,0,0,0.123636364,275,2
+2017,Norfolk,kerdiston.house,NR10_4RP,jollies,1,wb,NR10_4RP_grid_1,NR10_4RP_grid_1_2017,143,34,0,0,0,0.192090395,177,2
+2017,Norfolk,kerdiston.house,NR10_4RP,treasures,2,ww,NR10_4RP_grid_2,NR10_4RP_grid_2_2017,0,102,16,1,0,1.151260504,119,3
+2017,Norfolk,flordon.hall,NR15_1RT,24.acre,1,ww,NR15_1RT_grid_1,NR15_1RT_grid_1_2017,0,92,84,27,2,1.702439024,205,4
+2017,Norfolk,flordon.hall,NR15_1RT,bracon.close,2,ww,NR15_1RT_grid_2,NR15_1RT_grid_2_2017,0,84,24,1,0,1.23853211,109,3
+2017,Norfolk,friars,NR15_2QL,pillbox,1,wb,NR15_2QL_grid_1,NR15_2QL_grid_1_2017,114,59,6,0,0,0.396648045,179,3
+2017,Norfolk,friars,NR15_2QL,ollands,2,ww,NR15_2QL_grid_2,NR15_2QL_grid_2_2017,71,70,1,0,0,0.507042254,142,3
+2017,Norfolk,villa,NR16_1SN,glebe.30,1,ww,NR16_1SN_grid_1,NR16_1SN_grid_1_2017,221,3,0,0,0,0.013392857,224,2
+2017,Norfolk,honingham.thorpe.farms,NR17_1NJ,far.field,2,ww,NR17_1NJ_grid_2,NR17_1NJ_grid_2_2017,26,122,11,0,0,0.905660377,159,3
+2017,Norfolk,honingham.thorpe.farms,NR17_1NJ,stack.yard,3,ww,NR17_1NJ_grid_3,NR17_1NJ_grid_3_2017,87,57,3,0,0,0.428571429,147,3
+2017,Warwickshire,bourton,OX17_1AS,banbury.road,2,ww,OX17_1AS_grid_2,OX17_1AS_grid_2_2017,104,96,0,0,0,0.48,200,2
+2017,Northamptonshire,clattercote,OX17_1QB,stokes,3,ww,OX17_1QB_grid_3,OX17_1QB_grid_3_2017,15,144,2,0,0,0.919254658,161,3
+2017,Oxfordshire,perdiswell,OX20_1QJ,begbroke.A44,2,ww,OX20_1QJ_grid_2,OX20_1QJ_grid_2_2017,13,179,70,45,2,1.495145631,309,5
+2017,Oxfordshire,souldern.grounds,OX25_6LU,Viaduct.dry.lays,3,ww,OX25_6LU_grid_3,OX25_6LU_grid_3_2017,11,69,8,0,0,0.965909091,88,3
+2017,Oxfordshire,twelve.acre.farm,OX29_4BH,mushroom,3,ww,OX29_4BH_grid_3,OX29_4BH_grid_3_2017,123,124,10,0,0,0.560311284,257,3
+2017,Oxfordshire,model.farm,OX49_5DX,stokewell.ground,1,ww,OX49_5DX_grid_1,OX49_5DX_grid_1_2017,11,82,11,0,0,1,104,3
+2017,Lincolnshire,charlton,PE12_6QG,rookery.bottom,2,wb,PE12_6QG_grid_2,PE12_6QG_grid_2_2017,92,61,1,0,0,0.409090909,154,3
+2017,Cambridgeshire,worlick,PE26_2XF,bridge.ground,2,wb,PE26_2XF_grid_2,PE26_2XF_grid_2_2017,37,106,24,11,2,1.083333333,180,5
+2017,Cambridgeshire,worlick,PE26_2XF,16.acre,3,ww,PE26_2XF_grid_3,PE26_2XF_grid_3_2017,0,4,10,27,83,3.524193548,124,4
+2017,Cambridgeshire,wennington.lodge,PE28_2LP,behind.the.cotts,2,ww,PE28_2LP_grid_2,PE28_2LP_grid_2_2017,1,109,89,31,8,1.731092437,238,5
+2017,Cambridgeshire,manor.williams,PE28_5RR,back.of.hovels,1,ww,PE28_5RR_grid_1,PE28_5RR_grid_1_2017,2,192,0,0,0,0.989690722,194,2
+2017,Norfolk,cannister,PE32_2LW,lower.norrels.garden,1,ww,PE32_2LW_grid_1,PE32_2LW_grid_1_2017,0,69,23,3,0,1.305263158,95,3
+2017,Norfolk,cannister,PE32_2LW,barn.field,2,ww,PE32_2LW_grid_2,PE32_2LW_grid_2_2017,0,70,34,2,0,1.358490566,106,3
+2017,Bedfordshire,fullers.hill,SG19_3BP,pink.cottage.close,1,ww,SG19_3BP_grid_1,SG19_3BP_grid_1_2017,23,252,3,0,0,0.928057554,278,3
+2017,East Riding of Yorkshire,manor.house,YO25_8DX,44.acre.the.bottoms,2,,YO25_8DX_grid_2,YO25_8DX_grid_2_2017,21,132,5,0,0,0.898734177,158,3
+2017,North Yorkshire,overton,YO30_1AA,overton.5,2,ww,YO30_1AA_grid_2,YO30_1AA_grid_2_2017,224,18,0,0,0,0.074380165,242,2
+2017,North Yorkshire,overton,YO30_1AA,church,3,ww,YO30_1AA_grid_3,YO30_1AA_grid_3_2017,124,0,0,0,0,0,124,1
+2017,North Yorkshire,hall.bank,YO30_1AN,eds,1,ww,YO30_1AN_grid_1,YO30_1AN_grid_1_2017,204,55,0,0,0,0.212355212,259,2
+2017,North Yorkshire,hallmoor,YO32_2RQ,hallmoor.5,1,ww,YO32_2RQ_grid_1,YO32_2RQ_grid_1_2017,146,48,0,0,0,0.24742268,194,2
+2017,North Yorkshire,hallmoor,YO32_2RQ,hall.moor.8,2,ww,YO32_2RQ_grid_2,YO32_2RQ_grid_2_2017,97,23,0,0,0,0.191666667,120,2
+2017,North Yorkshire,raskelf,YO61_3LG,24.acre,1,ww,YO61_3LG_grid_1,YO61_3LG_grid_1_2017,12,158,29,13,7,1.292237443,219,5
+2017,North Yorkshire,birch,YO62_5YD,newton.grange.23,1,ww,YO62_5YD_grid_1,YO62_5YD_grid_1_2017,77,82,0,0,0,0.51572327,159,2
+2018,Warwickshire,squab.hall,CV33_9QB,Near.Ufton,3,WW,CV33_9QB_grid_3,CV33_9QB_grid_3_2018,21,173,0,0,0,0.891752577,194,2
+2018,Warwickshire,gaydon.hill,CV35_0HQ,garage.field,3,ww,CV35_0HQ_grid_3,CV35_0HQ_grid_3_2018,0,64,63,39,1,1.862275449,167,4
+2018,Warwickshire,croft,CV37_7NF,big.meadow,1,ww,CV37_7NF_grid_1,CV37_7NF_grid_1_2018,5,151,19,0,0,1.08,175,3
+2018,Warwickshire,croft,CV37_7NF,new.bridge,2,ww,CV37_7NF_grid_2,CV37_7NF_grid_2_2018,11,139,5,3,0,1,158,4
+2018,Nottinghamshire,magpie.hall,DN22_0LB,s15,1,sbarley,DN22_0LB_grid_1,DN22_0LB_grid_1_2018,198,29,0,0,0,0.127753304,227,2
+2018,Nottinghamshire,magpie.hall,DN22_0LB,s16,2,sbarley,DN22_0LB_grid_2,DN22_0LB_grid_2_2018,86,10,0,0,0,0.104166667,96,2
+2018,Lincolnshire,grange,DN36_5UP,stones,1,wbarley,DN36_5UP_grid_1,DN36_5UP_grid_1_2018,168,32,0,0,0,0.16,200,2
+2018,Lincolnshire,grange,DN36_5UP,grimoldbys,2,ww,DN36_5UP_grid_2,DN36_5UP_grid_2_2018,15,119,1,0,0,0.896296296,135,3
+2018,Lincolnshire,grange.faulding,DN40_3PX,glebe.22,1,s oats,DN40_3PX_grid_1,DN40_3PX_grid_1_2018,193,17,0,0,0,0.080952381,210,2
+2018,South Yorks,highfields,DN5_7UJ,common.hill,1,sbarley,DN5_7UJ_grid_1,DN5_7UJ_grid_1_2018,232,0,0,0,0,0,232,1
+2018,South Yorks,manor.robinson,DN7_5TG,buckleys,2,ww,DN7_5TG_grid_2,DN7_5TG_grid_2_2018,0,27,22,97,89,3.055319149,235,4
+2018,Buckinghamshire,moorleys,HP18_9QQ,cow.road,2,sbarley,HP18_9QQ_grid_2,HP18_9QQ_grid_2_2018,29,39,0,0,0,0.573529412,68,2
+2018,Buckinghamshire,moorleys,HP18_9QQ,moorleys,3,ww,HP18_9QQ_grid_3,HP18_9QQ_grid_3_2018,0,74,60,41,0,1.811428571,175,3
+2018,Buckinghamshire,moorleys,HP18_9QQ,rixons,4,wbarley,HP18_9QQ_grid_4,HP18_9QQ_grid_4_2018,45,94,0,0,0,0.676258993,139,2
+2018,East Riding of Yorkshire,new.headlands,HU11_4QA,back.of.beans,2,ww,HU11_4QA_grid_2,HU11_4QA_grid_2_2018,0,117,81,14,0,1.514150943,212,3
+2018,East Riding of Yorkshire,grange.patchett,HU15_1RG,back.field,1,ww,HU15_1RG_grid_1,HU15_1RG_grid_1_2018,15,152,34,23,15,1.460251046,239,5
+2018,East Riding of Yorkshire,grange.patchett,HU15_1RG,15.acre.greenoak,2,slinseed,HU15_1RG_grid_2,HU15_1RG_grid_2_2018,8,122,0,0,0,0.938461538,130,2
+2018,East Riding of Yorkshire,bransholme.dairy,HU7_4YP,field.2,2,ww,HU7_4YP_grid_2,HU7_4YP_grid_2_2018,2,53,31,67,12,2.206060606,165,5
+2018,Norfolk,hill,IP25_7EF,bush.meadow,2,ww,IP25_7EF_grid_2,IP25_7EF_grid_2_2018,0,27,72,52,20,2.380116959,171,4
+2018,Leicestershire,welldale,LE12_6JD,20.acre.railway,1,sbarley,LE12_6JD_grid_1,LE12_6JD_grid_1_2018,104,10,0,0,0,0.087719298,114,2
+2018,Leicestershire,welldale,LE12_6JD,17.acre.middle,2,ww,LE12_6JD_grid_2,LE12_6JD_grid_2_2018,86,88,0,0,0,0.505747126,174,2
+2018,Leicestershire,welldale,LE12_6JD,stack.field,3,ww,LE12_6JD_grid_3,LE12_6JD_grid_3_2018,17,80,8,0,0,0.914285714,105,3
+2018,Northamptonshire,fox.and.hounds,LE16_7UG,Sedgeleys,4,ww,LE16_7UG_grid_4,LE16_7UG_grid_4_2018,10,66,4,0,0,0.925,80,3
+2018,Lincolnshire,hall,LN1_2LL,clay.hills,4,ww,LN1_2LL_grid_4,LN1_2LL_grid_4_2018,125,99,13,1,0,0.537815126,238,4
+2018,Lincolnshire,cooper,LN11_0NX,no.7a,1,sbarley,LN11_0NX_grid_1,LN11_0NX_grid_1_2018,160,2,0,0,0,0.012345679,162,2
+2018,Lincolnshire,cooper,LN11_0NX,no.17,2,sbarley,LN11_0NX_grid_2,LN11_0NX_grid_2_2018,133,3,0,0,0,0.022058824,136,2
+2018,Lincolnshire,willoughby,LN13_9TD,garden,1,ww,LN13_9TD_grid_1,LN13_9TD_grid_1_2018,7,143,2,0,0,0.967105263,152,3
+2018,Lincolnshire,willoughby,LN13_9TD,pigpen,3,ww,LN13_9TD_grid_3,LN13_9TD_grid_3_2018,3,40,20,7,0,1.442857143,70,4
+2018,Lincolnshire,brantedge,LN5_0SP,woolfits,1,ww,LN5_0SP_grid_1,LN5_0SP_grid_1_2018,0,29,33,38,40,2.635714286,140,4
+2018,Lincolnshire,brantedge,LN5_0SP,44.acre,2,sbarley,LN5_0SP_grid_2,LN5_0SP_grid_2_2018,176,4,0,0,0,0.022222222,180,2
+2018,Lincolnshire,brantedge,LN5_0SP,sewage.works,3,ww,LN5_0SP_grid_3,LN5_0SP_grid_3_2018,8,92,8,0,0,1,108,3
+2018,Bedfordshire,watergate,LU7_9LN,stable,1,ww,LU7_9LN_grid_1,LU7_9LN_grid_1_2018,4,145,5,0,0,1.006493506,154,3
+2018,Bedfordshire,watergate,LU7_9LN,denmans.close,2,ww,LU7_9LN_grid_2,LU7_9LN_grid_2_2018,0,30,18,30,12,2.266666667,90,4
+2018,Bedfordshire,hermitage,MK16_0HR,slade,2,sbarley,MK16_0HR_grid_2,MK16_0HR_grid_2_2018,26,78,0,0,0,0.75,104,2
+2018,Bedfordshire,hermitage,MK16_0HR,moulsoe.cross,3,ww,MK16_0HR_grid_3,MK16_0HR_grid_3_2018,0,28,60,42,0,2.107692308,130,3
+2018,Bedfordshire,boxhedge,MK43_0AT,big.boxhedge,1,wb,MK43_0AT_grid_1,MK43_0AT_grid_1_2018,222,80,0,0,0,0.264900662,302,2
+2018,Bedfordshire,boxhedge,MK43_0AT,jollys,2,wb,MK43_0AT_grid_2,MK43_0AT_grid_2_2018,14,180,18,5,0,1.064516129,217,4
+2018,Bedfordshire,boxhedge,MK43_0AT,pounds.lane,3,ww,MK43_0AT_grid_3,MK43_0AT_grid_3_2018,22,89,0,0,0,0.801801802,111,2
+2018,Bedfordshire,lodge,MK44_1EJ,rootys,3,ww,MK44_1EJ_grid_3,MK44_1EJ_grid_3_2018,3,68,49,0,0,1.383333333,120,3
+2018,Bedfordshire,north.end,MK44_1QT,gilberts,2,ww,MK44_1QT_grid_2,MK44_1QT_grid_2_2018,98,200,2,0,0,0.68,300,3
+2018,Bedfordshire,green.end,MK44_2BU,common.green.end,1,ww,MK44_2BU_grid_1,MK44_2BU_grid_1_2018,20,167,0,0,0,0.893048128,187,2
+2018,Bedfordshire,elliott.farms,MK44_2EE,fence.field,1,ww,MK44_2EE_grid_1,MK44_2EE_grid_1_2018,47,128,0,0,0,0.731428571,175,2
+2018,Bedfordshire,elliott.farms,MK44_2EE,bottom.rosses,2,sbarley,MK44_2EE_grid_2,MK44_2EE_grid_2_2018,24,103,0,0,0,0.811023622,127,2
+2018,Bedfordshire,elliott.farms,MK44_2EE,top.rosses.by.house,3,ww,MK44_2EE_grid_3,MK44_2EE_grid_3_2018,32,172,0,0,0,0.843137255,204,2
+2018,Bedfordshire,rectory,MK44_2PD,maizys.laze,1,ww,MK44_2PD_grid_1,MK44_2PD_grid_1_2018,0,54,11,15,21,2.02970297,101,4
+2018,Nottinghamshire,hollygate,NG12_2JW,orchard.field,2,wbarley,NG12_2JW_grid_2,NG12_2JW_grid_2_2018,196,19,1,0,0,0.097222222,216,3
+2018,Nottinghamshire,hollygate,NG12_2JW,20.acre,3,ww,NG12_2JW_grid_3,NG12_2JW_grid_3_2018,51,65,23,14,5,1.094936709,158,5
+2018,Nottinghamshire,rectory.copley,NG13_9LF,opposite.yard,3,sbarley,NG13_9LF_grid_3,NG13_9LF_grid_3_2018,6,78,0,0,0,0.928571429,84,2
+2018,Nottinghamshire,staunton.charltons,NG13_9PE,pudding,2,ww,NG13_9PE_grid_2,NG13_9PE_grid_2_2018,4,110,12,0,0,1.063492063,126,3
+2018,Lincolnshire,barn,NG32_3HX,allotment,1,ww,NG32_3HX_grid_1,NG32_3HX_grid_1_2018,0,15,43,13,1,2,72,4
+2018,Lincolnshire,barn,NG32_3HX,rutland.south,2,wbarley,NG32_3HX_grid_2,NG32_3HX_grid_2_2018,69,93,3,4,0,0.656804734,169,4
+2018,Lincolnshire,barn,NG32_3HX,rutland.north,3,wbarley,NG32_3HX_grid_3,NG32_3HX_grid_3_2018,135,5,0,0,0,0.035714286,140,2
+2018,Northamptonshire,white.house,NN29_7JT,threadgold,1,ww,NN29_7JT_grid_1,NN29_7JT_grid_1_2018,0,91,90,13,0,1.597938144,194,3
+2018,Northamptonshire,white.house,NN29_7JT,front.field,2,ww,NN29_7JT_grid_2,NN29_7JT_grid_2_2018,14,53,10,1,0,0.974358974,78,4
+2018,Northamptonshire,white.house,NN29_7JT,whitehouse,3,ww,NN29_7JT_grid_3,NN29_7JT_grid_3_2018,36,188,0,0,0,0.839285714,224,2
+2018,Norfolk,flordon.hall,NR15_1RT,bracon.close,2,ww,NR15_1RT_grid_2,NR15_1RT_grid_2_2018,0,23,36,48,2,2.266055046,109,4
+2018,Norfolk,friars,NR15_2QL,ollands,2,ww,NR15_2QL_grid_2,NR15_2QL_grid_2_2018,58,81,1,0,0,0.592857143,140,3
+2018,Norfolk,friars,NR15_2QL,goose,3,ww,NR15_2QL_grid_3,NR15_2QL_grid_3_2018,16,83,2,1,0,0.882352941,102,4
+2018,Norfolk,honingham.thorpe.farms,NR17_1NJ,sherrards.green,1,wbarley,NR17_1NJ_grid_1,NR17_1NJ_grid_1_2018,34,55,1,0,0,0.633333333,90,3
+2018,Warwickshire,bourton,OX17_1AS,angels.piece,1,ww,OX17_1AS_grid_1,OX17_1AS_grid_1_2018,0,112,0,0,0,1,112,1
+2018,Warwickshire,bourton,OX17_1AS,midmeadow,4,ww,OX17_1AS_grid_4,OX17_1AS_grid_4_2018,13,102,0,0,0,0.886956522,115,2
+2018,Northamptonshire,clattercote,OX17_1QB,barn.ground,1,ww,OX17_1QB_grid_1,OX17_1QB_grid_1_2018,0,169,76,53,2,1.626666667,300,4
+2018,Northamptonshire,clattercote,OX17_1QB,clattercote.meadow,2,ww,OX17_1QB_grid_2,OX17_1QB_grid_2_2018,0,0,43,47,0,2.522222222,90,2
+2018,Oxfordshire,perdiswell,OX20_1QJ,motox,3,ww,OX20_1QJ_grid_3,OX20_1QJ_grid_3_2018,180,38,0,0,0,0.174311927,218,2
+2018,Oxfordshire,souldern.grounds,OX25_6LU,ramground,2,ww,OX25_6LU_grid_2,OX25_6LU_grid_2_2018,16,191,0,0,0,0.922705314,207,2
+2018,Oxfordshire,twelve.acre.farm,OX29_4BH,emmas,2,sbarley,OX29_4BH_grid_2,OX29_4BH_grid_2_2018,56,12,0,0,0,0.176470588,68,2
+2018,Oxfordshire,model.farm,OX49_5DX,stokewell.ground,1,ww,OX49_5DX_grid_1,OX49_5DX_grid_1_2018,24,88,2,0,0,0.807017544,114,3
+2018,Oxfordshire,model.farm,OX49_5DX,clare,3,ww,OX49_5DX_grid_3,OX49_5DX_grid_3_2018,0,91,101,17,0,1.645933014,209,3
+2018,Lincolnshire,churchview,PE10_0RZ,picks,1,ww,PE10_0RZ_grid_1,PE10_0RZ_grid_1_2018,0,12,59,77,32,2.716666667,180,4
+2018,Lincolnshire,churchview,PE10_0RZ,cumfrey,2,SW,PE10_0RZ_grid_2,PE10_0RZ_grid_2_2018,1,172,30,0,0,1.142857143,203,3
+2018,Lincolnshire,churchview,PE10_0RZ,turners,3,SW,PE10_0RZ_grid_3,PE10_0RZ_grid_3_2018,0,136,9,0,0,1.062068966,145,2
+2018,Lincolnshire,charlton,PE12_6QG,rookery.one.and.two,1,ww,PE12_6QG_grid_1,PE12_6QG_grid_1_2018,0,35,89,54,1,2.117318436,179,4
+2018,Lincolnshire,charlton,PE12_6QG,rookery.bottom,2,ww,PE12_6QG_grid_2,PE12_6QG_grid_2_2018,1,0,2,29,130,3.771604938,162,4
+2018,Lincolnshire,lighthouse,PE12_9YT,corridor,1,ww,PE12_9YT_grid_1,PE12_9YT_grid_1_2018,20,237,0,0,0,0.922178988,257,2
+2018,Cambridgeshire,wennington.lodge,PE28_2LP,bridge,1,,PE28_2LP_grid_1,PE28_2LP_grid_1_2018,0,192,26,0,0,1.119266055,218,2
+2018,Cambridgeshire,barnfield,PE28_3LY,hill.field,2,wb,PE28_3LY_grid_2,PE28_3LY_grid_2_2018,71,94,0,0,0,0.56969697,165,2
+2018,Cambridgeshire,manor.williams,PE28_5RR,top.of.lambs.lane.east,3,ww,PE28_5RR_grid_3,PE28_5RR_grid_3_2018,5,51,5,0,0,1,61,3
+2018,Norfolk,cannister,PE32_2LW,lower.norrels.garden,1,woats/fallow,PE32_2LW_grid_1,PE32_2LW_grid_1_2018,100,0,0,0,0,0,100,1
+2018,Norfolk,cannister,PE32_2LW,barn.field,2,woats,PE32_2LW_grid_2,PE32_2LW_grid_2_2018,47,56,0,0,0,0.54368932,103,2
+2018,Cambridgeshire,burnt.house,PE7_2HP,joans.drove,1,ww,PE7_2HP_grid_1,PE7_2HP_grid_1_2018,11,163,30,14,2,1.240909091,220,5
+2018,Cambridgeshire,burnt.house,PE7_2HP,mecks.centre,2,ww,PE7_2HP_grid_2,PE7_2HP_grid_2_2018,5,104,28,4,0,1.219858156,141,4
+2018,Cambridgeshire,burnt.house,PE7_2HP,fletchers,3,ww,PE7_2HP_grid_3,PE7_2HP_grid_3_2018,170,12,0,0,0,0.065934066,182,2
+2018,Bedfordshire,fullers.hill,SG19_3BP,middle.diff.align,2,ww,SG19_3BP_grid_2,SG19_3BP_grid_2_2018,0,97,64,20,0,1.574585635,181,3
+2018,Bedfordshire,fullers.hill,SG19_3BP,dick.and.dolls,3,ww,SG19_3BP_grid_3,SG19_3BP_grid_3_2018,7,183,37,3,0,1.156521739,230,4
+2018,East Riding of Yorkshire,manor.house,YO25_8DX,16.acre,1,ww,YO25_8DX_grid_1,YO25_8DX_grid_1_2018,99,76,0,0,0,0.434285714,175,2
+2018,East Riding of Yorkshire,manor.house,YO25_8DX,44.acre.the.bottoms,2,ww,YO25_8DX_grid_2,YO25_8DX_grid_2_2018,67,170,22,0,0,0.826254826,259,3
+2018,North Yorkshire,overton,YO30_1AA,overton.6,1,ww,YO30_1AA_grid_1,YO30_1AA_grid_1_2018,110,0,0,0,0,0,110,1
+2018,North Yorkshire,overton,YO30_1AA,church,3,soats,YO30_1AA_grid_3,YO30_1AA_grid_3_2018,133,0,0,0,0,0,133,1
+2018,North Yorkshire,hall.bank,YO30_1AN,new.parks,2,ww,YO30_1AN_grid_2,YO30_1AN_grid_2_2018,188,1,0,0,0,0.005291005,189,2
+2018,North Yorkshire,hallmoor,YO32_2RQ,hallmoor.5,1,wbarley,YO32_2RQ_grid_1,YO32_2RQ_grid_1_2018,97,97,0,0,0,0.5,194,2
+2018,North Yorkshire,raskelf,YO61_3LG,45.acre.nr.duffields,2,ww,YO61_3LG_grid_2,YO61_3LG_grid_2_2018,0,51,54,14,0,1.68907563,119,3
+2018,North Yorkshire,raskelf,YO61_3LG,raskelf,3,ww,YO61_3LG_grid_3,YO61_3LG_grid_3_2018,2,48,54,73,5,2.17032967,182,5
+2018,North Yorkshire,birch,YO62_5YD,newton.grange.23,1,wbarley,YO62_5YD_grid_1,YO62_5YD_grid_1_2018,55,110,0,0,0,0.666666667,165,2
+2018,North Yorkshire,birch,YO62_5YD,newton.grange.bottom,2,ww,YO62_5YD_grid_2,YO62_5YD_grid_2_2018,75,64,0,0,0,0.460431655,139,2
+2019,Warwickshire,squab.hall,CV33_9QB,field.3,1,WW,CV33_9QB_grid_1,CV33_9QB_grid_1_2019,13,181,15,0,0,1.009569378,209,3
+2019,Warwickshire,squab.hall,CV33_9QB,field.5,2,ww,CV33_9QB_grid_2,CV33_9QB_grid_2_2019,5,65,4,0,0,0.986486486,74,3
+2019,Warwickshire,squab.hall,CV33_9QB,Barnwell.Farm,4,ww,CV33_9QB_grid_4,CV33_9QB_grid_4_2019,9,49,33,4,1,1.364583333,96,5
+2019,Warwickshire,croft,CV37_7NF,big.meadow,1,wbarley,CV37_7NF_grid_1,CV37_7NF_grid_1_2019,25,151,0,0,0,0.857954545,176,2
+2019,Warwickshire,croft,CV37_7NF,new.bridge,2,wbarleyl,CV37_7NF_grid_2,CV37_7NF_grid_2_2019,65,82,10,1,0,0.664556962,158,4
+2019,Warwickshire,croft,CV37_7NF,croft,3,ww,CV37_7NF_grid_3,CV37_7NF_grid_3_2019,75,57,2,0,0,0.455223881,134,3
+2019,Lincolnshire,grange,DN36_5UP,glasshouse,3,ww,DN36_5UP_grid_3,DN36_5UP_grid_3_2019,0,42,64,79,9,2.283505155,194,4
+2019,Lincolnshire,grange.faulding,DN40_3PX,glebe.22,1,wbarley,DN40_3PX_grid_1,DN40_3PX_grid_1_2019,21,190,0,0,0,0.900473934,211,2
+2019,South Yorks,highfields,DN5_7UJ,common.hill,1,ww,DN5_7UJ_grid_1,DN5_7UJ_grid_1_2019,1,166,40,24,0,1.376623377,231,4
+2019,South Yorks,manor.robinson,DN7_5TG,front.field,1,ww,DN7_5TG_grid_1,DN7_5TG_grid_1_2019,0,16,27,78,59,3,180,4
+2019,South Yorks,manor.robinson,DN7_5TG,buckleys,2,ww,DN7_5TG_grid_2,DN7_5TG_grid_2_2019,3,98,74,50,9,1.846153846,234,5
+2019,Buckinghamshire,moorleys,HP18_9QQ,wells.road,1,wbarley,HP18_9QQ_grid_1,HP18_9QQ_grid_1_2019,0,232,25,1,0,1.104651163,258,3
+2019,Buckinghamshire,moorleys,HP18_9QQ,cow.road,2,wbarley,HP18_9QQ_grid_2,HP18_9QQ_grid_2_2019,0,40,25,0,0,1.384615385,65,2
+2019,East Riding of Yorkshire,new.headlands,HU11_4QA,dottoms,1,ww,HU11_4QA_grid_1,HU11_4QA_grid_1_2019,0,6,80,102,11,2.592964824,199,4
+2019,East Riding of Yorkshire,new.headlands,HU11_4QA,back.of.beans,2,ww,HU11_4QA_grid_2,HU11_4QA_grid_2_2019,6,129,56,20,1,1.438679245,212,5
+2019,East Riding of Yorkshire,grange.patchett,HU15_1RG,15.acre.greenoak,2,ww,HU15_1RG_grid_2,HU15_1RG_grid_2_2019,6,119,6,0,0,1,131,3
+2019,East Riding of Yorkshire,grange.patchett,HU15_1RG,19.acre,3,ww,HU15_1RG_grid_3,HU15_1RG_grid_3_2019,8,81,66,30,0,1.637837838,185,4
+2019,East Riding of Yorkshire,bransholme.dairy,HU7_4YP,field.3,1,ww,HU7_4YP_grid_1,HU7_4YP_grid_1_2019,0,63,73,82,20,2.24789916,238,4
+2019,Norfolk,hill,IP25_7EF,arable,1,,IP25_7EF_grid_1,IP25_7EF_grid_1_2019,9,81,18,18,8,1.514925373,134,5
+2019,Norfolk,hill,IP25_7EF,bush.meadow,2,sbarley,IP25_7EF_grid_2,IP25_7EF_grid_2_2019,144,27,0,0,0,0.157894737,171,2
+2019,Leicestershire,welldale,LE12_6JD,stack.field,3,sbarley,LE12_6JD_grid_3,LE12_6JD_grid_3_2019,64,149,0,0,0,0.699530516,213,2
+2019,Leicestershire,welldale,LE12_6JD,12.acre.brook,4,ww,LE12_6JD_grid_4,LE12_6JD_grid_4_2019,14,61,33,8,0,1.301724138,116,4
+2019,Northamptonshire,fox.and.hounds,LE16_7UG,noseley,3,ww,LE16_7UG_grid_3,LE16_7UG_grid_3_2019,0,143,65,26,0,1.5,234,3
+2019,Northamptonshire,poplars,LE16_8TB,18.acre,2,ww,LE16_8TB_grid_2,LE16_8TB_grid_2_2019,0,36,59,65,1,2.192546584,161,4
+2019,Lincolnshire,hall,LN1_2LL,top.cliffe,1,ww,LN1_2LL_grid_1,LN1_2LL_grid_1_2019,84,27,0,0,0,0.243243243,111,2
+2019,Lincolnshire,hall,LN1_2LL,45.acre,2,ww,LN1_2LL_grid_2,LN1_2LL_grid_2_2019,226,41,11,2,0,0.246428571,280,4
+2019,Lincolnshire,hall,LN1_2LL,middle.briest,3,,LN1_2LL_grid_3,LN1_2LL_grid_3_2019,50,72,0,0,0,0.590163934,122,2
+2019,Lincolnshire,cooper,LN11_0NX,no.7a,1,wbarley,LN11_0NX_grid_1,LN11_0NX_grid_1_2019,2,69,1,0,0,0.986111111,72,3
+2019,Lincolnshire,cooper,LN11_0NX,no.17,2,ww,LN11_0NX_grid_2,LN11_0NX_grid_2_2019,0,9,23,68,20,2.825,120,4
+2019,Lincolnshire,cooper,LN11_0NX,no.19,3,ww,LN11_0NX_grid_3,LN11_0NX_grid_3_2019,0,125,27,0,0,1.177631579,152,2
+2019,Lincolnshire,willoughby,LN13_9TD,garden,1,ww,LN13_9TD_grid_1,LN13_9TD_grid_1_2019,18,94,35,1,0,1.128378378,148,4
+2019,Lincolnshire,willoughby,LN13_9TD,thors.manor.3,2,ww,LN13_9TD_grid_2,LN13_9TD_grid_2_2019,16,115,2,0,0,0.894736842,133,3
+2019,Lincolnshire,leggott.m,LN4_4QQ,bridge.leggott,1,ww,LN4_4QQ_grid_1,LN4_4QQ_grid_1_2019,45,85,0,0,0,0.653846154,130,2
+2019,Lincolnshire,leggott.m,LN4_4QQ,2x11,2,ww,LN4_4QQ_grid_2,LN4_4QQ_grid_2_2019,21,45,40,6,0,1.276785714,112,4
+2019,Lincolnshire,leggott.c,LN5_0RD,capps,1,ww,LN5_0RD_grid_1,LN5_0RD_grid_1_2019,0,57,26,53,12,2.135135135,148,4
+2019,Lincolnshire,leggott.c,LN5_0RD,horsewoods.3rd,3,ww,LN5_0RD_grid_3,LN5_0RD_grid_3_2019,5,199,0,0,0,0.975490196,204,2
+2019,Lincolnshire,brantedge,LN5_0SP,woolfits,1,sbarley,LN5_0SP_grid_1,LN5_0SP_grid_1_2019,1,137,2,0,0,1.007142857,140,3
+2019,Lincolnshire,brantedge,LN5_0SP,sewage.works,3,sbarley,LN5_0SP_grid_3,LN5_0SP_grid_3_2019,111,62,0,0,0,0.358381503,173,2
+2019,Bedfordshire,watergate,LU7_9LN,stable,1,ww,LU7_9LN_grid_1,LU7_9LN_grid_1_2019,0,48,92,14,0,1.779220779,154,3
+2019,Bedfordshire,watergate,LU7_9LN,homefield,3,ww,LU7_9LN_grid_3,LU7_9LN_grid_3_2019,27,51,23,3,0,1.019230769,104,4
+2019,Bedfordshire,hermitage,MK16_0HR,clay.hill,1,ww,MK16_0HR_grid_1,MK16_0HR_grid_1_2019,3,44,65,4,0,1.603448276,116,4
+2019,Bedfordshire,hermitage,MK16_0HR,moulsoe.cross,3,ww,MK16_0HR_grid_3,MK16_0HR_grid_3_2019,8,122,1,0,0,0.946564885,131,3
+2019,Buckingham,chetwode.manor,MK18_4BB,court,2,WW,MK18_4BB_grid_2,MK18_4BB_grid_2_2019,0,155,18,0,0,1.104046243,173,2
+2019,Bedfordshire,boxhedge,MK43_0AT,pounds.lane,3,wbarley,MK43_0AT_grid_3,MK43_0AT_grid_3_2019,96,0,0,0,0,0,96,1
+2019,Bedfordshire,boxhedge,MK43_0AT,E.of.N.Crawley,4,ww,MK43_0AT_grid_4,MK43_0AT_grid_4_2019,15,73,10,4,0,1.029411765,102,4
+2019,Bedfordshire,lodge,MK44_1EJ,little.great.close,1,ww,MK44_1EJ_grid_1,MK44_1EJ_grid_1_2019,0,5,18,28,152,3.610837438,203,4
+2019,Bedfordshire,lodge,MK44_1EJ,middle.lodge,2,ww,MK44_1EJ_grid_2,MK44_1EJ_grid_2_2019,0,64,44,28,1,1.751824818,137,4
+2019,Bedfordshire,north.end,MK44_1QT,gilberts,2,ww45,MK44_1QT_grid_2,MK44_1QT_grid_2_2019,128,161,10,0,0,0.605351171,299,3
+2019,Bedfordshire,north.end,MK44_1QT,NorthEnd.Farm,3,ww,MK44_1QT_grid_3,MK44_1QT_grid_3_2019,21,74,42,34,0,1.520467836,171,4
+2019,Bedfordshire,green.end,MK44_2BU,common.green.end,1,ww,MK44_2BU_grid_1,MK44_2BU_grid_1_2019,12,162,7,2,0,0.994535519,183,4
+2019,Bedfordshire,elliott.farms,MK44_2EE,bottom.rosses,2,wbarley,MK44_2EE_grid_2,MK44_2EE_grid_2_2019,0,98,29,2,0,1.255813953,129,3
+2019,Bedfordshire,elliott.farms,MK44_2EE,top.rosses.by.house,3,ww,MK44_2EE_grid_3,MK44_2EE_grid_3_2019,1,54,85,49,0,1.962962963,189,4
+2019,Bedfordshire,rectory,MK44_2PD,bilses.hill,2,,MK44_2PD_grid_2,MK44_2PD_grid_2_2019,0,78,88,37,18,1.977375566,221,4
+2019,Bedfordshire,rectory,MK44_2PD,bairds,3,ww,MK44_2PD_grid_3,MK44_2PD_grid_3_2019,11,116,2,0,0,0.930232558,129,3
+2019,Nottinghamshire,hollygate,NG12_2JW,long.7.acre,1,ww,NG12_2JW_grid_1,NG12_2JW_grid_1_2019,0,15,23,28,13,2.493670886,79,4
+2019,Nottinghamshire,hollygate,NG12_2JW,tree.field,4,ww,NG12_2JW_grid_4,NG12_2JW_grid_4_2019,11,42,10,14,11,1.681818182,88,5
+2019,Nottinghamshire,rectory.copley,NG13_9LF,corner.13.acre,1,ww,NG13_9LF_grid_1,NG13_9LF_grid_1_2019,22,78,18,5,0,1.048780488,123,4
+2019,Nottinghamshire,rectory.copley,NG13_9LF,top.end.mill.lane,2,wbarley,NG13_9LF_grid_2,NG13_9LF_grid_2_2019,23,86,0,0,0,0.788990826,109,2
+2019,Nottinghamshire,staunton.charltons,NG13_9PE,lark,1,ww,NG13_9PE_grid_1,NG13_9PE_grid_1_2019,0,73,97,94,0,2.079545455,264,3
+2019,Nottinghamshire,staunton.charltons,NG13_9PE,pudding,2,swheat,NG13_9PE_grid_2,NG13_9PE_grid_2_2019,92,33,0,0,0,0.264,125,2
+2019,Nottinghamshire,staunton.charltons,NG13_9PE,barn.meadow,3,swheat,NG13_9PE_grid_3,NG13_9PE_grid_3_2019,25,71,0,0,0,0.739583333,96,2
+2019,Lincolnshire,barn,NG32_3HX,allotment,1,ww,NG32_3HX_grid_1,NG32_3HX_grid_1_2019,0,5,51,16,0,2.152777778,72,3
+2019,Northamptonshire,white.house,NN29_7JT,front.field,2,wbarley,NN29_7JT_grid_2,NN29_7JT_grid_2_2019,18,34,16,6,0,1.135135135,74,4
+2019,Northamptonshire,white.house,NN29_7JT,whitehouse,3,wbarley,NN29_7JT_grid_3,NN29_7JT_grid_3_2019,26,160,26,5,0,1.046082949,217,4
+2019,Northamptonshire,bfc.agronomy,NN6_8NN,ram.close,3,ww,NN6_8NN_grid_3,NN6_8NN_grid_3_2019,262,10,0,0,0,0.036764706,272,2
+2019,Norfolk,flordon.hall,NR15_1RT,24.acre,1,ww,NR15_1RT_grid_1,NR15_1RT_grid_1_2019,0,1,4,77,142,3.607142857,224,4
+2019,Norfolk,friars,NR15_2QL,pillbox,1,ww,NR15_2QL_grid_1,NR15_2QL_grid_1_2019,97,84,0,0,0,0.464088398,181,2
+2019,Norfolk,friars,NR15_2QL,goose,3,wbarley,NR15_2QL_grid_3,NR15_2QL_grid_3_2019,21,69,5,1,0,0.854166667,96,4
+2019,Norfolk,villa,NR16_1SN,glebe.30,1,swheat,NR16_1SN_grid_1,NR16_1SN_grid_1_2019,216,10,0,0,0,0.044247788,226,2
+2019,Norfolk,honingham.thorpe.farms,NR17_1NJ,sherrards.green,1,ww,NR17_1NJ_grid_1,NR17_1NJ_grid_1_2019,48,45,0,0,0,0.483870968,93,2
+2019,Northamptonshire,clattercote,OX17_1QB,stokes,3,WW,OX17_1QB_grid_3,OX17_1QB_grid_3_2019,3,117,45,2,0,1.275449102,167,4
+2019,Oxfordshire,perdiswell,OX20_1QJ,south.bank,4,ww,OX20_1QJ_grid_4,OX20_1QJ_grid_4_2019,38,220,1,0,0,0.857142857,259,3
+2019,Oxfordshire,souldern.grounds,OX25_6LU,slade,1,ww,OX25_6LU_grid_1,OX25_6LU_grid_1_2019,7,241,0,0,0,0.971774194,248,2
+2019,Oxfordshire,model.farm,OX49_5DX,stokewell.ground,1,WW,OX49_5DX_grid_1,OX49_5DX_grid_1_2019,25,66,13,0,0,0.884615385,104,3
+2019,Oxfordshire,model.farm,OX49_5DX,sids.and.the.linings,2,ww,OX49_5DX_grid_2,OX49_5DX_grid_2_2019,0,232,34,10,0,1.195652174,276,3
+2019,Lincolnshire,churchview,PE10_0RZ,turners,3,ww,PE10_0RZ_grid_3,PE10_0RZ_grid_3_2019,0,1,17,48,114,3.527777778,180,4
+2019,Lincolnshire,lighthouse,PE12_9YT,corridor,1,ww,PE12_9YT_grid_1,PE12_9YT_grid_1_2019,0,126,134,0,0,1.515384615,260,2
+2019,Lincolnshire,lighthouse,PE12_9YT,roundabout,2,ww,PE12_9YT_grid_2,PE12_9YT_grid_2_2019,225,55,0,0,0,0.196428571,280,2
+2019,Cambridgeshire,wennington.lodge,PE28_2LP,bridge,1,ww,PE28_2LP_grid_1,PE28_2LP_grid_1_2019,1,103,68,16,0,1.526595745,188,4
+2019,Cambridgeshire,barnfield,PE28_3LY,big.orchard,1,ww,PE28_3LY_grid_1,PE28_3LY_grid_1_2019,0,76,94,5,0,1.594285714,175,3
+2019,Cambridgeshire,barnfield,PE28_3LY,hill.field,2,ww,PE28_3LY_grid_2,PE28_3LY_grid_2_2019,3,138,22,1,2,1.162650602,166,5
+2019,Cambridgeshire,barnfield,PE28_3LY,sinkers.hole,3,wbarley,PE28_3LY_grid_3,PE28_3LY_grid_3_2019,2,47,13,3,0,1.261538462,65,4
+2019,Cambridgeshire,barnfield,PE28_3LY,barnfield,4,wbarley,PE28_3LY_grid_4,PE28_3LY_grid_4_2019,0,22,4,7,6,1.923076923,39,4
+2019,Cambridgeshire,manor.williams,PE28_5RR,chapmans,2,ww,PE28_5RR_grid_2,PE28_5RR_grid_2_2019,0,82,17,0,0,1.171717172,99,2
+2019,Cambridgeshire,manor.williams,PE28_5RR,top.of.lambs.lane.east,3,sbarley,PE28_5RR_grid_3,PE28_5RR_grid_3_2019,20,39,0,0,0,0.661016949,59,2
+2019,Norfolk,cannister,PE32_2LW,lower.norrels.garden,1,ww,PE32_2LW_grid_1,PE32_2LW_grid_1_2019,0,21,53,16,0,1.944444444,90,3
+2019,Norfolk,cannister,PE32_2LW,barn.field,2,ww,PE32_2LW_grid_2,PE32_2LW_grid_2_2019,0,49,47,10,0,1.632075472,106,3
+2019,Cambridgeshire,burnt.house,PE7_2HP,joans.drove,1,ww,PE7_2HP_grid_1,PE7_2HP_grid_1_2019,118,18,34,43,7,1.104545455,220,5
+2019,Bedfordshire,fullers.hill,SG19_3BP,pink.cottage.close,1,ww,SG19_3BP_grid_1,SG19_3BP_grid_1_2019,16,228,33,0,0,1.061371841,277,3
+2019,East Riding of Yorkshire,manor.house,YO25_8DX,44.acre.the.bottoms,2,wbarley,YO25_8DX_grid_2,YO25_8DX_grid_2_2019,60,203,14,0,0,0.833935018,277,3
+2019,North Yorkshire,overton,YO30_1AA,church,3,ww,YO30_1AA_grid_3,YO30_1AA_grid_3_2019,132,1,0,0,0,0.007518797,133,2
+2019,North Yorkshire,hall.bank,YO30_1AN,eds,1,ww,YO30_1AN_grid_1,YO30_1AN_grid_1_2019,138,137,1,0,0,0.503623188,276,3
+2019,North Yorkshire,hall.bank,YO30_1AN,new.parks,2,ww,YO30_1AN_grid_2,YO30_1AN_grid_2_2019,188,1,0,0,0,0.005291005,189,2
+2019,North Yorkshire,hallmoor,YO32_2RQ,hall.moor.8,2,ww,YO32_2RQ_grid_2,YO32_2RQ_grid_2_2019,52,63,0,0,0,0.547826087,115,2
+2019,North Yorkshire,raskelf,YO61_3LG,24.acre,1,ww,YO61_3LG_grid_1,YO61_3LG_grid_1_2019,0,77,88,41,5,1.876777251,211,4
+2019,North Yorkshire,raskelf,YO61_3LG,45.acre.nr.duffields,2,ww,YO61_3LG_grid_2,YO61_3LG_grid_2_2019,9,81,0,0,0,0.9,90,2
+2019,North Yorkshire,birch,YO62_5YD,newton.grange.bottom,2,ww,YO62_5YD_grid_2,YO62_5YD_grid_2_2019,88,78,4,1,1,0.540697674,172,5
+2020,Warwickshire,squab.hall,CV33_9QB,field.3,1,ww,CV33_9QB_grid_1,CV33_9QB_grid_1_2020,185,19,3,1,0,0.134615385,208,4
+2020,Warwickshire,squab.hall,CV33_9QB,field.5,2,ww,CV33_9QB_grid_2,CV33_9QB_grid_2_2020,48,20,0,0,0,0.294117647,68,2
+2020,Warwickshire,gaydon.hill,CV35_0HQ,shooters.bank,1,sb,CV35_0HQ_grid_1,CV35_0HQ_grid_1_2020,208,2,0,0,0,0.00952381,210,2
+2020,Warwickshire,gaydon.hill,CV35_0HQ,mushroom.field,2,sb,CV35_0HQ_grid_2,CV35_0HQ_grid_2_2020,223,1,0,0,0,0.004464286,224,2
+2020,Warwickshire,gaydon.hill,CV35_0HQ,colt.house,4,sb,CV35_0HQ_grid_4,CV35_0HQ_grid_4_2020,118,38,1,0,0,0.25477707,157,3
+2020,Warwickshire,croft,CV37_7NF,big.meadow,1,sb,CV37_7NF_grid_1,CV37_7NF_grid_1_2020,184,1,0,0,0,0.005405405,185,2
+2020,Warwickshire,croft,CV37_7NF,new.bridge,2,sb,CV37_7NF_grid_2,CV37_7NF_grid_2_2020,155,0,0,0,0,0,155,1
+2020,Warwickshire,croft,CV37_7NF,croft,3,sw,CV37_7NF_grid_3,CV37_7NF_grid_3_2020,131,3,0,0,0,0.02238806,134,2
+2020,Warwickshire,croft,CV37_7NF,tubbs.end.8,4,ww,CV37_7NF_grid_4,CV37_7NF_grid_4_2020,21,169,47,0,0,1.109704641,237,3
+2020,Nottinghamshire,magpie.hall,DN22_0LB,s15,1,sb,DN22_0LB_grid_1,DN22_0LB_grid_1_2020,107,123,0,0,0,0.534782609,230,2
+2020,Nottinghamshire,magpie.hall,DN22_0LB,s16,2,sb,DN22_0LB_grid_2,DN22_0LB_grid_2_2020,52,46,0,0,0,0.469387755,98,2
+2020,Norfolk,hill,IP25_7EF,arable,1,sb,IP25_7EF_grid_1,IP25_7EF_grid_1_2020,70,64,5,0,0,0.532374101,139,3
+2020,Leicestershire,welldale,LE12_6JD,20.acre.railway,1,sw,LE12_6JD_grid_1,LE12_6JD_grid_1_2020,109,0,0,0,0,0,109,1
+2020,Leicestershire,welldale,LE12_6JD,17.acre.middle,2,sw,LE12_6JD_grid_2,LE12_6JD_grid_2_2020,136,0,0,0,0,0,136,1
+2020,Lincolnshire,hall,LN1_2LL,middle.briest,3,sb,LN1_2LL_grid_3,LN1_2LL_grid_3_2020,98,25,0,0,0,0.203252033,123,2
+2020,Lincolnshire,leggott.c,LN5_0RD,horsewoods.3rd,3,sb,LN5_0RD_grid_3,LN5_0RD_grid_3_2020,150,37,0,0,0,0.197860963,187,2
+2020,Lincolnshire,brantedge,LN5_0SP,44.acre,2,sw,LN5_0SP_grid_2,LN5_0SP_grid_2_2020,176,0,0,0,0,0,176,1
+2020,Bedfordshire,watergate,LU7_9LN,stable,1,sb,LU7_9LN_grid_1,LU7_9LN_grid_1_2020,153,1,0,0,0,0.006493506,154,2
+2020,Bedfordshire,watergate,LU7_9LN,denmans.close,2,ww,LU7_9LN_grid_2,LU7_9LN_grid_2_2020,8,77,3,0,0,0.943181818,88,3
+2020,Bedfordshire,watergate,LU7_9LN,homefield,3,sb,LU7_9LN_grid_3,LU7_9LN_grid_3_2020,90,11,0,0,0,0.108910891,101,2
+2020,Bedfordshire,hermitage,MK16_0HR,clay.hill,1,ww,MK16_0HR_grid_1,MK16_0HR_grid_1_2020,10,109,0,0,0,0.915966387,119,2
+2020,Bedfordshire,hermitage,MK16_0HR,slade,2,sb,MK16_0HR_grid_2,MK16_0HR_grid_2_2020,95,7,0,0,0,0.068627451,102,2
+2020,Buckingham,chetwode.manor,MK18_4BB,hill.ground,3,sb,MK18_4BB_grid_3,MK18_4BB_grid_3_2020,104,3,0,0,0,0.028037383,107,2
+2020,Bedfordshire,boxhedge,MK43_0AT,big.boxhedge,1,ww,MK43_0AT_grid_1,MK43_0AT_grid_1_2020,179,133,1,0,0,0.431309904,313,3
+2020,Bedfordshire,boxhedge,MK43_0AT,jollys,2,ww,MK43_0AT_grid_2,MK43_0AT_grid_2_2020,1,142,51,17,1,1.410377358,212,5
+2020,Bedfordshire,boxhedge,MK43_0AT,E.of.N.Crawley,4,sb,MK43_0AT_grid_4,MK43_0AT_grid_4_2020,69,33,1,0,0,0.339805825,103,3
+2020,Bedfordshire,lodge,MK44_1EJ,little.great.close,1,sb,MK44_1EJ_grid_1,MK44_1EJ_grid_1_2020,0,187,0,0,0,1,187,1
+2020,Bedfordshire,lodge,MK44_1EJ,middle.lodge,2,sb,MK44_1EJ_grid_2,MK44_1EJ_grid_2_2020,33,92,0,0,0,0.736,125,2
+2020,Bedfordshire,north.end,MK44_1QT,mowing.ground,1,sb,MK44_1QT_grid_1,MK44_1QT_grid_1_2020,20,46,0,0,0,0.696969697,66,2
+2020,Bedfordshire,north.end,MK44_1QT,gilberts,2,sb,MK44_1QT_grid_2,MK44_1QT_grid_2_2020,235,60,0,0,0,0.203389831,295,2
+2020,Bedfordshire,north.end,MK44_1QT,NorthEnd.Farm,3,sb,MK44_1QT_grid_3,MK44_1QT_grid_3_2020,156,15,0,0,0,0.087719298,171,2
+2020,Bedfordshire,green.end,MK44_2BU,common.green.end,1,ww,MK44_2BU_grid_1,MK44_2BU_grid_1_2020,35,137,11,0,0,0.868852459,183,3
+2020,Bedfordshire,green.end,MK44_2BU,great.skimish.field,3,sw,MK44_2BU_grid_3,MK44_2BU_grid_3_2020,153,57,0,0,0,0.271428571,210,2
+2020,Bedfordshire,elliott.farms,MK44_2EE,fence.field,1,ww,MK44_2EE_grid_1,MK44_2EE_grid_1_2020,0,161,2,0,0,1.012269939,163,2
+2020,Bedfordshire,rectory,MK44_2PD,bairds,3,sb,MK44_2PD_grid_3,MK44_2PD_grid_3_2020,34,95,0,0,0,0.736434109,129,2
+2020,Nottinghamshire,hollygate,NG12_2JW,orchard.field,2,sb,NG12_2JW_grid_2,NG12_2JW_grid_2_2020,137,78,0,0,0,0.362790698,215,2
+2020,Nottinghamshire,hollygate,NG12_2JW,20.acre,3,sb,NG12_2JW_grid_3,NG12_2JW_grid_3_2020,83,48,6,2,2,0.524822695,141,5
+2020,Nottinghamshire,staunton.charltons,NG13_9PE,lark,1,sb,NG13_9PE_grid_1,NG13_9PE_grid_1_2020,23,238,0,0,0,0.911877395,261,2
+2020,Nottinghamshire,staunton.charltons,NG13_9PE,pudding,2,sb,NG13_9PE_grid_2,NG13_9PE_grid_2_2020,77,55,0,0,0,0.416666667,132,2
+2020,Nottinghamshire,staunton.charltons,NG13_9PE,barn.meadow,3,sb,NG13_9PE_grid_3,NG13_9PE_grid_3_2020,36,60,0,0,0,0.625,96,2
+2020,Lincolnshire,barn,NG32_3HX,rutland.south,2,sb,NG32_3HX_grid_2,NG32_3HX_grid_2_2020,67,83,4,2,1,0.643312102,157,5
+2020,Lincolnshire,barn,NG32_3HX,rutland.north,3,sb,NG32_3HX_grid_3,NG32_3HX_grid_3_2020,130,7,0,0,0,0.051094891,137,2
+2020,Northamptonshire,white.house,NN29_7JT,front.field,2,sb,NN29_7JT_grid_2,NN29_7JT_grid_2_2020,30,41,0,0,0,0.577464789,71,2
+2020,Northamptonshire,white.house,NN29_7JT,whitehouse,3,sb,NN29_7JT_grid_3,NN29_7JT_grid_3_2020,44,158,2,0,0,0.794117647,204,3
+2020,Northamptonshire,bfc.agronomy,NN6_8NN,mawland.smiths,1,sb,NN6_8NN_grid_1,NN6_8NN_grid_1_2020,221,18,0,0,0,0.075313808,239,2
+2020,Northamptonshire,bfc.agronomy,NN6_8NN,fifty.acre,2,sb,NN6_8NN_grid_2,NN6_8NN_grid_2_2020,242,44,0,0,0,0.153846154,286,2
+2020,Norfolk,flordon.hall,NR15_1RT,24.acre,1,sb,NR15_1RT_grid_1,NR15_1RT_grid_1_2020,0,145,70,3,0,1.348623853,218,3
+2020,Norfolk,flordon.hall,NR15_1RT,bracon.close,2,sb,NR15_1RT_grid_2,NR15_1RT_grid_2_2020,0,108,0,0,0,1,108,1
+2020,Norfolk,friars,NR15_2QL,pillbox,1,ww,NR15_2QL_grid_1,NR15_2QL_grid_1_2020,28,138,7,0,0,0.878612717,173,3
+2020,Norfolk,friars,NR15_2QL,ollands,2,ww,NR15_2QL_grid_2,NR15_2QL_grid_2_2020,12,116,5,2,0,0.977777778,135,4
+2020,Norfolk,villa,NR16_1SN,glebe.30,1,ww,NR16_1SN_grid_1,NR16_1SN_grid_1_2020,221,1,0,0,0,0.004504505,222,2
+2020,Norfolk,honingham.thorpe.farms,NR17_1NJ,sherrards.green,1,wb,NR17_1NJ_grid_1,NR17_1NJ_grid_1_2020,29,53,11,0,0,0.806451613,93,3
+2020,Norfolk,honingham.thorpe.farms,NR17_1NJ,far.field,2,ww,NR17_1NJ_grid_2,NR17_1NJ_grid_2_2020,36,121,0,0,0,0.770700637,157,2
+2020,Norfolk,honingham.thorpe.farms,NR17_1NJ,stack.yard,3,ww,NR17_1NJ_grid_3,NR17_1NJ_grid_3_2020,32,73,12,6,3,1.007936508,126,5
+2020,Warwickshire,bourton,OX17_1AS,angels.piece,1,sb,OX17_1AS_grid_1,OX17_1AS_grid_1_2020,117,4,0,0,0,0.033057851,121,2
+2020,Warwickshire,bourton,OX17_1AS,banbury.road,2,sb,OX17_1AS_grid_2,OX17_1AS_grid_2_2020,198,2,0,0,0,0.01,200,2
+2020,Northamptonshire,clattercote,OX17_1QB,barn.ground,1,sw,OX17_1QB_grid_1,OX17_1QB_grid_1_2020,144,119,2,0,0,0.464150943,265,3
+2020,Oxfordshire,perdiswell,OX20_1QJ,motox,3,ww,OX20_1QJ_grid_3,OX20_1QJ_grid_3_2020,205,19,0,0,0,0.084821429,224,2
+2020,Oxfordshire,souldern.grounds,OX25_6LU,slade,1,sb,OX25_6LU_grid_1,OX25_6LU_grid_1_2020,19,237,5,1,0,0.954198473,262,4
+2020,Oxfordshire,souldern.grounds,OX25_6LU,ramground,2,sb,OX25_6LU_grid_2,OX25_6LU_grid_2_2020,130,86,0,0,0,0.398148148,216,2
+2020,Oxfordshire,twelve.acre.farm,OX29_4BH,emmas,2,sw,OX29_4BH_grid_2,OX29_4BH_grid_2_2020,71,0,0,0,0,0,71,1
+2020,Oxfordshire,model.farm,OX49_5DX,stokewell.ground,1,sw,OX49_5DX_grid_1,OX49_5DX_grid_1_2020,13,65,24,2,0,1.144230769,104,4
+2020,Oxfordshire,model.farm,OX49_5DX,clare,3,sb,OX49_5DX_grid_3,OX49_5DX_grid_3_2020,214,0,0,0,0,0,214,1
+2020,Lincolnshire,churchview,PE10_0RZ,picks,1,ww,PE10_0RZ_grid_1,PE10_0RZ_grid_1_2020,65,71,21,3,0,0.7625,160,4
+2020,Lincolnshire,churchview,PE10_0RZ,cumfrey,2,ww,PE10_0RZ_grid_2,PE10_0RZ_grid_2_2020,0,45,133,24,0,1.896039604,202,3
+2020,Lincolnshire,churchview,PE10_0RZ,turners,3,sw,PE10_0RZ_grid_3,PE10_0RZ_grid_3_2020,175,12,0,0,0,0.064171123,187,2
+2020,Lincolnshire,lighthouse,PE12_9YT,roundabout,2,sw,PE12_9YT_grid_2,PE12_9YT_grid_2_2020,273,7,0,0,0,0.025,280,2
+2020,Lincolnshire,lighthouse,PE12_9YT,lighthouse,3,sw,PE12_9YT_grid_3,PE12_9YT_grid_3_2020,228,0,0,0,0,0,228,1
+2020,Cambridgeshire,worlick,PE26_2XF,opposite.cottage,1,sb,PE26_2XF_grid_1,PE26_2XF_grid_1_2020,195,25,0,0,0,0.113636364,220,2
+2020,Cambridgeshire,worlick,PE26_2XF,bridge.ground,2,ww,PE26_2XF_grid_2,PE26_2XF_grid_2_2020,16,108,59,3,0,1.26344086,186,4
+2020,Cambridgeshire,worlick,PE26_2XF,16.acre,3,ww,PE26_2XF_grid_3,PE26_2XF_grid_3_2020,0,14,48,55,5,2.418032787,122,4
+2020,Cambridgeshire,wennington.lodge,PE28_2LP,bridge,1,sb,PE28_2LP_grid_1,PE28_2LP_grid_1_2020,169,17,0,0,0,0.091397849,186,2
+2020,Cambridgeshire,wennington.lodge,PE28_2LP,behind.the.cotts,2,ww,PE28_2LP_grid_2,PE28_2LP_grid_2_2020,6,188,6,0,0,1,200,3
+2020,Cambridgeshire,barnfield,PE28_3LY,big.orchard,1,wb,PE28_3LY_grid_1,PE28_3LY_grid_1_2020,0,6,16,38,113,3.49132948,173,4
+2020,Cambridgeshire,barnfield,PE28_3LY,hill.field,2,sb,PE28_3LY_grid_2,PE28_3LY_grid_2_2020,143,24,0,0,0,0.143712575,167,2
+2020,Cambridgeshire,barnfield,PE28_3LY,sinkers.hole,3,sb,PE28_3LY_grid_3,PE28_3LY_grid_3_2020,31,35,0,0,0,0.53030303,66,2
+2020,Cambridgeshire,manor.williams,PE28_5RR,back.of.hovels,1,ww,PE28_5RR_grid_1,PE28_5RR_grid_1_2020,133,59,0,0,0,0.307291667,192,2
+2020,Cambridgeshire,manor.williams,PE28_5RR,chapmans,2,sb,PE28_5RR_grid_2,PE28_5RR_grid_2_2020,52,46,0,0,0,0.469387755,98,2
+2020,Norfolk,cannister,PE32_2LW,lower.norrels.garden,1,ww,PE32_2LW_grid_1,PE32_2LW_grid_1_2020,0,10,21,29,7,2.492537313,67,4
+2020,Norfolk,cannister,PE32_2LW,barn.field,2,ww,PE32_2LW_grid_2,PE32_2LW_grid_2_2020,0,3,5,47,48,3.359223301,103,4
+2020,Cambridgeshire,burnt.house,PE7_2HP,fletchers,3,ww,PE7_2HP_grid_3,PE7_2HP_grid_3_2020,182,0,0,0,0,0,182,1
+2020,Bedfordshire,fullers.hill,SG19_3BP,pink.cottage.close,1,ww,SG19_3BP_grid_1,SG19_3BP_grid_1_2020,22,219,15,0,0,0.97265625,256,3
+2021,Warwickshire,squab.hall,CV33_9QB,Near.Ufton,3,wb,CV33_9QB_grid_3,CV33_9QB_grid_3_2021,7,174,8,0,0,1.005291005,189,3
+2021,Warwickshire,squab.hall,CV33_9QB,Barnwell.Farm,4,ww,CV33_9QB_grid_4,CV33_9QB_grid_4_2021,0,10,12,5,0,1.814814815,27,3
+2021,Warwickshire,gaydon.hill,CV35_0HQ,garage.field,3,ww,CV35_0HQ_grid_3,CV35_0HQ_grid_3_2021,0,59,77,25,0,1.788819876,161,3
+2021,Warwickshire,croft,CV37_7NF,croft,3,wb,CV37_7NF_grid_3,CV37_7NF_grid_3_2021,132,1,0,0,0,0.007518797,133,2
+2021,South Yorks,manor.robinson,DN7_5TG,buckleys,2,ww,DN7_5TG_grid_2,DN7_5TG_grid_2_2021,0,4,9,31,154,3.691919192,198,4
+2021,East Riding of Yorkshire,new.headlands,HU11_4QA,dottoms,1,ww,HU11_4QA_grid_1,HU11_4QA_grid_1_2021,0,147,28,4,0,1.201117318,179,3
+2021,East Riding of Yorkshire,new.headlands,HU11_4QA,back.of.beans,2,ww,HU11_4QA_grid_2,HU11_4QA_grid_2_2021,14,185,0,0,0,0.929648241,199,2
+2021,East Riding of Yorkshire,bransholme.dairy,HU7_4YP,field.2,2,ww,HU7_4YP_grid_2,HU7_4YP_grid_2_2021,0,58,31,49,13,2.112582781,151,4
+2021,Norfolk,hill,IP25_7EF,bush.meadow,2,ww,IP25_7EF_grid_2,IP25_7EF_grid_2_2021,0,7,65,64,26,2.672839506,162,4
+2021,Leicestershire,welldale,LE12_6JD,stack.field,3,ww,LE12_6JD_grid_3,LE12_6JD_grid_3_2021,31,74,0,0,0,0.704761905,105,2
+2021,Leicestershire,welldale,LE12_6JD,12.acre.brook,4,ww,LE12_6JD_grid_4,LE12_6JD_grid_4_2021,13,61,14,1,0,1.033707865,89,4
+2021,Lincolnshire,hall,LN1_2LL,top.cliffe,1,ww,LN1_2LL_grid_1,LN1_2LL_grid_1_2021,97,15,0,0,0,0.133928571,112,2
+2021,Lincolnshire,hall,LN1_2LL,45.acre,2,ww,LN1_2LL_grid_2,LN1_2LL_grid_2_2021,242,38,0,0,0,0.135714286,280,2
+2021,Lincolnshire,hall,LN1_2LL,clay.hills,4,ww,LN1_2LL_grid_4,LN1_2LL_grid_4_2021,190,47,0,0,0,0.198312236,237,2
+2021,Lincolnshire,willoughby,LN13_9TD,garden,1,ww,LN13_9TD_grid_1,LN13_9TD_grid_1_2021,0,35,24,35,58,2.763157895,152,4
+2021,Lincolnshire,leggott.c,LN5_0RD,capps,1,wb,LN5_0RD_grid_1,LN5_0RD_grid_1_2021,0,24,41,32,2,2.121212121,99,4
+2021,Lincolnshire,leggott.c,LN5_0RD,horsewoods.top,2,ww,LN5_0RD_grid_2,LN5_0RD_grid_2_INTERPOLATED_2021,4,261,0,0,0,0.98490566,265,2
+2021,Lincolnshire,leggott.c,LN5_0RD,horsewoods.top,2,ww,LN5_0RD_grid_2_ROTATED,LN5_0RD_grid_2_ROTATED_2021,4,261,0,0,0,0.98490566,265,2
+2021,Lincolnshire,brantedge,LN5_0SP,woolfits,1,ww,LN5_0SP_grid_1,LN5_0SP_grid_1_2021,0,69,31,26,14,1.892857143,140,4
+2021,Lincolnshire,brantedge,LN5_0SP,sewage.works,3,ww,LN5_0SP_grid_3,LN5_0SP_grid_3_INTERPOLATED_2021,49,132,2,0,0,0.743169399,183,3
+2021,Lincolnshire,brantedge,LN5_0SP,sewage.works,3,ww,LN5_0SP_grid_3_ROTATED,LN5_0SP_grid_3_ROTATED_2021,55,134,3,0,0,0.729166667,192,3
+2021,Bedfordshire,watergate,LU7_9LN,stable,1,ww,LU7_9LN_grid_1,LU7_9LN_grid_1_2021,1,63,42,40,6,1.914473684,152,5
+2021,Bedfordshire,hermitage,MK16_0HR,moulsoe.cross,3,ww,MK16_0HR_grid_3,MK16_0HR_grid_3_2021,4,113,14,1,0,1.090909091,132,4
+2021,Buckingham,chetwode.manor,MK18_4BB,hill.ground,3,ww,MK18_4BB_grid_3,MK18_4BB_grid_3_2021,0,18,50,35,0,2.165048544,103,3
+2021,Bedfordshire,boxhedge,MK43_0AT,pounds.lane,3,ww,MK43_0AT_grid_3,MK43_0AT_grid_3_2021,2,97,9,0,0,1.064814815,108,3
+2021,Bedfordshire,lodge,MK44_1EJ,rootys,3,ww,MK44_1EJ_grid_3,MK44_1EJ_grid_3_2021,27,85,0,0,0,0.758928571,112,2
+2021,Bedfordshire,north.end,MK44_1QT,mowing.ground,1,ww,MK44_1QT_grid_1,MK44_1QT_grid_1_2021,12,58,0,0,0,0.828571429,70,2
+2021,Bedfordshire,north.end,MK44_1QT,gilberts,2,ww,MK44_1QT_grid_2,MK44_1QT_grid_2_2021,129,162,0,0,0,0.556701031,291,2
+2021,Bedfordshire,north.end,MK44_1QT,NorthEnd.Farm,3,ww,MK44_1QT_grid_3,MK44_1QT_grid_3_2021,58,113,0,0,0,0.660818713,171,2
+2021,Bedfordshire,elliott.farms,MK44_2EE,bottom.rosses,2,ww,MK44_2EE_grid_2,MK44_2EE_grid_2_2021,0,144,43,8,1,1.316326531,196,4
+2021,Bedfordshire,elliott.farms,MK44_2EE,top.rosses.by.house,3,ww,MK44_2EE_grid_3,MK44_2EE_grid_3_2021,0,143,41,19,0,1.389162562,203,3
+2021,Nottinghamshire,hollygate,NG12_2JW,long.7.acre,1,ww,NG12_2JW_grid_1,NG12_2JW_grid_1_2021,0,12,42,18,3,2.16,75,4
+2021,Nottinghamshire,hollygate,NG12_2JW,orchard.field,2,ww,NG12_2JW_grid_2,NG12_2JW_grid_2_2021,157,51,2,0,0,0.261904762,210,3
+2021,Nottinghamshire,hollygate,NG12_2JW,20.acre,3,wb,NG12_2JW_grid_3,NG12_2JW_grid_3_2021,65,61,0,0,0,0.484126984,126,2
+2021,Nottinghamshire,hollygate,NG12_2JW,tree.field,4,ww,NG12_2JW_grid_4,NG12_2JW_grid_4_2021,0,44,11,14,18,2.068965517,87,4
+2021,Lincolnshire,barn,NG32_3HX,allotment,1,ww,NG32_3HX_grid_1,NG32_3HX_grid_1_2021,0,2,24,45,0,2.605633803,71,3
+2021,Northamptonshire,white.house,NN29_7JT,threadgold,1,ww,NN29_7JT_grid_1,NN29_7JT_grid_1_2021,0,125,56,0,0,1.309392265,181,2
+2021,Northamptonshire,bfc.agronomy,NN6_8NN,mawland.smiths,1,ww,NN6_8NN_grid_1,NN6_8NN_grid_1_2021,171,48,0,0,0,0.219178082,219,2
+2021,Northamptonshire,bfc.agronomy,NN6_8NN,fifty.acre,2,ww,NN6_8NN_grid_2,NN6_8NN_grid_2_2021,182,56,0,0,0,0.235294118,238,2
+2021,Northamptonshire,bfc.agronomy,NN6_8NN,ram.close,3,ww,NN6_8NN_grid_3,NN6_8NN_grid_3_2021,255,22,0,0,0,0.079422383,277,2
+2021,Norfolk,friars,NR15_2QL,ollands,2,wb,NR15_2QL_grid_2,NR15_2QL_grid_2_2021,42,106,0,0,0,0.716216216,148,2
+2021,Norfolk,friars,NR15_2QL,goose,3,ww,NR15_2QL_grid_3,NR15_2QL_grid_3_2021,3,81,15,3,0,1.176470588,102,4
+2021,Norfolk,villa,NR16_1SN,glebe.30,1,wb,NR16_1SN_grid_1,NR16_1SN_grid_1_2021,220,0,0,0,0,0,220,1
+2021,Warwickshire,bourton,OX17_1AS,angels.piece,1,wb,OX17_1AS_grid_1,OX17_1AS_grid_1_2021,0,62,42,7,1,1.526785714,112,4
+2021,Northamptonshire,clattercote,OX17_1QB,clattercote.meadow,2,ww,OX17_1QB_grid_2,OX17_1QB_grid_2_2021,0,51,35,3,0,1.460674157,89,3
+2021,Northamptonshire,clattercote,OX17_1QB,stokes,3,ww,OX17_1QB_grid_3,OX17_1QB_grid_3_2021,0,52,43,43,27,2.272727273,165,4
+2021,Oxfordshire,perdiswell,OX20_1QJ,south.bank,4,ww,OX20_1QJ_grid_4,OX20_1QJ_grid_4_2021,11,240,3,0,0,0.968503937,254,3
+2021,Oxfordshire,model.farm,OX49_5DX,stokewell.ground,1,ww,OX49_5DX_grid_1,OX49_5DX_grid_1_2021,6,58,35,8,0,1.420560748,107,4
+2021,Oxfordshire,model.farm,OX49_5DX,sids.and.the.linings,2,ww,OX49_5DX_grid_2,OX49_5DX_grid_2_2021,0,227,45,0,0,1.165441176,272,2
+2021,Lincolnshire,churchview,PE10_0RZ,cumfrey,2,ww,PE10_0RZ_grid_2,PE10_0RZ_grid_2_2021,7,194,3,0,0,0.980392157,204,3
+2021,Lincolnshire,churchview,PE10_0RZ,turners,3,ww,PE10_0RZ_grid_3,PE10_0RZ_grid_3_2021,0,10,39,75,25,2.771812081,149,4
+2021,Lincolnshire,lighthouse,PE12_9YT,corridor,1,ww,PE12_9YT_grid_1,PE12_9YT_grid_1_2021,0,259,1,0,0,1.003846154,260,2
+2021,Lincolnshire,lighthouse,PE12_9YT,lighthouse,3,ww,PE12_9YT_grid_3,PE12_9YT_grid_3_2021,1,165,47,9,0,1.288288288,222,4
+2021,Cambridgeshire,worlick,PE26_2XF,opposite.cottage,1,ww,PE26_2XF_grid_1,PE26_2XF_grid_1_2021,9,208,0,0,0,0.958525346,217,2
+2021,Cambridgeshire,worlick,PE26_2XF,bridge.ground,2,wb,PE26_2XF_grid_2,PE26_2XF_grid_2_2021,9,37,0,0,0,0.804347826,46,2
+2021,Cambridgeshire,wennington.lodge,PE28_2LP,bridge,1,ww,PE28_2LP_grid_1,PE28_2LP_grid_1_2021,7,182,0,0,0,0.962962963,189,2
+2021,Cambridgeshire,wennington.lodge,PE28_2LP,behind.the.cotts,2,ww,PE28_2LP_grid_2,PE28_2LP_grid_2_2021,1,152,43,1,0,1.223350254,197,4
+2021,Cambridgeshire,barnfield,PE28_3LY,barnfield,4,ww,PE28_3LY_grid_4,PE28_3LY_grid_4_2021,0,2,5,10,22,3.333333333,39,4
+2021,Cambridgeshire,manor.williams,PE28_5RR,top.of.lambs.lane.east,3,ww,PE28_5RR_grid_3,PE28_5RR_grid_3_2021,10,46,0,0,0,0.821428571,56,2
+2021,Cambridgeshire,burnt.house,PE7_2HP,mecks.centre,2,ww,PE7_2HP_grid_2,PE7_2HP_grid_2_2021,13,122,0,0,0,0.903703704,135,2
+2021,Bedfordshire,fullers.hill,SG19_3BP,middle.diff.align,2,ww,SG19_3BP_grid_2,SG19_3BP_grid_2_2021,0,0,26,94,60,3.188888889,180,3
+2021,Bedfordshire,fullers.hill,SG19_3BP,dick.and.dolls,3,ww,SG19_3BP_grid_3,SG19_3BP_grid_3_2021,40,50,19,32,75,2.240740741,216,5
+2021,East Riding of Yorkshire,manor.house,YO25_8DX,16.acre,1,ww,YO25_8DX_grid_1,YO25_8DX_grid_1_2021,6,166,3,0,0,0.982857143,175,3
+2021,East Riding of Yorkshire,manor.house,YO25_8DX,44.acre.the.bottoms,2,ww,YO25_8DX_grid_2,YO25_8DX_grid_2_2021,1,119,49,34,1,1.583333333,204,5
+2021,North Yorkshire,overton,YO30_1AA,church,3,ww,YO30_1AA_grid_3,YO30_1AA_grid_3_2021,84,1,0,0,0,0.011764706,85,2
+2021,North Yorkshire,hall.bank,YO30_1AN,eds,1,ww,YO30_1AN_grid_1,YO30_1AN_grid_1_2021,181,55,1,0,0,0.240506329,237,3
+2021,North Yorkshire,hall.bank,YO30_1AN,new.parks,2,ww,YO30_1AN_grid_2,YO30_1AN_grid_2_2021,180,9,0,0,0,0.047619048,189,2
+2021,North Yorkshire,hallmoor,YO32_2RQ,hall.moor.8,2,ww,YO32_2RQ_grid_2,YO32_2RQ_grid_2_2021,37,11,0,0,0,0.229166667,48,2
+2021,North Yorkshire,raskelf,YO61_3LG,24.acre,1,ww,YO61_3LG_grid_1,YO61_3LG_grid_1_2021,3,103,66,14,1,1.502673797,187,5
+2021,North Yorkshire,raskelf,YO61_3LG,45.acre.nr.duffields,2,wb,YO61_3LG_grid_2,YO61_3LG_grid_2_2021,0,112,53,14,1,1.466666667,180,4
+2021,North Yorkshire,birch,YO62_5YD,newton.grange.23,1,wb,YO62_5YD_grid_1,YO62_5YD_grid_1_2021,56,108,1,0,0,0.666666667,165,3
+2021,North Yorkshire,birch,YO62_5YD,newton.grange.bottom,2,wb,YO62_5YD_grid_2,YO62_5YD_grid_2_2021,74,94,2,2,1,0.624277457,173,5

@@ -1,0 +1,675 @@
+---
+title: "For LD-HR fields: when does it flip?"
+author: "Alexa Varah"
+date: "2023-01-17"
+output: html_document
+---
+
+# 1. Intro
+The analysis of the worst-case situation (very high density black-grass in 100% of grid cells) showed that in LD-HR fields, on heavy and medium soils, MIT strategies often became economically preferable to the BAU strategy. This was also true, although not as often, in HD-HR fields. Now I want to know at what point MIT strategies become preferable. Is it only when 100% of grid cells are in VH density? Or is it when 80% of grid cells are in VH density? This script explores the point at which it becomes profitable to take action (i.e. switch from BAU to MIT) in LD-HR and HR-HR fields (i.e. fields with high resistance).  
+I'll do this by varying the ratio of H:VH densities (0:100, 10:90, etc). Each time, I'll compare this outcome with the outcome from implementing MIT strategies *now*. This will give an approximate estimation of how prevalent VH densities need to become before it becomes economically rational to switch strategy.
+
+I'm only loading the ECOMOD model runs where black-grass density was set to high or very high. This is because it only becomes viable to switch from BAU to MIT when black-grass densities are pretty high. To determine *how* bad densities have to get, I am going to vary the proportions of high and very high density states (and am assuming here that there are no grid cells in low or medium density states). I will then weight yield and gross profit by the density state distribution within a field.  
+  
+*N.B.* Rob used the following density state distributions for his models:  
+* "very high"  <- matrix(c(0.1,0.1,0.2,0.3,0.3),ncol=5)    
+* "high"       <- matrix(c(0.2,0.2,0.2,0.2,0.2),ncol=5)  
+I'm not using these density distributions as I'm looking at the extreme case where the whole field has high or very high density black-grass (i.e. whole field has economically-damaging black-grass densities).
+
+We know that it's only in fields where initial resistance is high that it eventually becomes economically viable to switch from BAU to MIT strategies. So I'll pull out just fields with initial high resistance.
+
+
+# 2. Set up
+## 2.1. Load packages
+```{r load-packages, message=FALSE}
+rm(list=ls())
+library(tidyverse) # for data manipulation; includes dplyr, ggplot2 & more
+library(patchwork) # for panel plots
+```
+
+## 2.2. Load functions
+This counts complete observations
+```{r}
+nobs <- function(x) length(x[!is.na(x)])
+```
+
+## 2.3. Load & tidy data
+I'll need to reshape from wide to long and create some new columns for soil type, region etc., as well as a column which specifies the ECOMOD model run.  
+
+### 2.3.1. BAU high density model run
+```{r load-data-BAU-h}
+bau_h <- read.csv("../output/bau_ECOMOD_output_H.csv", header=TRUE) %>% 
+  dplyr::select(-Field_no) %>% # remove unnecessary column
+  dplyr::rename_with(stringr::str_replace, 
+              # add '.' b4 the number in 'crop' colnames:
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  data.frame() %>%
+  dplyr::filter(grepl("LD-HR",field_name)|grepl("HD-HR",field_name)) %>% # extract required strategies
+  #dplyr::filter(!grepl("LR",field_name)) %>% # exclude LR strategies
+  tidyr::pivot_longer( # reshape
+    cols = c(2:85),
+    names_to = c(".value", "year"),
+    names_sep = '\\.'
+    ) %>% 
+  
+  # make columns for soil, region, initial density etc:
+  dplyr::mutate(
+    initdenres = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    # extract characters between 1st and 2nd underscore ( x[2] pulls out the 
+    # 2nd split string when split on underscores):
+    soiltype = sapply(strsplit(field_name, "_"), function(x) x[2]), 
+    soiltype = substr(soiltype, start = 1, stop = 1), # extract 1st character
+ 
+    region = sub('_.*', '', field_name), # extract chrs before first '_'
+    region = tolower(region),
+
+    # recode soil type and region, and specify order of factor levels:
+    soiltype = dplyr::recode(soiltype,
+                      "h" = "heavy",
+                      "m" = "medium",
+                      "l" = "light"),
+    soiltype = factor(soiltype,
+                      levels = c("heavy", "medium", "light")
+                      ),
+    region = dplyr::recode(region,
+                    "n" = "north",
+                    "c" = "central",
+                    "e" = "east"),
+    region = factor(region,
+                    levels = c("north", "central", "east")
+                    ),
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "BAU",
+    modelrun = "high"
+    ) %>%
+  dplyr::select(scenario, initcondit, initdenres, region,
+                soiltype, year, crop, yield, grossprof, modelrun) %>% 
+  dplyr::arrange(scenario,region, soiltype, initdenres, year)
+```
+
+
+### 2.3.2. BAU very high density model run
+```{r load-data-BAU-vh}
+bau_v <- read.csv("../output/bau_ECOMOD_output_V.csv", header=TRUE) %>% 
+  dplyr::select(-Field_no) %>% # remove unnecessary column
+  dplyr::rename_with(stringr::str_replace, 
+              # add '.' b4 the number in 'crop' colnames:
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  data.frame() %>%
+  dplyr::filter(grepl("LD-HR",field_name)|grepl("HD-HR",field_name)) %>% # extract required strategies
+  #dplyr::filter(!grepl("LR",field_name)) %>% # exclude LR strategies
+  tidyr::pivot_longer( # reshape
+    cols = c(2:85),
+    names_to = c(".value", "year"),
+    names_sep = '\\.'
+    ) %>% 
+  
+  # make columns for soil, region, initial density etc:
+  dplyr::mutate(
+    initdenres = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    
+    # extract characters between 1st and 2nd underscore ( x[2] pulls out the 
+    # 2nd split string when split on underscores):
+    soiltype = sapply(strsplit(field_name, "_"), function(x) x[2]), 
+    soiltype = substr(soiltype, start = 1, stop = 1), # extract 1st character
+ 
+    region = sub('_.*', '', field_name), # extract chrs before first '_'
+    region = tolower(region),
+
+    # recode soil type and region, and specify order of factor levels:
+    soiltype = dplyr::recode(soiltype,
+                      "h" = "heavy",
+                      "m" = "medium",
+                      "l" = "light"),
+    soiltype = factor(soiltype,
+                      levels = c("heavy", "medium", "light")
+                      ),
+    region = dplyr::recode(region,
+                    "n" = "north",
+                    "c" = "central",
+                    "e" = "east"),
+    region = factor(region,
+                    levels = c("north", "central", "east")
+                    ),
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "BAU",
+    modelrun = "veryhigh"
+    ) %>%
+  dplyr::select(scenario, initcondit, initdenres, region,
+                soiltype, year, crop, yield, grossprof, modelrun) %>% 
+  dplyr::arrange(scenario,region, soiltype, initdenres, year)
+```
+
+
+
+
+### 2.3.3. 'Current' data
+```{r}
+econ_3DR <- read.csv("../output/economic_data_for_analysis_3DR.csv", header = T) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+```
+
+
+# 3. Make data frames for analysis
+## 3.1. BAU high/very high
+Join the two BAU model runs. I also need to average the BAU data across LD-HR & MD-HR, and across HD-HR & VD-HR.
+```{r bind-high-and-veryhigh-model-runs}
+bau_hvh <- rbind(bau_h, bau_v) %>% 
+  dplyr::mutate(year = as.integer(year))
+
+# Clean up
+rm(bau_h, bau_v)
+```
+
+## 3.2. 'Current' data
+```{r}
+mit_current <- econ_3DR %>% 
+  dplyr::mutate(initcondit = paste(region, soiltype, initdenres_collapsed, sep = "_"),
+                year = as.integer(year)) %>% 
+  dplyr::filter(scenario == "MIT", # pull out MIT scenario
+                #grepl("LD-HR",initcondit) # pull out LD-HR strategies
+                !grepl("LR",initcondit) # exclude low resistance strategies
+                ) %>% 
+  dplyr::rename(grossprof = wtd_gp_mean,
+                yield = wtd_yield_mean) %>% 
+  # extract cols needed
+  dplyr::select(scenario, initcondit, initdenres_collapsed, region, 
+                soiltype, year, crop, yield, grossprof) %>% 
+  dplyr::arrange(region, soiltype, initdenres_collapsed, year) %>% 
+  dplyr::rename(initdenres = initdenres_collapsed)
+```
+
+
+# 4. Calculate weighted gross profit for a range of black-grass density distributions
+```{r h0-vh1--h1-v0, message=FALSE}
+## h0.0-vh1.0 Calculate weighted gross profit where 100% of grid cells have very high black-grass density----
+wtd_df_100 <- bau_hvh %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "high" ~ 0*grossprof,
+      modelrun == "veryhigh" ~ 1*grossprof
+    ),
+    wtd_yield = case_when(
+      modelrun == "high" ~ 0*yield,
+      modelrun == "veryhigh" ~ 1*yield
+    )
+  ) %>%
+  # Add weighted variables across model runs (high & vhigh den) 
+  # to get total gross profit, yield etc (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy.
+  dplyr::group_by(initcondit, year) %>% 
+  dplyr::summarise(wtd_gp = sum(wtd_gp), wtd_yield = sum(wtd_yield)) %>% 
+  # Add columns indicating the proportions of grid cells in 
+  # high and very high density used to calculate the weighted values
+  dplyr::mutate(
+    h = 0,
+    vh = 1
+    )
+
+## h0.1-vh0.9 Calculate weighted gross profit where 90% of grid cells have very high black-grass density----
+wtd_df_90 <- bau_hvh %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "high" ~ 0.1*grossprof,
+      modelrun == "veryhigh" ~ 0.9*grossprof
+    ),
+    wtd_yield = case_when(
+      modelrun == "high" ~ 0.1*yield,
+      modelrun == "veryhigh" ~ 0.9*yield
+    )
+  ) %>%
+  # Add weighted variables across model runs (high & vhigh den) 
+  # to get total gross profit & yield (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy.
+  dplyr::group_by(initcondit, year) %>% 
+  dplyr::summarise(wtd_gp = sum(wtd_gp), wtd_yield = sum(wtd_yield)) %>% 
+  # Add columns indicating the proportions of grid cells in 
+  # high and very high density used to calculate the weighted values
+  dplyr::mutate(
+    h = 0.1,
+    vh = 0.9
+  )
+
+## h0.2-vh0.8 Calculate weighted gross profit where 80% of grid cells have very high black-grass density----
+wtd_df_80 <- bau_hvh %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "high" ~ 0.2*grossprof,
+      modelrun == "veryhigh" ~ 0.8*grossprof
+    ),
+    wtd_yield = case_when(
+      modelrun == "high" ~ 0.2*yield,
+      modelrun == "veryhigh" ~ 0.8*yield
+    )
+  ) %>%
+  # Add weighted variables across model runs (high & vhigh den) 
+  # to get total gross profit, yield etc (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy.
+  dplyr::group_by(initcondit, year) %>% 
+  dplyr::summarise(wtd_gp = sum(wtd_gp), wtd_yield = sum(wtd_yield)) %>% 
+  # Add columns indicating the proportions of grid cells in 
+  # high and very high density used to calculate the weighted values
+  dplyr::mutate(
+    h = 0.2,
+    vh = 0.8
+    )
+
+## h0.3-vh0.7 Calculate weighted gross profit where 70% of grid cells have very high black-grass density----
+wtd_df_70 <- bau_hvh %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "high" ~ 0.3*grossprof,
+      modelrun == "veryhigh" ~ 0.7*grossprof
+    ),
+    wtd_yield = case_when(
+      modelrun == "high" ~ 0.3*yield,
+      modelrun == "veryhigh" ~ 0.7*yield
+    )
+  ) %>%
+  # Add weighted variables across model runs (high & vhigh den) 
+  # to get total gross profit, yield etc (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy.
+  dplyr::group_by(initcondit, year) %>% 
+  dplyr::summarise(wtd_gp = sum(wtd_gp), wtd_yield = sum(wtd_yield)) %>% 
+  # Add columns indicating the proportions of grid cells in 
+  # high and very high density used to calculate the weighted values
+  dplyr::mutate(
+    h = 0.3,
+    vh = 0.7
+    )
+
+## h0.4-vh0.6 Calculate weighted gross profit where 60% of grid cells have very high black-grass density----
+wtd_df_60 <- bau_hvh %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "high" ~ 0.4*grossprof,
+      modelrun == "veryhigh" ~ 0.6*grossprof
+    ),
+    wtd_yield = case_when(
+      modelrun == "high" ~ 0.4*yield,
+      modelrun == "veryhigh" ~ 0.6*yield
+    )
+  ) %>%
+  # Add weighted variables across model runs (high & vhigh den) 
+  # to get total gross profit, yield etc (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy.
+  dplyr::group_by(initcondit, year) %>% 
+  dplyr::summarise(wtd_gp = sum(wtd_gp), wtd_yield = sum(wtd_yield)) %>% 
+  # Add columns indicating the proportions of grid cells in 
+  # high and very high density used to calculate the weighted values
+  dplyr::mutate(
+    h = 0.4,
+    vh = 0.6
+    )
+
+## h0.5-vh0.5 Calculate weighted gross profit where 50% of grid cells have very high black-grass density----
+wtd_df_50 <- bau_hvh %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "high" ~ 0.5*grossprof,
+      modelrun == "veryhigh" ~ 0.5*grossprof
+    ),
+    wtd_yield = case_when(
+      modelrun == "high" ~ 0.5*yield,
+      modelrun == "veryhigh" ~ 0.5*yield
+    )
+  ) %>%
+  # Add weighted variables across model runs (high & vhigh den) 
+  # to get total gross profit, yield etc (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy.
+  dplyr::group_by(initcondit, year) %>% 
+  dplyr::summarise(wtd_gp = sum(wtd_gp), wtd_yield = sum(wtd_yield)) %>% 
+  # Add columns indicating the proportions of grid cells in 
+  # high and very high density used to calculate the weighted values
+  dplyr::mutate(
+    h = 0.5,
+    vh = 0.5
+    )
+
+## h0.6-vh0.4 Calculate weighted gross profit where 40% of grid cells have very high black-grass density----
+wtd_df_40 <- bau_hvh %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "high" ~ 0.6*grossprof,
+      modelrun == "veryhigh" ~ 0.4*grossprof
+    ),
+    wtd_yield = case_when(
+      modelrun == "high" ~ 0.6*yield,
+      modelrun == "veryhigh" ~ 0.4*yield
+    )
+  ) %>%
+  # Add weighted variables across model runs (high & vhigh den) 
+  # to get total gross profit, yield etc (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy.
+  dplyr::group_by(initcondit, year) %>% 
+  dplyr::summarise(wtd_gp = sum(wtd_gp), wtd_yield = sum(wtd_yield)) %>% 
+  # Add columns indicating the proportions of grid cells in 
+  # high and very high density used to calculate the weighted values
+  dplyr::mutate(
+    h = 0.6,
+    vh = 0.4
+    )
+
+## h0.7-vh0.3 Calculate weighted gross profit where 30% of grid cells have very high black-grass density----
+wtd_df_30 <- bau_hvh %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "high" ~ 0.7*grossprof,
+      modelrun == "veryhigh" ~ 0.3*grossprof
+    ),
+    wtd_yield = case_when(
+      modelrun == "high" ~ 0.7*yield,
+      modelrun == "veryhigh" ~ 0.3*yield
+    )
+  ) %>%
+  # Add weighted variables across model runs (high & vhigh den) 
+  # to get total gross profit, yield etc (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy.
+  dplyr::group_by(initcondit, year) %>% 
+  dplyr::summarise(wtd_gp = sum(wtd_gp), wtd_yield = sum(wtd_yield)) %>% 
+  # Add columns indicating the proportions of grid cells in 
+  # high and very high density used to calculate the weighted values
+  dplyr::mutate(
+    h = 0.7,
+    vh = 0.3
+    )
+
+## h0.8-vh0.2 Calculate weighted gross profit where 20% of grid cells have very high black-grass density----
+wtd_df_20 <- bau_hvh %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "high" ~ 0.8*grossprof,
+      modelrun == "veryhigh" ~ 0.2*grossprof
+    ),
+    wtd_yield = case_when(
+      modelrun == "high" ~ 0.8*yield,
+      modelrun == "veryhigh" ~ 0.2*yield
+    )
+  ) %>%
+  # Add weighted variables across model runs (high & vhigh den) 
+  # to get total gross profit, yield etc (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy.
+  dplyr::group_by(initcondit, year) %>% 
+  dplyr::summarise(wtd_gp = sum(wtd_gp), wtd_yield = sum(wtd_yield)) %>% 
+  # Add columns indicating the proportions of grid cells in 
+  # high and very high density used to calculate the weighted values
+  dplyr::mutate(
+    h = 0.8,
+    vh = 0.2
+    )
+
+## h0.9-vh0.1 Calculate weighted gross profit where 10% of grid cells have very high black-grass density----
+wtd_df_10 <- bau_hvh %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "high" ~ 0.9*grossprof,
+      modelrun == "veryhigh" ~ 0.1*grossprof
+    ),
+    wtd_yield = case_when(
+      modelrun == "high" ~ 0.9*yield,
+      modelrun == "veryhigh" ~ 0.1*yield
+    )
+  ) %>%
+  # Add weighted variables across model runs (high & vhigh den) 
+  # to get total gross profit, yield etc (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy.
+  dplyr::group_by(initcondit, year) %>% 
+  dplyr::summarise(wtd_gp = sum(wtd_gp), wtd_yield = sum(wtd_yield)) %>% 
+  # Add columns indicating the proportions of grid cells in 
+  # high and very high density used to calculate the weighted values
+  dplyr::mutate(
+    h = 0.9,
+    vh = 0.1
+    )
+
+## h1.0-vh0.0 Calculate weighted gross profit where 0% of grid cells have very high black-grass density----
+wtd_df_0 <- bau_hvh %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "high" ~ 1*grossprof,
+      modelrun == "veryhigh" ~ 0*grossprof
+    ),
+    wtd_yield = case_when(
+      modelrun == "high" ~ 1*yield,
+      modelrun == "veryhigh" ~ 0*yield
+    )
+  ) %>%
+  # Add weighted variables across model runs (high & vhigh den) 
+  # to get total gross profit, yield etc (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy.
+  dplyr::group_by(initcondit, year) %>% 
+  dplyr::summarise(wtd_gp = sum(wtd_gp), wtd_yield = sum(wtd_yield)) %>% 
+  # Add columns indicating the proportions of grid cells in 
+  # high and very high density used to calculate the weighted values
+  dplyr::mutate(
+    h = 1.0,
+    vh = 0.0
+    )
+
+## Join dataframes----
+bau_range <- rbind(wtd_df_0, wtd_df_10, wtd_df_20, wtd_df_30, wtd_df_40,   
+                   wtd_df_50, wtd_df_60, wtd_df_70, wtd_df_80, wtd_df_90, 
+                   wtd_df_100)
+
+## Clean up----
+rm(wtd_df_0, wtd_df_10, wtd_df_20, wtd_df_30, wtd_df_40,   
+   wtd_df_50, wtd_df_60, wtd_df_70, wtd_df_80, wtd_df_90, 
+   wtd_df_100)
+```
+
+# 5. Calculate opportunity costs
+## 5.1. Create joined dataframe
+I now need to join the BAU worst case scenario onto the MIT scenario ```mit_current```. After that I can work out opportunity costs for the range of densities in the BAU data.
+
+```{r}
+bau_tojoin <- bau_range %>% 
+  dplyr::mutate(scenario = "BAU", initcondit2 = initcondit) %>% 
+  tidyr::separate(initcondit2, c("region", "soiltype", "initdenres"), "_") %>% 
+  dplyr::rename(grossprof = wtd_gp,
+                yield = wtd_yield) %>% 
+  dplyr::relocate(scenario, initcondit, initdenres, region,  
+                  soiltype, year, yield, grossprof, h, vh) 
+
+mit_current_tojoin <- mit_current %>% 
+  dplyr::mutate(h = NA, vh = NA) %>% 
+  dplyr::select(-crop)
+
+flipdf <- rbind(bau_tojoin, mit_current_tojoin) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres = factor(initdenres, levels = c("LD-HR", "HD-HR"))) %>%  
+  dplyr::arrange(scenario, region, soiltype, initdenres, year)
+```
+
+## 5.2. Calc opp costs
+```{r, message=FALSE}
+opp_costs <- flipdf %>%  
+  dplyr::group_by(initcondit, year) %>% 
+  dplyr::mutate(opp_cost = grossprof - grossprof[scenario == "MIT"]) %>% 
+  dplyr::group_by(scenario, initcondit, vh) %>% # find rotation mean
+  dplyr::summarise(
+    oc = mean(opp_cost, na.rm = TRUE),
+    oc_ci_l = mean(opp_cost, na.rm = TRUE) - 
+      (1.96 * (sd(opp_cost, na.rm = TRUE) / sqrt(nobs(opp_cost)))),
+    oc_ci_u = mean(opp_cost, na.rm = TRUE) + 
+      (1.96 * (sd(opp_cost, na.rm = TRUE) / sqrt(nobs(opp_cost))))
+    ) %>% 
+  tidyr::separate(initcondit, c("region", "soiltype", "initdenres"), "_") %>% 
+  dplyr::filter(!scenario=="MIT") %>% 
+  dplyr::mutate(
+    soiltype = factor(soiltype, levels = c("heavy", "medium", "light")),
+    region = factor(region, levels = c("north", "central", "east")),
+    initdenres = factor(initdenres, levels = c("LD-HR", "HD-HR"))
+    )
+```
+
+# 6. Plot
+Scatter plot, opportunity costs worst case vs now across the range of black-grass density distributions.
+
+## 6.1. For LD-HR fields
+Specify the labels for the panels.  
+```{r specify-panel-labels}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+   
+Then specify the plot.  
+```{r scatter-plot-gross-profit-3DR-LDHR}
+scatt_flip_LDHR <- ggplot(opp_costs %>% 
+                       dplyr::filter(initdenres == "LD-HR"), aes(vh, oc)) + 
+  geom_hline(aes(yintercept = 0), color="grey") + #, linetype="dashed"
+  geom_line() +
+  geom_point() +
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs),
+             scales = 'free'
+             ) +
+  labs(x = "Proportion of grid cells in very high density state", 
+       y = "Mean annual opportunity cost, BAU-MIT (£/ha)") +
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 16),#, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 16),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(1.7)),#, 
+        axis.text.y=element_text(size=rel(1.7)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=16)
+        ) +
+  
+  geom_pointrange(aes(ymin = oc_ci_l, 
+                      ymax = oc_ci_u), 
+                  #position=position_dodge(width=0.3),
+                  size = 0.9) +
+  
+  # Change spacing between facets on both axis
+  theme(panel.spacing = unit(1, "lines"))
+
+scatt_flip_LDHR
+```
+ 
+Save plot.  
+```{r, message=FALSE}
+#ggsave("../figures/Script 4e_when does it flip.png", height = 10, width = 10)
+
+png("../figures/Script 4e_when does it flip_LD-HR.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(scatt_flip_LDHR)
+dev.off()
+```
+
+## 6.2. For HD-HR fields
+Specify the labels for the panels.  
+```{r specify-panel-labels-repeat}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+   
+Then specify the plot.  
+```{r scatter-plot-gross-profit-3DR-HDHR}
+scatt_flip_HDHR <- ggplot(opp_costs %>% 
+                       dplyr::filter(initdenres == "HD-HR"), aes(vh, oc)) + 
+  geom_hline(aes(yintercept = 0), color="grey") + #, linetype="dashed"
+  geom_line() +
+  geom_point() +
+  #geom_point(size = 4) +
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs),
+             scales = 'free'
+             ) +
+  labs(x = "Proportion of grid cells in very high density state", 
+       y = "Mean annual opportunity cost, BAU-MIT (£/ha)") +
+  theme(strip.placement = 'outside',
+        #strip.background.x = element_blank(),
+        #strip.text.x = element_blank(), #removes facet labels
+        strip.text.x = element_text(size = 16),#, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 16),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(1.7)),#, 
+        axis.text.y=element_text(size=rel(1.7)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=16)
+        ) +
+  
+  geom_pointrange(aes(ymin = oc_ci_l, 
+                      ymax = oc_ci_u), 
+                  #position=position_dodge(width=0.3),
+                  size = 0.9) +
+  
+  # Change spacing between facets on both axis
+  theme(panel.spacing = unit(1, "lines"))
+
+scatt_flip_HDHR
+```
+ 
+Save plot.  
+```{r, message=FALSE}
+#ggsave("../figures/Script 4e_when does it flip.png", height = 10, width = 10)
+
+png("../figures/Script 4e_when does it flip_HD-HR.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(scatt_flip_HDHR)
+dev.off()
+```
+
+## 6.3. Make panel plot
+```{r}
+scatt_flip <- (scatt_flip_LDHR + scatt_flip_HDHR) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 18, face="bold"))
+scatt_flip
+```
+
+Save panel plot.
+```{r}
+png("../figures/Script 04e_flip.png",
+    height = 10, width = 20, units = "in", res = 300)
+print(scatt_flip)
+dev.off()
+
+
+tiff("../figures/Script 04e_flip.tiff", 
+     height = 10, width = 20, pointsize = 1/300, units = 'in', res = 300)
+print(scatt_flip)
+dev.off()
+```
