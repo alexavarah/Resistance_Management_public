@@ -30,12 +30,12 @@ Because there are crops in the Farmer Focus strategies that ECOMOD can't model (
 ## 2.1. Make input files
 ```{r load-tidy-MIT}
 ## Read in the raw data.
-mit_est = read_xlsx("../data/InputData_FF_ECOMOD&CFT_2021-12-03.xlsx",3) %>% 
+mit_est = read_xlsx("../data/ECOMOD_InputData_MIT.xlsx",1) %>% 
   select(-"lookup_ref") %>%  # remove 'lookup_ref' column
   mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
   mutate_at(3, round, 2) # soil texture needs 2 decimal places
 
-mit_act = read_xlsx("../data/InputData_FF_ECOMOD&CFT_2021-12-03.xlsx",4) %>% 
+mit_act = read_xlsx("../data/ECOMOD_InputData_MIT.xlsx",2) %>% 
   select(-"lookup_ref") %>%  # remove 'lookup_ref' column
   mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
   mutate_at(3, round, 2) # soil texture needs 2 decimal places
