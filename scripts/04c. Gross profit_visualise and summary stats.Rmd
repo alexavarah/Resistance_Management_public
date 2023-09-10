@@ -114,7 +114,7 @@ econ_3DR %>%
     gp_ci_u = mean(wtd_gp_mean, na.rm = TRUE) + 
       (1.96 * sd(wtd_gp_mean, na.rm = TRUE) / sqrt(length(wtd_gp_mean)))
     ) %>% 
-  #ungroup() %>% # makes no difference whether this line is run or not
+  #ungroup() %>% # makes no difference here whether this line is run or not
   # then find scenario mean
   dplyr::group_by(scenario) %>% 
   dplyr::summarize(
