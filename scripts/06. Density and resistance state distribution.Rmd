@@ -110,7 +110,7 @@ Work out the proportion of *high/very high* density states in a field and assign
 ### **Resistance**
 Use WRAG guidelines (Figure 1, and see 'The ‘R’ system for interpreting results from herbicide-resistance screening assays in the UK'). They have developed a standard ‘R’ system, and this has been adopted by all resistance testing centres in the UK. There's a choice of which cut-off to use. Either the cut-off at 72% mortality / 28% survival between 'probably susceptible' and 'definite resistance present'; or a cut-off at 54% mortality / 46% survival which is the mid point of the RR category, separating 2* and 3* resistance.  
 
-![](methods/Figure 1_WRAG_R rating system.png)
+[R rating system](methods/Figure 1_WRAG_R rating system.png)
 <font size="2">**Figure 1.** The older ‘star’ rating and newer ‘R’ rating systems used in the United Kingdom for designating different degrees of resistance based on responses to single doses of herbicides in resistance screening assays (Moss et al. 1999). **S** = susceptible; **R?** = early indications that resistance may be developing, possibly reducing herbicide performance; **RR** = resistance confirmed, probably reducing herbicide performance; **RRR** = resistance confirmed, highly likely to reduce herbicide performance.</font>  
 
 ## Assign the new H and L categories
