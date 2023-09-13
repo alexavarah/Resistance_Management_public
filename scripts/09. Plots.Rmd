@@ -122,7 +122,7 @@ df_scatter_wwyld_hd <- read.csv("../output/data for scatter plot_wheat yield_hd.
 
 # Fig S6: Sensitivity analysis
 # Fig S6(a) - opportunity costs - sensitivity analysis
-gp_oc <- read.csv("../output/data for sensitivity analysis scatter_gp.csv", 
+gp_oc <- read.csv("../output/data for sensitivity analysis scatter_gp_oc.csv", 
                      header = T) %>% 
   dplyr::mutate(
     scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
@@ -132,7 +132,7 @@ gp_oc <- read.csv("../output/data for sensitivity analysis scatter_gp.csv",
                                   levels = c("LD-LR", "LD-HR", "HD-HR")))
 
 # Fig S6(b) - productivity costs - sensitivity analysis
-ww_pc <- read.csv("../output/data for sensitivity analysis scatter_PC.csv", 
+ww_pc <- read.csv("../output/data for sensitivity analysis scatter_ww_pc.csv", 
                      header = T) %>% 
   dplyr::mutate(
     scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
@@ -1136,9 +1136,7 @@ dev.off()
 ```
 
 # 8. Figure S6: Sensitivity analysis plots
-
-## 8.1. Figure S6(a): Scatter plot, gp, MIT & BAU
-### 8.1.1. Specify panel labels  
+## 8.1. Specify panel labels  
 ```{r FigS6-panel-labels}
 region.labs <- c("Northern England", "Central England", "Eastern England") # new
 names(region.labs) <- c("north", "central", "east") # original
@@ -1147,7 +1145,8 @@ soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
 names(soiltype.labs) <- c("heavy", "medium", "light") # original
 ```
 
-### 8.1.2. Specify plot
+## 8.2. Figure S6(a): Scatter plot, gp, MIT & BAU
+### 8.2.1. Specify plot
 Plot results of sensitivity analysis for gross profit, BAU and MIT scenarios.
 ```{r FigS6a-plot}
 figS6a <- ggplot(gp_oc %>% filter(!scenario=="CWW"), 
@@ -1192,30 +1191,26 @@ yield penalties",
 figS6a
 ```
 
-
-## 8.2. Figure S6(a): Scatter plot, ww, MIT & BAU
-If not done above, specify the labels for the panels.  
-```{r specify-panel-labels-SA-ww}
-region.labs <- c("Northern England", "Central England", "Eastern England") # new
-names(region.labs) <- c("north", "central", "east") # original
-
-soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
-names(soiltype.labs) <- c("heavy", "medium", "light") # original
+### 8.2.2. Save plot
+```{r FigS6a-save}
+png("../figures/Supplementary Figure S6a.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(figS6a)
+dev.off()
 ```
 
-Then specify the plot.
+## 8.3. Figure S6(b): Scatter plot, ww, MIT & BAU
+### 8.3.1. Specify plot
 ```{r plot-ww-sensanaly-noCWW}
-scatt_SA_ww <- ggplot(ww_pc %>% filter(!scenario=="CWW"), 
-                aes(initdenres_collapsed, ww, 
-                    colour = ID, shape = ID)) + 
+figS6b <- ggplot(ww_pc %>% filter(!scenario=="CWW"),
+             aes(initdenres_collapsed, ww_mean, colour = ID, shape = ID)) + 
   facet_grid(region ~ soiltype,
              labeller = labeller(region = region.labs, 
-                                 soiltype = soiltype.labs)
-  ) +
+                                 soiltype = soiltype.labs)) +
   scale_x_discrete(guide = guide_axis(angle = 45)) +
-  labs(x = "Initial density and resistance", 
+  labs(x = "Initial density and resistance of Black-grass population", 
        y = "Mean annual wheat yield (t/ha)") +
-  # specify colours for 'scenario':
+  # specify colours for points:
   scale_color_manual(name = "Scenario & 
 yield penalties",
                      values = c("#88CCEE", # BAU, lower yield penalty
@@ -1231,28 +1226,30 @@ yield penalties",
                      values=c(15, 15, 15,    # BAU 15 = square
                               16, 16, 16)) + # MIT 16 = circle
   theme(strip.placement = 'outside',
-        strip.text.x = element_text(size = 18),
-        strip.text.y = element_text(size = 18),
-        axis.title=element_text(size=22),
-        axis.text.x=element_text(size=rel(1.9)),
-        axis.text.y=element_text(size=rel(1.9)),
-        legend.title=element_text(size=20),
-        legend.text=element_text(size=18)
+        strip.text.x = element_text(size = 14),
+        strip.text.y = element_text(size = 14),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=18),
+        axis.text.x=element_text(size=rel(1.5)), 
+        axis.text.y=element_text(size=rel(1.5)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=14)#,
+        #panel.background = element_rect(fill = "white", colour = "black"), # white background in main panels
+        #strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
+        #legend.key = element_blank(),# removes grey background behind symbols in legend
         ) +
   geom_pointrange(aes(ymin = ww_ci_l, 
-                      ymax = ww_ci_u), 
-                  position=position_dodge(width=0.6),
-                  size = 0.9) 
-
-scatt_SA_ww
+                      ymax = ww_ci_u
+                      ), 
+                  position=position_dodge(width=0.8),
+                  size = 0.9)
+figS6b
 ```
 
-
-
-Save plot.
-```{r save-SA-ww-plot-noCWW}
-png("../figures/Script 10_SA_ww by initcondit_BAU & MIT.png",
+### 8.3.1. Save plot.
+```{r FigS6b-save}
+png("../figures/Supplementary Figure S6b.png",
     height = 10, width = 10, units = "in", res = 300)
-print(scatt_SA_ww)
+print(figS6b)
 dev.off()
 ```
