@@ -1408,10 +1408,11 @@ Once the data is read in I'll need to insert the additional scenarios that Rob G
 * HD-HR becomes HD-HR and VD-HR  
   
 Read in the raw CWW data.
-```{r CWW-raw-data}
-cww_econdata = read_xlsx("../data/InputData_CWW_ECOMOD&CFT_2021-12-02.xlsx",5) %>% 
+```{r load-tidy-CWW}
+#cww_econdata = read_xlsx("../data/InputData_CWW_ECOMOD&CFT_2021-12-02.xlsx",5) %>%
+cww_econdata = read_xlsx("../data/ECOMOD_InputData_CWW.xlsx") %>% 
   mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
-  mutate_at(3, round, 2) %>%  # soil texture needs 2 decimal places
+  mutate_at(3, round, 2) %>% # soil texture needs 2 decimal places
   # replace density and resistance abbreviations with even shorter forms:
   mutate(
     farm_id = gsub('L-Dsty.L-Res', 'LD-LR', farm_id), 
@@ -1419,55 +1420,52 @@ cww_econdata = read_xlsx("../data/InputData_CWW_ECOMOD&CFT_2021-12-02.xlsx",5) %
     farm_id = gsub('H-Dsty.H-Res', 'HD-HR', farm_id),
     farm_id = gsub('\\.', '_', farm_id), # replace . with _
   )
-```
+  
+# Insert the additional scenarios that Rob G can run. 
+# He can differentiate all density states.
+# LD-LR becomes LD-LR and MD-LR
+# LD-HR becomes LD-HR and MD-HR
+# HD-HR becomes HD-HR and VD-HR
 
-Insert the additional rows for the differentiated density states.
-```{r CWW-insert-extra-initdenres}
-# make a new dataframe with the missing density states
+# create new rows to be added
 cww_insert.df <- cww_econdata %>% 
   mutate(
     farm_id = gsub('LD-LR', 'MD-LR', farm_id), # replace LD-LR with MD-LR
-    farm_id = gsub('LD-HR', 'MD-HR', farm_id), # replace LD-HR with MD-HR
-    farm_id = gsub('HD-HR', 'VD-HR', farm_id)  # replace HD-HR with VD-HR
+    farm_id = gsub('LD-HR', 'MD-HR', farm_id),
+    farm_id = gsub('HD-HR', 'VD-HR', farm_id)
   )
-    
-# join the two data frames
+
+# join the two dataframes
 cww_out.df <- rbind(cww_econdata, cww_insert.df)
 
 # re-order so that new rows are inserted every other row
-rm(n)
 n <- nrow(cww_econdata)
 cww_econ.input.data <- cww_out.df[kronecker(1:n, c(0, n), "+"), ]
 
-rm(cww_econdata, cww_out.df, cww_insert.df)
-```
 
-Create input files for each black-grass density state.
-```{r CWW-create-input-files}
+## Create input files for each black-grass density state
+
 # LOW / ABSENT
 cww_l <- cww_econ.input.data %>%
-  mutate(across(starts_with('blackgrass'), 
-                ~replace(., . %in% c("medium","high","veryhigh"), "low"))) %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% c("medium","high","veryhigh"), "low"))) %>%
   data.frame()
 
 # MEDIUM
 cww_m <- cww_l %>%
-  mutate(across(starts_with('blackgrass'), 
-                ~replace(., . %in% "low", "medium"))) %>% 
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "low", "medium"))) %>% 
   data.frame()
 
 # HIGH
 cww_h = cww_m %>%
-  mutate(across(starts_with('blackgrass'), 
-                ~replace(., . %in% "medium", "high"))) %>% 
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "medium", "high"))) %>% 
   data.frame()
 
 # VERY HIGH
 cww_v = cww_h %>%
-  mutate(across(starts_with('blackgrass'), 
-                ~replace(., . %in% "high", "veryhigh"))) %>% 
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "high", "veryhigh"))) %>% 
   data.frame()
 ```
+
 
 ## 4.2. CWW - Run ECOMOD - lower limits to yield penalties
 ### 4.2.1. CWW lower limits - Low/absent model run
