@@ -251,7 +251,7 @@ DON'T save the plot, it's not useful.
 
 
 ### 4.1.2. Scatter plot - rotation wheat yield, 3 denres
-Make data frame for the plot.
+#### Make data frame for the plot.
 ```{r}
 # sensitivity analysis
 rotmean_3DR_SA <- ww_3DR_SA %>% 
@@ -319,7 +319,12 @@ ww_pc <- rbind(rotmean_3DR, rotmean_3DR_SA)  %>%
   dplyr::select(-ss)
 ```
 
-  
+#### Save data frame
+```{r}
+write.csv(ww_pc,"../output/data for sensitivity analysis scatter_ww_pc.csv", row.names = FALSE)
+```
+
+ 
 #### Plot  
 Specify the labels for the panels.  
 ```{r specify-panel-labels-repeat}
@@ -335,7 +340,6 @@ Specify the plot.
 p2 <- ggplot(ww_pc, aes(initdenres_collapsed, ww_mean, 
                    colour = ID, 
                    shape = ID)) + 
-  #geom_point(size = 4) +
   facet_grid(region ~ soiltype,
              labeller = labeller(region = region.labs, 
                                  soiltype = soiltype.labs)
@@ -371,10 +375,7 @@ yield penalties",
         axis.text.x=element_text(size=rel(1.5)), 
         axis.text.y=element_text(size=rel(1.5)),
         legend.title=element_text(size=18),
-        legend.text=element_text(size=14)#,
-        #panel.background = element_rect(fill = "white", colour = "black"), # white background in main panels
-        #strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
-        #legend.key = element_blank(),# removes grey background behind symbols in legend
+        legend.text=element_text(size=14)
         ) +
   geom_pointrange(aes(ymin = ww_ci_l, 
                       ymax = ww_ci_u
@@ -389,15 +390,10 @@ p2
   
 #### Save plot
 ```{r}
-#, eval=FALSE, echo=FALSE
-#ggsave("../figures/Script 5c_ww yield by initcondit for each scenario.png", 
-#       height = 10, width = 10)
-
-png("../figures/SA_04c_ww by initcondit_all scenarios.png",
-#png("../figures/SA_04c_ww by initcondit_all scenarios_white bkgrd.png",
-    height = 10, width = 10, units = "in", res = 300)
-print(p2)
-dev.off()
+#png("../figures/SA_04c_ww by initcondit_all scenarios.png",
+#    height = 10, width = 10, units = "in", res = 300)
+#print(p2)
+#dev.off()
 ```
 
   
@@ -465,15 +461,10 @@ p3
     
 #### Save plot
 ```{r}
-#, eval=FALSE, echo=FALSE
-#ggsave("../figures/Script 5c_ww yield by initcondit for BAU and MIT.png", 
-#       height = 10, width = 10)
-
-png("../figures/SA_04c_ww by initcondit_BAU & MIT.png",
-#png("../figures/SA_04c_ww by initcondit_BAU & MIT_white bkgrd.png",
-    height = 10, width = 10, units = "in", res = 300)
-print(p3)
-dev.off()
+#png("../figures/SA_04c_ww by initcondit_BAU & MIT.png",
+#    height = 10, width = 10, units = "in", res = 300)
+#print(p3)
+#dev.off()
 ```
 
 
@@ -599,6 +590,6 @@ dev.off()
 
 # 5. Session info
 ```{r}
-sessionInfo()
+#sessionInfo()
 ```
 
