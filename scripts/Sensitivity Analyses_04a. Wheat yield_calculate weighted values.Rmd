@@ -687,7 +687,6 @@ rm(cww_economicdata_upper)
 ### 3.1.3. Join all economic scenarios & tidy
 Now join all the economic data together before calculating weighted gross profit.
 ```{r make-ridy-economic-data}
-rm(econdata)
 econdata <- rbind(bau_econdata_lower,
                    bau_econdata_upper,
                    cww_econdata_lower,
