@@ -78,7 +78,7 @@ kable(yldpen.tbl,
 
 # Load ECOMOD 
 
-It takes AGES to load ECOMOD in R Markdown so it's not included here. Load ECOMOD versions from script 'Sensitivity Analyses_01.ECOMOD.R' before continuing here. There are 4 versions: 2 with the lower yield penalties, one each yield set to 'estimate' and 'actual'; and 2 with the higher yield penalties, one each with yield set to 'estimate' and 'actual.'
+It takes a while to load ECOMOD in R Markdown so it's not included here. Load ECOMOD versions from script 'Sensitivity Analyses_01.ECOMOD.R' before continuing here. There are 4 versions: 2 with the lower yield penalties, one each yield set to 'estimate' and 'actual'; and 2 with the higher yield penalties, one each with yield set to 'estimate' and 'actual.'
 
 File 'Sensitivity Analyses_01. Load ECOMOD.R' contains the 4 ECOMOD functions used here.
 ``` {r ECOMOD, purl=FALSE}
