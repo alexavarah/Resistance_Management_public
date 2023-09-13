@@ -122,7 +122,7 @@ df_scatter_wwyld_hd <- read.csv("../output/data for scatter plot_wheat yield_hd.
 
 # Fig S6: Sensitivity analysis
 # Fig S6(a) - opportunity costs - sensitivity analysis
-gp_oc <- read.csv("../output/data for sensitivity analysis scatter_OC.csv", 
+gp_oc <- read.csv("../output/data for sensitivity analysis scatter_gp.csv", 
                      header = T) %>% 
   dplyr::mutate(
     scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
