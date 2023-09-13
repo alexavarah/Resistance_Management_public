@@ -59,18 +59,6 @@ econ_3DR_hd <- read.csv("../output/economic_data_for_analysis_3DR_hd.csv", heade
     initdenres_collapsed = factor(initdenres_collapsed,
                                   levels = c("LD-LR", "LD-HR", "HD-HR")))
 
-#econ_6DR <- read.csv("../output/economic_data_for_analysis_6DR.csv", header = T) %>% 
-#  dplyr::mutate(
-#    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
-#    region = factor(region, levels = c("north", "central", "east")),
-#    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
-#    initdenres = factor(initdenres, 
-#                        levels = c(
-#                          "LD-LR", "MD-LR",
-#                          "LD-HR", "MD-HR",
-#                          "HD-HR", "VD-HR" 
-#                          )))
-
 econ_allimp <- read.csv("../output/economic_data_for_analysis-all_imputations.csv", header = T) %>% 
   dplyr::mutate(
     scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
@@ -332,6 +320,6 @@ write.csv(df2_hd, "../output/data for scatter plot_gross profit_hd.csv",
 
 # 5. Session info
 ```{r}
-sessionInfo()
+#sessionInfo()
 ```
 
