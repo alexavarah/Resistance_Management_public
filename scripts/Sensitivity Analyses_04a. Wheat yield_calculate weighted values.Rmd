@@ -816,6 +816,6 @@ rm(bau_econdata_lower, bau_econdata_upper,
 
 # Session info
 ```{r}
-sessionInfo()
+#sessionInfo()
 ```
 
