@@ -522,6 +522,6 @@ write.csv(yield_allimp_hd,"../output/wwyield_data_for_analysis-all_imputations_h
 
 # Session info
 ```{r}
-sessionInfo()
+#sessionInfo()
 ```
 
