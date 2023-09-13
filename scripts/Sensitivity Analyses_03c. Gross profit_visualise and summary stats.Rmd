@@ -362,6 +362,11 @@ gp_oc <- rbind(rotmean, rotmean_SA)  %>%
   dplyr::relocate(sensanaly)
 ```
 
+## Save data frame
+```{r}
+write.csv(gp_oc,"../output/data for sensitivity analysis scatter_gp_oc.csv", row.names = FALSE)
+```
+
 
 
 ### 5.2.2. Scatter plot - rotation gross profit, 3 denres, all scenarios
@@ -591,8 +596,6 @@ scatt_oc_by_reg_and_initDR <- ggplot(forplot, aes(
 scatt_oc_by_reg_and_initDR
 ```
   
-
-
 
 Save the plot.
 ```{r, eval=FALSE, echo=FALSE}
