@@ -245,8 +245,6 @@ rm(bau_low, mit_low, cww_low,
    bau_low_tidy, mit_low_tidy, cww_low_tidy,
    low_run, low_run_tidy, 
    econ_allimp, econ_distinct_3DR, summarised_df_3DR)
-
-colnames(econ_3DR)
 ```
 
 # 4. Summarise across a rotation
