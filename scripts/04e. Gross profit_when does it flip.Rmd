@@ -583,15 +583,6 @@ scatt_flip_LDHR <- ggplot(opp_costs %>%
 scatt_flip_LDHR
 ```
  
-Save plot.  
-```{r, message=FALSE}
-#ggsave("../figures/Script 4e_when does it flip.png", height = 10, width = 10)
-
-png("../figures/Script 4e_when does it flip_LD-HR.png",
-    height = 10, width = 10, units = "in", res = 300)
-print(scatt_flip_LDHR)
-dev.off()
-```
 
 ## 6.2. For HD-HR fields
 Specify the labels for the panels.  
@@ -642,15 +633,6 @@ scatt_flip_HDHR <- ggplot(opp_costs %>%
 scatt_flip_HDHR
 ```
  
-Save plot.  
-```{r, message=FALSE}
-#ggsave("../figures/Script 4e_when does it flip.png", height = 10, width = 10)
-
-png("../figures/Script 4e_when does it flip_HD-HR.png",
-    height = 10, width = 10, units = "in", res = 300)
-print(scatt_flip_HDHR)
-dev.off()
-```
 
 ## 6.3. Make panel plot
 ```{r}
@@ -658,18 +640,4 @@ scatt_flip <- (scatt_flip_LDHR + scatt_flip_HDHR) +
   plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
   theme(plot.tag = element_text(size = 18, face="bold"))
 scatt_flip
-```
-
-Save panel plot.
-```{r}
-png("../figures/Script 04e_flip.png",
-    height = 10, width = 20, units = "in", res = 300)
-print(scatt_flip)
-dev.off()
-
-
-tiff("../figures/Script 04e_flip.tiff", 
-     height = 10, width = 20, pointsize = 1/300, units = 'in', res = 300)
-print(scatt_flip)
-dev.off()
 ```
