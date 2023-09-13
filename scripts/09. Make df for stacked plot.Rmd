@@ -186,12 +186,16 @@ low_run_tidy <- low_run %>%
 ```
 
 # 2. Calculate cost due to lost yield
+To do this, do:  
+potential output (no BG) - output (BG present)  
+  
 Join output column from low_run onto econ_allimp, then do the subtraction.
 ```{r}
 econ_allimp_new <- inner_join(econ_allimp, 
                               low_run_tidy %>% dplyr::select(ID, output),  
                               by = "ID") %>% 
-  dplyr::mutate(wtd_cyl = output - wtd_output) # cost due to yield loss
+  dplyr::rename(potential_output = output) %>% 
+  dplyr::mutate(wtd_cyl = potential_output - wtd_output)
 ```
 
 # 3. Summarise across 3 den-res levels
@@ -219,7 +223,7 @@ summarised_df_3DR <- econ_allimp_new %>%
   dplyr::mutate(
     ID = factor(paste(scenario, 
                       substr(region, 1, 1), # just 1st letter of region
-                      substr(soiltype, 1, 1), # 1st letter of soiltype
+                      substr(soiltype, 1, 1), # 1st letter of soil type
                       initdenres_collapsed, year, sep="_"))
   )
 
@@ -293,12 +297,20 @@ rotn_means <- econ_3DR %>%
     output_ci_l = mean(wtd_output_mean, na.rm = TRUE) - 
       (1.96 * sd(wtd_output_mean, na.rm = TRUE) / sqrt(length(wtd_output_mean))),
     output_ci_u = mean(wtd_output_mean, na.rm = TRUE) + 
-      (1.96 * sd(wtd_output_mean, na.rm = TRUE) / sqrt(length(wtd_output_mean)))
-  ) %>% 
+      (1.96 * sd(wtd_output_mean, na.rm = TRUE) / sqrt(length(wtd_output_mean))),
+    
+    # potential output
+    pot_out_mean = mean(potential_output_mean, na.rm = TRUE),
+    pot_out_ci_l = mean(potential_output_mean, na.rm = TRUE) - 
+      (1.96 * sd(potential_output_mean, na.rm = TRUE) / sqrt(length(potential_output_mean))),
+    pot_out_ci_u = mean(potential_output_mean, na.rm = TRUE) + 
+      (1.96 * sd(potential_output_mean, na.rm = TRUE) / sqrt(length(potential_output_mean)))
+    ) %>% 
   
   # then find mean across scenario and initdenres
   dplyr::group_by(scenario, initdenres_collapsed) %>% 
   dplyr::summarize(
+    
     #gross profit
     gp = mean(gp_mean, na.rm = TRUE),
     gp_ci_l = mean(gp_mean, na.rm = TRUE) - 
@@ -335,20 +347,26 @@ rotn_means <- econ_3DR %>%
       (1.96 * sd(other_mean, na.rm = TRUE) / sqrt(length(other_mean))),
     
     # output
-    output = mean(output_mean, na.rm = TRUE),
-    output_ci_l = mean(output_mean, na.rm = TRUE) - 
+    output_with_BG = mean(output_mean, na.rm = TRUE),
+    output_with_BG_ci_l = mean(output_mean, na.rm = TRUE) - 
       (1.96 * sd(output_mean, na.rm = TRUE) / sqrt(length(output_mean))),
-    output_ci_u = mean(output_mean, na.rm = TRUE) + 
-      (1.96 * sd(output_mean, na.rm = TRUE) / sqrt(length(output_mean)))
-  ) %>% 
-  dplyr::relocate(output:output_ci_u, .after = initdenres_collapsed)
-
+    output_with_BG_ci_u = mean(output_mean, na.rm = TRUE) + 
+      (1.96 * sd(output_mean, na.rm = TRUE) / sqrt(length(output_mean))),
+    
+    # potential output (i.e. potential £ if there were no yield loss)
+    output_without_BG = mean(pot_out_mean, na.rm = TRUE),
+    output_without_BG_ci_l = mean(pot_out_mean, na.rm = TRUE) - 
+      (1.96 * sd(pot_out_mean, na.rm = TRUE) / sqrt(length(pot_out_mean))),
+    output_without_BG_ci_u = mean(pot_out_mean, na.rm = TRUE) + 
+      (1.96 * sd(pot_out_mean, na.rm = TRUE) / sqrt(length(pot_out_mean)))
+    ) %>% 
+  dplyr::relocate(output_with_BG:output_without_BG_ci_u, .after = initdenres_collapsed)
 ```
+
 
 # 5. Plot cost components
 
-First get the data into a different format.  
-
+Get the data into a different format for plotting, and save the output so can plot elsewhere.
 ```{r}
 df_for_stack <- rotn_means %>% 
   ungroup() %>% 
@@ -358,9 +376,9 @@ df_for_stack <- rotn_means %>%
   dplyr::select(-c('scenario','initdenres_collapsed')) %>% 
   dplyr::select(xval, herb, ops, cly, other) %>% 
   pivot_longer(!xval, names_to = "cost", values_to = "amount") %>% 
-  dplyr::mutate(cost = factor(cost, levels=c("herb", "cly", "ops", "other")))
+  dplyr::mutate(cost = factor(cost, levels=c("herb", "cly", "ops", "other"))) %>% 
+  dplyr::filter(!cost == "cly")
 ```
-
 
 Save data.
 ```{r}
