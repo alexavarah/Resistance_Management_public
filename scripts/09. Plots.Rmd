@@ -13,7 +13,6 @@ library(tidyverse) # loads ggplot2
 library(patchwork) # for panel plots
 ```
 
-
 ## 1.2. Load data
 
 ```{r}
@@ -70,8 +69,17 @@ df_wc_pc <- read.csv("../output/prod costs_worst case vs current.csv",
 ## SUPPLEMENTARY FIGURES
 
 # Fig S4: Scatter plot - effect of init condition on weed density
-density_3dr <- readRDS("../output/density_data_summarised_3dr.rds")
-density_3dr_hd <- readRDS("../output/density_data_summarised_3dr_hd.rds")
+density_3dr <- readRDS("../output/density_data_summarised_3dr.rds") %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    initDR3 = factor(initDR3,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+
+density_3dr_hd <- readRDS("../output/density_data_summarised_3dr_hd.rds") %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    initDR3 = factor(initDR3,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
 
 # Fig S5(a): Scatter plot - gross profit
 df_scatter_gp <- read.csv("../output/data for scatter plot_gross profit.csv", 
@@ -249,17 +257,26 @@ plot_gp
 
 ## 2.4. Make panel plot, ncol = 1
 ```{r Fig2-arrange-panels}
-panel_wd_gp_bw_1col <- (plot_wd + plot_gp) + 
+fig2 <- (plot_wd + plot_gp) + 
   plot_layout(ncol=1) +
   plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
   theme(plot.tag = element_text(size = 24, face="bold"))
-panel_wd_gp_bw_1col
+fig2
 ```
 
 
 
+## 2.5. Save plot
+```{r Fig2-save}
+png("../figures/Figure 2.png",
+    height = 15, width = 20, units = "in", res = 300)
+print(fig2)
+dev.off()
+```
+
 
 # 3. Figure 3: Stacked bar plot
+## 3.1. Specify plot
 ```{r stacked-plot-bw, echo=TRUE, fig.keep='all'}
 # **IMPORTANT!** 
 # If not done earlier, specify order of factor levels here:
@@ -271,7 +288,7 @@ panel_wd_gp_bw_1col
 #    )
 
 # Specify plot
-sp_bw <- ggplot(df_for_stack, aes(x=xval, y=amount, fill=cost)) +
+fig3 <- ggplot(df_for_stack, aes(x=xval, y=amount, fill=cost)) +
   geom_bar(position="stack", stat="identity") +
   scale_fill_manual(
     name = "Cost \ncomponent",
@@ -375,11 +392,20 @@ sp_bw <- ggplot(df_for_stack, aes(x=xval, y=amount, fill=cost)) +
         legend.text=element_text(size=20)
         ) 
 
-sp_bw
+fig3
 ```
 
 Error bars show 95% CIs, which indicate variation across years in the rotation
 Brackets and annotations on plot were added in MS Word.
+
+## 3.2. Save plot
+```{r}
+png("../figures/Figure 3.png",
+    height = 10, width = 17, units = "in", res = 300)
+print(fig3)
+dev.off()
+```
+
 
 # 4. Figure 4: Scatter plots of opportunity and productivity costs, for current and worst case conditions
 ## 4.1. Specify panel labels  
@@ -653,7 +679,13 @@ fig4 <- (fig4a + fig4b) +
 fig4
 ```
 
-
+## 4.5. Save plot
+```{r}
+png("../figures/Figure 4.png",
+    height = 10, width = 20, units = "in", res = 300)
+print(fig4)
+dev.off()
+```
 
 # 5. Figure 5: When does it flip?
 See script 4e.
@@ -798,6 +830,13 @@ figS4 <- ggplot(density_3dr %>% dplyr::filter(year == 6 & !scenario=="CWW"), #Ke
 figS4
 ```
 
+## 6.4. Save plot
+```{r FigS4-save}
+png("../figures/Supplementary Figure S4.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(figS4)
+dev.off()
+```
 
 # 7. Figure S5: Scatter plots, gp and wheat yield
 ## 7.1. Specify panel labels  
@@ -1082,10 +1121,18 @@ plot_scatter_wwyld
 
 ## 7.4. Arrange as panel plot
 ```{r Fig-S5-arrange-panels}
-scatt_gp_wwyld <- (plot_scatter_gp + plot_scatter_wwyld) + 
+figS5 <- (plot_scatter_gp + plot_scatter_wwyld) + 
   plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
-  theme(plot.tag = element_text(size = 18, face="bold"))
-scatt_gp_wwyld
+  theme(plot.tag = element_text(size = 24, face="bold"))
+figS5
+```
+
+## 7.5. Save plot
+```{r FigS5-save}
+png("../figures/Supplementary Figure S5.png",
+    height = 10, width = 20, units = "in", res = 300)
+print(figS5)
+dev.off()
 ```
 
 # 8. Figure S6: Sensitivity analysis plots
