@@ -212,7 +212,7 @@ summarised_df_3DR <- econ_allimp_new %>%
   
   # Step 2: for weighted variables, calculate means across the new den-res levels and across imputations
   dplyr::group_by(scenario,region,soiltype,initdenres_collapsed,year) %>% 
-  dplyr::summarise(across(starts_with("wtd"),.fns = list(
+  dplyr::summarise(across(c(starts_with("wtd"),potential_output),.fns = list( 
     mean=~mean(.x, na.rm = TRUE), 
     sd=~sd(.x, na.rm = TRUE), 
     se=~sd(.x, na.rm = TRUE)/sqrt(length(.x)),
@@ -245,6 +245,8 @@ rm(bau_low, mit_low, cww_low,
    bau_low_tidy, mit_low_tidy, cww_low_tidy,
    low_run, low_run_tidy, 
    econ_allimp, econ_distinct_3DR, summarised_df_3DR)
+
+colnames(econ_3DR)
 ```
 
 # 4. Summarise across a rotation
