@@ -212,6 +212,6 @@ write.csv(oc_both, "../output/opp costs_worst case vs current.csv",
 
 Session info
 ```{r}
-sessionInfo()
+#sessionInfo()
 ```
 
