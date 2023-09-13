@@ -876,6 +876,6 @@ rm(econdata_small, weighted_df,
 
 # Session info
 ```{r session-info}
-sessionInfo()
+#sessionInfo()
 ```
 
