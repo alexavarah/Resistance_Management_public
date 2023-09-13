@@ -347,7 +347,7 @@ line_den_gp_bw
 
 Colour.
 ```{r}
-png("../figures/Script 09_line graph_den and gp.png",
+png("../figures/Script 10_line graph_den and gp.png",
     height = 6, width = 17, units = "in", res = 300)
 print(line_den_gp)
 dev.off()
@@ -355,7 +355,7 @@ dev.off()
 
 Black and white.
 ```{r}
-png("../figures/Script 09_line graph_den and gp_bw.png",
+png("../figures/Script 10_line graph_den and gp_bw.png",
     height = 6, width = 17, units = "in", res = 300)
 print(line_den_gp_bw)
 dev.off()
@@ -760,7 +760,7 @@ scatt_gp_wwyld_subscr
 
 ## 3.4. Save
 ```{r}
-png("../figures/Script 09_scatter_gp and wwyld.png",
+png("../figures/Script 10_scatter_gp and wwyld.png",
     height = 10, width = 20, units = "in", res = 300)
 print(scatt_gp_wwyld)
 dev.off()
@@ -768,7 +768,7 @@ dev.off()
 
 ### 3.4.1. Save panel plot with subscripts
 ```{r}
-png("../figures/Script 09_scatter_gp and wwyld_subscripts.png",
+png("../figures/Script 10_scatter_gp and wwyld_subscripts.png",
     height = 10, width = 20, units = "in", res = 300)
 print(scatt_gp_wwyld_subscr)
 dev.off()
@@ -1214,14 +1214,14 @@ scatt_gp_wwyld_subscr_hd
 
 ## 4.4. Save
 ```{r}
-png("../figures/Script 09_scatter_gp and wwyld_hd.png",
+png("../figures/Script 10_scatter_gp and wwyld_hd.png",
     height = 10, width = 20, units = "in", res = 300)
 print(scatt_gp_wwyld_hd)
 dev.off()
 ```
 
 ```{r}
-png("../figures/Script 09_scatter_gp and wwyld_subscripts_hd.png",
+png("../figures/Script 10_scatter_gp and wwyld_subscripts_hd.png",
     height = 10, width = 20, units = "in", res = 300)
 print(scatt_gp_wwyld_subscr_hd)
 dev.off()
@@ -1394,53 +1394,6 @@ anno_oc <- data.frame(
 ```
 
 Then specify the plot.  
-Colour version.
-```{r plot-scatter-worstcase-oc}
-scatt_oc_current_worst <- ggplot(df_wc_oc, aes(initdenres_collapsed, oc*(-1), 
-                    colour = situation, shape = situation)) + 
-  facet_grid(region ~ soiltype,
-             labeller = labeller(region = region.labs, 
-                                 soiltype = soiltype.labs)
-  ) +
-  scale_x_discrete(guide = guide_axis(angle = 45)) +
-  geom_hline(aes(yintercept = 0), color="grey") + #, linetype="dashed"
-  labs(x = "Initial density and resistance", 
-       y = "Mean annual opportunity cost, BAU-MIT (£/ha)") +
-  # specify colours for 'situation':
-  scale_color_manual(name = "Situation",
-                     values = c("#EECC66", # current, (capri blue #00C2F9) (blue #1A85FF)
-                                "#000000" # worst case, (magenta #EE3377) (pink #D41159)
-                                )
-                     ) + 
-  scale_shape_manual(name = "Situation",
-                     values=c(15, 16)) + # current 15 square; worst 16 circle
-  theme(strip.placement = 'outside',
-        panel.background = element_rect(fill = "white", colour = "black"),# white background in main panels
-        strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
-        strip.text.x = element_text(size = 18),#16, color = "red", face = "bold.italic"
-        strip.text.y = element_text(size = 18),#16
-        plot.title = element_text(size=22),
-        axis.title=element_text(size=22),#18
-        axis.text.x=element_text(size=rel(2)),#1.7
-        axis.text.y=element_text(size=rel(2)),#1.7
-        legend.title=element_text(size=22),#18
-        legend.text=element_text(size=20),#16
-        legend.key = element_blank(),# removes grey background behind symbols in legend
-        ) +
-  geom_pointrange(aes(ymin = oc_ci_l*(-1), 
-                      ymax = oc_ci_u*(-1)
-                      ), 
-                  position=position_dodge(width=0.3),
-                  size = 0.9) + 
-  geom_text(data = anno_oc, aes(x = x,  y = y, label = lab),
-           colour = "grey",  size=6) +
-  theme(legend.position="none")
-
-scatt_oc_current_worst
-```
-
-Figure shows: Mean annual opportunity costs of switching from BAU to MIT rotations (i.e., the chosen option is MIT; the foregone option is BAU), for current conditions and worst-case conditions. ‘Current’ opportunity costs are calculated as BAU, current density – MIT, current density. ‘Worst-case ’ opportunity costs are calculated as BAU, worst-case density – MIT, current density. ‘Worst-case’ is defined as 100% of surveyed grid cells in a field having very high black-grass density. **Points below the line at y=0 indicate that MIT strategies did better than BAU strategies.** Error bars are 95% CIs. x-axis abbreviations: D, density; R, resistance; L, low; H, high. Annotations show numbers of spring crops in the 6-year rotation.
-
 Black and white version.
 ```{r plot-scatter-worstcase-oc-bw}
 scatt_oc_current_worst_bw <- ggplot(df_wc_oc, aes(initdenres_collapsed, oc*(-1), 
@@ -1485,6 +1438,7 @@ scatt_oc_current_worst_bw <- ggplot(df_wc_oc, aes(initdenres_collapsed, oc*(-1),
 
 scatt_oc_current_worst_bw
 ```
+Figure shows: Mean annual opportunity costs of switching from BAU to MIT rotations (i.e., the chosen option is MIT; the foregone option is BAU), for current conditions and worst-case conditions. ‘Current’ opportunity costs are calculated as BAU, current density – MIT, current density. ‘Worst-case ’ opportunity costs are calculated as BAU, worst-case density – MIT, current density. ‘Worst-case’ is defined as 100% of surveyed grid cells in a field having very high black-grass density. **Points below the line at y=0 indicate that MIT strategies did better than BAU strategies.** Error bars are 95% CIs. x-axis abbreviations: D, density; R, resistance; L, low; H, high. Annotations show numbers of spring crops in the 6-year rotation.
 
 ## 5.2. Prod costs
 Specify the labels for the panels (already done above).  
@@ -1575,55 +1529,6 @@ anno_pc <- data.frame(
 
 
 Specify the plot. 
-Colour.
-```{r plot-scatter-worstcase-pc}
-scatt_pc_current_worst <- ggplot(df_wc_pc, aes(initdenres_collapsed, pc*(-1), 
-                    colour = situation, shape = situation)) + 
-  facet_grid(region ~ soiltype,
-             labeller = labeller(region = region.labs, 
-                                 soiltype = soiltype.labs)
-  ) +
-  scale_x_discrete(guide = guide_axis(angle = 45)) +
-  geom_hline(aes(yintercept = 0), color="grey") + #, linetype="dashed"
-  labs(x = "Initial density and resistance", 
-       y = "Mean annual productivity cost, BAU-MIT (t/ha)") +
-  # specify colours for 'situation':
-  scale_color_manual(name = "Situation",
-                     values = c("#EECC66", # current
-                                "#000000"  # worst case
-                                )
-                     ) + 
-  scale_shape_manual(name = "Situation",
-                     values=c(15, 16)) + # current 15 square; worst 16 circle
-  theme(strip.placement = 'outside',
-        #strip.background.x = element_blank(),
-        #strip.text.x = element_blank(), # removes facet labels
-        panel.background = element_rect(fill = "white", colour = "black"),# white background in main panels
-        strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
-        strip.text.x = element_text(size = 18),#16, color = "red", face = "bold.italic"
-        strip.text.y = element_text(size = 18),#16
-        plot.title = element_text(size=22),
-        axis.title=element_text(size=22),#18
-        axis.text.x=element_text(size=rel(2)),#1.7
-        axis.text.y=element_text(size=rel(2)),#1.7
-        legend.title=element_text(size=22),#18
-        legend.text=element_text(size=20),#16
-        legend.key = element_blank(),# removes grey background behind symbols in legend
-        #legend.title = element_blank()
-        ) +
-  geom_pointrange(aes(ymin = pc_ci_l*(-1), 
-                      ymax = pc_ci_u*(-1)
-                      ), 
-                  position=position_dodge(width=0.3),
-                  size = 0.9) + 
-  geom_text(data = anno_pc, aes(x = x,  y = y, label = lab),
-           colour = "grey",  size=6) 
-
-scatt_pc_current_worst
-```
-
-**Figure shows:** Mean annual productivity costs of switching from BAU to MIT rotations (i.e., the chosen option is MIT; the foregone option is BAU), for current conditions and worst-case conditions. Current’ productivity costs are calculated as BAU, current density – MIT, current density. ‘Worst-case’ productivity costs – in other words, is it better for wheat production to switch pre-emptively to MIT, or is it better for wheat production to continue with BAU in the knowledge that weed density will get worse – are calculated as BAU, worst-case density – MIT, current density. ‘Worst-case’ is defined as 100% of surveyed grid cells in a field having very high black-grass density. **Points below the line at y=0 indicate that MIT strategies did better than BAU strategies.** Error bars are 95% CIs. x-axis abbreviations: D, density; R, resistance; L, low; H, high. Annotations show numbers of spring crops in the 6-year rotation.
-
 Black and white.
 ```{r plot-scatter-worstcase-pc-bw}
 scatt_pc_current_worst_bw <- ggplot(df_wc_pc, aes(initdenres_collapsed, pc*(-1), 
@@ -1670,17 +1575,10 @@ scatt_pc_current_worst_bw <- ggplot(df_wc_pc, aes(initdenres_collapsed, pc*(-1),
 
 scatt_pc_current_worst_bw
 ```
+**Figure shows:** Mean annual productivity costs of switching from BAU to MIT rotations (i.e., the chosen option is MIT; the foregone option is BAU), for current conditions and worst-case conditions. Current’ productivity costs are calculated as BAU, current density – MIT, current density. ‘Worst-case’ productivity costs – in other words, is it better for wheat production to switch pre-emptively to MIT, or is it better for wheat production to continue with BAU in the knowledge that weed density will get worse – are calculated as BAU, worst-case density – MIT, current density. ‘Worst-case’ is defined as 100% of surveyed grid cells in a field having very high black-grass density. **Points below the line at y=0 indicate that MIT strategies did better than BAU strategies.** Error bars are 95% CIs. x-axis abbreviations: D, density; R, resistance; L, low; H, high. Annotations show numbers of spring crops in the 6-year rotation.
+
 
 ## 5.3. Panel plot
-
-Colour.
-```{r}
-scatt_wc_oc_pc <- (scatt_oc_current_worst + scatt_pc_current_worst) + 
-  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
-  theme(plot.tag = element_text(size = 18, face="bold"))
-scatt_wc_oc_pc
-```
-
 Black and white.
 ```{r}
 scatt_wc_oc_pc_bw <- (scatt_oc_current_worst_bw + scatt_pc_current_worst_bw) + 
@@ -1691,24 +1589,9 @@ scatt_wc_oc_pc_bw
 
 
 ## 5.4. Save
-
-Colour.
-```{r}
-png("../figures/Script 09_scatter_worstcase_oc and pc.png",
-    height = 10, width = 20, units = "in", res = 300)
-print(scatt_wc_oc_pc)
-dev.off()
-
-
-tiff("../figures/Script 09_scatter_worstcase_oc and pc.tiff", 
-     height = 10, width = 20, pointsize = 1/300, units = 'in', res = 300)
-print(scatt_wc_oc_pc)
-dev.off()
-```
-
 Black and white.
 ```{r}
-png("../figures/Script 09_scatter_worstcase_oc and pc_bw.png",
+png("../figures/Script 10_scatter_worstcase_oc and pc_bw.png",
     height = 10, width = 20, units = "in", res = 300)
 print(scatt_wc_oc_pc_bw)
 dev.off()
@@ -1717,118 +1600,19 @@ dev.off()
 
 
 # 6. Stacked bar plot
-Colour.
-```{r stacked-plot, echo=TRUE, fig.keep='all'}
-sp <- ggplot(df_for_stack %>% dplyr::filter(!cost=="cly"),
-             aes(x=xval, y=amount, fill=cost)) +
-  geom_bar(position="stack", stat="identity") +
-  scale_fill_manual(
-    name = "Cost \ncomponent",
-    values = c('#9ecae1', '#3ac8e1', '#005FCC'),# '#08306b',  #0E61DC
-    labels = c('Herbicide', 'Operations', 'Other') # 'Lost yield', 
-    ) +
-
-  # 1. BAU LD-LR
-  # output
-  geom_point(aes(x = 1, y = 1416.308), 
-             cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
-  geom_segment(aes(x = 1, y = 1307.133, xend = 1, yend = 1525.483)) + # CIs
-  # output with no BG
-  geom_point(aes(x = 1.05, y = 1446.279), # point
-             cex = 4, shape = 17, show.legend = FALSE) + 
-  geom_segment(aes(x = 1.05, y = 1332.746, xend = 1.05, yend = 1559.811)) + # CIs
-  # gross profit line
-  geom_segment(aes(   x = 0.95,    y = 766.8389, 
-                   xend = 0.95, yend = 1416.308, 
-                   linetype = 'dotdash')) + # diff = gp 649.4691
-  
-  # 2. BAU LD-HR
-  # output
-  geom_point(aes(x = 2, y = 1378.1), 
-             cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
-  geom_segment(aes(   x = 2,    y = 1271.964, 
-                   xend = 2, yend = 1484.184)) + # CIs
-  # output with no BG
-  geom_point(aes(x = 2.05, y = 1484.513), cex = 4, shape = 17, show.legend = FALSE) + # point
-  geom_segment(aes(x = 2.05, y = 1367.219, xend = 2.05, yend = 1601.806)) + # CIs
-  # gross profit line
-  geom_segment(aes(   x = 1.95,    y = 766.0656, 
-                   xend = 1.95, yend = 1378.1, 
-                   linetype = 'dashed')) +
-  
-  # 3. BAU HD-HR
-  # output
-  geom_point(aes(x = 3, y = 1349.2), cex = 4, show.legend = FALSE) + # point #colour = "#020E20",
-  geom_segment(aes(x = 3, y = 1244.473, xend = 3, yend = 1453.913)) + # CIs
-  # output with no BG
-  geom_point(aes(x = 3.05, y = 1513.394), cex = 4, shape = 17, show.legend = FALSE) + 
-  geom_segment(aes(   x = 3.05,    y = 1394.663, 
-                   xend = 3.05, yend = 1632.125)) + # CIs #,colour = "#08306b"
-  # gross profit line
-  geom_segment(aes(   x = 2.95,    y = 767.4341, 
-                   xend = 2.95, yend = 1349.2, 
-                   linetype = 'dotted')) + 
-  scale_linetype_identity() +  
-
-  # 4. MIT LD-LR
-  # output
-  geom_point(aes(x = 4, y = 1447.7), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
-  geom_segment(aes(x = 4, y = 1349.828, xend = 4, yend = 1545.666)) + # CIs
-  # output with no BG
-  geom_point(aes(x = 4.05, y = 1456.491), cex = 4, shape = 17, show.legend = FALSE) + # point
-  geom_segment(aes(x = 4.05, y = 1358.818, xend = 4.05, yend = 1554.165)) + # CIs
-  # gross profit from BAU scenario
-  geom_segment(aes(   x = 3.95,    y = 1447.7-649.4691, 
-                   xend = 3.95, yend = 1447.7,
-                   linetype = 'dotdash')) + # # diff = 649.4691
-  
-  # 5. MIT LD-HR
-  # output
-  geom_point(aes(x = 5, y = 1331.78), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
-  geom_segment(aes(x = 5, y = 1250.360, xend = 5, yend = 1413.200)) + # CIs
-  # output with no BG
-  geom_point(aes(x = 5.05, y = 1349.842), cex = 4, shape = 17, show.legend = FALSE) + # point
-  geom_segment(aes(x = 5.05, y = 1267.995, xend = 5.05, yend = 1431.689)) + # CIs
-  # gross profit from BAU scenario
-  geom_segment(aes(   x = 4.95,    y = 719.7456, 
-                   xend = 4.95, yend = 1331.78, 
-                   linetype = 'dashed')) + # diff = 612.0344
-  
-
-  # 6. MIT HD-HR
-  # output
-  geom_point(aes(x = 6, y = 1190.729), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
-  geom_segment(aes(x = 6, y = 1108.905, xend = 6, yend = 1272.553)) + # CIs
-  # output with no BG
-  geom_point(aes(x = 6.05, y = 1246.424), cex = 4, shape = 17, show.legend = FALSE) + # point
-  geom_segment(aes(x = 6.05, y = 1164.023, xend = 6.05, yend = 1328.824)) + # CIs
-  # gross profit from BAU scenario
-  geom_segment(aes(   x = 5.95,    y = 608.9631, 
-                   xend = 5.95, yend = 1190.729, 
-                   linetype = 'dotted')) +
-  
-  labs(x = "\n\nScenario and initial density-resistance state", 
-       y = "Mean annual costs and output (£/ha)") +
-  scale_x_discrete(labels=c('LD-LR', 'LD-HR', 'HD-HR',
-                              'LD-LR', 'LD-HR', 'HD-HR')) +
-  annotate("text", x=2, y=-230, label="BAU", size = 7) +
-  annotate("text", x=5, y=-230, label="MIT", size = 7) +
-  coord_cartesian(ylim=c(0,1600),clip="off") +
-  theme_classic() +
-  theme(axis.title=element_text(size=22),
-        axis.text.x=element_text(size=rel(2)),#, 
-        axis.text.y=element_text(size=rel(2)),
-        legend.title=element_text(size=22),
-        legend.text=element_text(size=20)
-        ) 
-
-sp
-```
-
 Black and white.
 ```{r stacked-plot-bw, echo=TRUE, fig.keep='all'}
-sp_bw <- ggplot(df_for_stack %>% dplyr::filter(!cost=="cly"), 
-                aes(x=xval, y=amount, fill=cost)) +
+# **IMPORTANT!** 
+# If not done earlier, specify order of factor levels here:
+#df_for_stack <- df_for_stack %>% 
+#  dplyr::mutate(
+#    xval = factor(xval,
+#                  levels = c("BAU_LD-LR", "BAU_LD-HR", "BAU_HD-HR", 
+#                             "MIT_LD-LR", "MIT_LD-HR", "MIT_HD-HR"))
+#    )
+
+# Specify plot
+sp_bw <- ggplot(df_for_stack, aes(x=xval, y=amount, fill=cost)) +
   geom_bar(position="stack", stat="identity") +
   scale_fill_manual(
     name = "Cost \ncomponent",
@@ -1842,9 +1626,9 @@ sp_bw <- ggplot(df_for_stack %>% dplyr::filter(!cost=="cly"),
              cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
   geom_segment(aes(x = 1, y = 1307.133, xend = 1, yend = 1525.483)) + # CIs
   # output with no BG
-  geom_point(aes(x = 1.05, y = 1446.279), # point
+  geom_point(aes(x = 1.05, y = 1431.293), # point
              cex = 4, shape = 17, show.legend = FALSE) + 
-  geom_segment(aes(x = 1.05, y = 1332.746, xend = 1.05, yend = 1559.811)) + # CIs
+  geom_segment(aes(x = 1.05, y = 1320.006, xend = 1.05, yend = 1542.580)) + # CIs
   # gross profit line
   geom_segment(aes(   x = 0.95,    y = 766.8389, 
                    xend = 0.95, yend = 1416.308, 
@@ -1857,8 +1641,9 @@ sp_bw <- ggplot(df_for_stack %>% dplyr::filter(!cost=="cly"),
   geom_segment(aes(   x = 2,    y = 1271.964, 
                    xend = 2, yend = 1484.184)) + # CIs
   # output with no BG
-  geom_point(aes(x = 2.05, y = 1484.513), cex = 4, shape = 17, show.legend = FALSE) + # point
-  geom_segment(aes(x = 2.05, y = 1367.219, xend = 2.05, yend = 1601.806)) + # CIs
+  geom_point(aes(x = 2.05, y = 1431.293), 
+             cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 2.05, y = 1320.006, xend = 2.05, yend = 1542.580)) + # CIs
   # gross profit line
   geom_segment(aes(   x = 1.95,    y = 766.0656, 
                    xend = 1.95, yend = 1378.1, 
@@ -1866,12 +1651,13 @@ sp_bw <- ggplot(df_for_stack %>% dplyr::filter(!cost=="cly"),
   
   # 3. BAU HD-HR
   # output
-  geom_point(aes(x = 3, y = 1349.2), cex = 4, show.legend = FALSE) + # point #colour = "#020E20",
+  geom_point(aes(x = 3, y = 1349.2), 
+             cex = 4, show.legend = FALSE) + # point #colour = "#020E20",
   geom_segment(aes(x = 3, y = 1244.473, xend = 3, yend = 1453.913)) + # CIs
   # output with no BG
-  geom_point(aes(x = 3.05, y = 1513.394), cex = 4, shape = 17, show.legend = FALSE) + 
-  geom_segment(aes(   x = 3.05,    y = 1394.663, 
-                   xend = 3.05, yend = 1632.125)) + # CIs #,colour = "#08306b"
+  geom_point(aes(x = 3.05, y = 1431.293), 
+             cex = 4, shape = 17, show.legend = FALSE) + 
+  geom_segment(aes(x = 3.05, y = 1320.006, xend = 3.05, yend = 1542.580)) + # CIs #,colour = "#08306b"
   # gross profit line
   geom_segment(aes(   x = 2.95,    y = 767.4341, 
                    xend = 2.95, yend = 1349.2, 
@@ -1883,8 +1669,8 @@ sp_bw <- ggplot(df_for_stack %>% dplyr::filter(!cost=="cly"),
   geom_point(aes(x = 4, y = 1447.7), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
   geom_segment(aes(x = 4, y = 1349.828, xend = 4, yend = 1545.666)) + # CIs
   # output with no BG
-  geom_point(aes(x = 4.05, y = 1456.491), cex = 4, shape = 17, show.legend = FALSE) + # point
-  geom_segment(aes(x = 4.05, y = 1358.818, xend = 4.05, yend = 1554.165)) + # CIs
+  geom_point(aes(x = 4.05, y = 1452.119), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 4.05, y = 1354.349, xend = 4.05, yend = 1549.890)) + # CIs
   # gross profit from BAU scenario
   geom_segment(aes(   x = 3.95,    y = 1447.7-649.4691, 
                    xend = 3.95, yend = 1447.7,
@@ -1895,8 +1681,8 @@ sp_bw <- ggplot(df_for_stack %>% dplyr::filter(!cost=="cly"),
   geom_point(aes(x = 5, y = 1331.78), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
   geom_segment(aes(x = 5, y = 1250.360, xend = 5, yend = 1413.200)) + # CIs
   # output with no BG
-  geom_point(aes(x = 5.05, y = 1349.842), cex = 4, shape = 17, show.legend = FALSE) + # point
-  geom_segment(aes(x = 5.05, y = 1267.995, xend = 5.05, yend = 1431.689)) + # CIs
+  geom_point(aes(x = 5.05, y = 1340.811), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 5.05, y = 1259.247, xend = 5.05, yend = 1422.375)) + # CIs
   # gross profit from BAU scenario
   geom_segment(aes(   x = 4.95,    y = 719.7456, 
                    xend = 4.95, yend = 1331.78, 
@@ -1908,8 +1694,8 @@ sp_bw <- ggplot(df_for_stack %>% dplyr::filter(!cost=="cly"),
   geom_point(aes(x = 6, y = 1190.729), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
   geom_segment(aes(x = 6, y = 1108.905, xend = 6, yend = 1272.553)) + # CIs
   # output with no BG
-  geom_point(aes(x = 6.05, y = 1246.424), cex = 4, shape = 17, show.legend = FALSE) + # point
-  geom_segment(aes(x = 6.05, y = 1164.023, xend = 6.05, yend = 1328.824)) + # CIs
+  geom_point(aes(x = 6.05, y = 1218.576), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 6.05, y = 1137.202, xend = 6.05, yend = 1299.950)) + # CIs
   # gross profit from BAU scenario
   geom_segment(aes(   x = 5.95,    y = 608.9631, 
                    xend = 5.95, yend = 1190.729, 
@@ -1934,24 +1720,10 @@ sp_bw
 ```
 
 
-## 6.1. Save plots.
-
-Colour.
-```{r}
-png("../figures/Script 11_cost components_stacked.png",
-    height = 10, width = 17, units = "in", res = 300)
-print(sp)
-dev.off()
-
-#tiff("../figures/Script 09_scatter_worstcase_oc and pc.tiff", 
-#     height = 10, width = 20, pointsize = 1/300, units = 'in', res = 300)
-#print(scatt_wc_oc_pc)
-#dev.off()
-```
-
+## 6.1. Save.
 Black and white.
 ```{r}
-png("../figures/Script 09_cost components_stacked_bw.png",
+png("../figures/Script 10_cost components_stacked_bw.png",
     height = 10, width = 17, units = "in", res = 300)
 print(sp_bw)
 dev.off()
@@ -2091,10 +1863,7 @@ sp1
 
 #### Save plot
 ```{r save-sp1}
-#ggsave("../figures/Script 3c_prop hvh_yr6_effect of scenario and initcondit_3dr_scatter_noCWW.png", 
-#       height = 10, width = 10, dpi = 300)
-
-png("../figures/Script 3c_prop hvh_yr6_effect of scenario and initcondit_3dr_scatter_noCWW.png",
+png("../figures/Script 10_prop hvh_yr6_effect of scenario and initcondit_3dr_scatter_noCWW.png",
     height = 10, width = 10, units = "in", res = 300)
 print(sp1)
 dev.off()
@@ -2195,23 +1964,18 @@ sp2
 
 Save plot.
 ```{r, eval=FALSE, echo=FALSE}
-#ggsave("../figures/Script 3c_prop hvh_yr6_effect of scenario and initDR_3dr_scatter_noCWW_VD added.png",
-#       height = 10, width = 10)
-
-png("../figures/Script 09_prop hvh_yr6_noCWW_LD-HR added.png",
+png("../figures/Script 10_prop hvh_yr6_noCWW_LD-HR added.png",
     height = 10, width = 10, units = "in", res = 300)
 print(sp2)
 dev.off()
 ```
 
 
-
- 
 # 9. SI: Sensitivity analysis plots
 
 ## 9.1. Scatter plot, gp, MIT & BAU
 If not done above, specify the labels for the panels.  
-```{r specify-panel-labels}
+```{r specify-panel-labels-SA-gp}
 region.labs <- c("Northern England", "Central England", "Eastern England") # new
 names(region.labs) <- c("north", "central", "east") # original
 
@@ -2264,8 +2028,8 @@ scatt_SA_gp
 ```
 
 Save plot.
-```{r save-econ-plot-noCWW}
-png("../figures/Script 09_SA_gp by initcondit_BAU & MIT.png",
+```{r save-SA-econ-plot-noCWW}
+png("../figures/Script 10_SA_gp by initcondit_BAU & MIT.png",
     height = 10, width = 10, units = "in", res = 300)
 print(scatt_SA_gp)
 dev.off()
@@ -2274,7 +2038,7 @@ dev.off()
 
 ## 9.2. Scatter plot, ww, MIT & BAU
 If not done above, specify the labels for the panels.  
-```{r specify-panel-labels}
+```{r specify-panel-labels-SA-ww}
 region.labs <- c("Northern England", "Central England", "Eastern England") # new
 names(region.labs) <- c("north", "central", "east") # original
 
@@ -2283,7 +2047,7 @@ names(soiltype.labs) <- c("heavy", "medium", "light") # original
 ```
 
 Then specify the plot.
-```{r plot-gp-sensanaly-noCWW}
+```{r plot-ww-sensanaly-noCWW}
 scatt_SA_ww <- ggplot(ww_pc %>% filter(!scenario=="CWW"), 
                 aes(initdenres_collapsed, ww, 
                     colour = ID, shape = ID)) + 
@@ -2329,8 +2093,8 @@ scatt_SA_ww
 
 
 Save plot.
-```{r save-econ-plot-noCWW}
-png("../figures/Script 09_SA_ww by initcondit_BAU & MIT.png",
+```{r save-SA-ww-plot-noCWW}
+png("../figures/Script 10_SA_ww by initcondit_BAU & MIT.png",
     height = 10, width = 10, units = "in", res = 300)
 print(scatt_SA_ww)
 dev.off()
