@@ -17,7 +17,8 @@ library(patchwork) # for panel plots
 ## 1.2. Load data
 
 ```{r}
-# Line graph - density
+## MAIN FIGURES
+# Fig 2(a): Line graph - density
 df_line_den <- read.csv("../output/data for line graph_density.csv", 
                         header = T) %>% 
   dplyr::mutate(
@@ -25,7 +26,7 @@ df_line_den <- read.csv("../output/data for line graph_density.csv",
     initDR3 = factor(initDR3,
                                   levels = c("LD-LR", "LD-HR", "HD-HR")))
 
-# Line graph - gross profit
+# Fig 2(b): Line graph - gross profit
 df_line_gp <- read.csv("../output/data for line graph_gross profit.csv", 
                        header = T) %>% 
   dplyr::mutate(
@@ -34,7 +35,45 @@ df_line_gp <- read.csv("../output/data for line graph_gross profit.csv",
                                   levels = c("LD-LR", "LD-HR", "HD-HR"))) %>% 
   dplyr::select(-initdenres_collapsed)
 
-# Scatter plot - gross profit
+# Fig 3: Stacked bar chart, costs and output
+df_for_stack <- read.csv("../output/data for stacked bar plot.csv", 
+                     header = T) %>% 
+  dplyr::mutate(
+    xval = factor(xval,
+                  levels = c("BAU_LD-LR", "BAU_LD-HR", "BAU_HD-HR", 
+                             "MIT_LD-LR", "MIT_LD-HR", "MIT_HD-HR"))
+    )
+
+levels(df_for_stack$xval)
+
+# Fig 4(a): Scatter plot - worst case opportunity costs
+df_wc_oc <- read.csv("../output/opp costs_worst case vs current.csv", 
+                     header = T) %>% 
+  dplyr::mutate(
+    situation = factor(situation, levels = c("Current", "Worst case")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+
+# Fig 4(b): Scatter plot - worst case productivity costs
+df_wc_pc <- read.csv("../output/prod costs_worst case vs current.csv", 
+                     header = T) %>% 
+  dplyr::mutate(
+    situation = factor(situation, levels = c("Current", "Worst case")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres_collapsed = factor(initdenres_collapsed,
+                                  levels = c("LD-LR", "LD-HR", "HD-HR")))
+
+
+## SUPPLEMENTARY FIGURES
+
+# Fig S4: Scatter plot - effect of init condition on weed density
+density_3dr <- readRDS("../output/density_data_summarised_3dr.rds")
+density_3dr_hd <- readRDS("../output/density_data_summarised_3dr_hd.rds")
+
+# Fig S5(a): Scatter plot - gross profit
 df_scatter_gp <- read.csv("../output/data for scatter plot_gross profit.csv", 
                           header = T) %>% 
   dplyr::mutate(
@@ -54,7 +93,7 @@ df_scatter_gp_hd <- read.csv("../output/data for scatter plot_gross profit_hd.cs
                                   levels = c("LD-LR", "LD-HR", "HD-HR")))
 
 
-# Scatter plot - wheat yield
+# Fig S5(b): Scatter plot - wheat yield
 df_scatter_wwyld <- read.csv("../output/data for scatter plot_wheat yield.csv", 
                              header = T) %>% 
   dplyr::mutate(
@@ -73,43 +112,27 @@ df_scatter_wwyld_hd <- read.csv("../output/data for scatter plot_wheat yield_hd.
     initdenres_collapsed = factor(initdenres_collapsed,
                                   levels = c("LD-LR", "LD-HR", "HD-HR")))
 
-# Scatter plot - worst case opportunity costs
-df_wc_oc <- read.csv("../output/opp costs_worst case vs current.csv", 
+# Fig S6: Sensitivity analysis
+# Fig S6(a) - opportunity costs - sensitivity analysis
+gp_oc <- read.csv("../output/data for sensitivity analysis scatter_OC.csv", 
                      header = T) %>% 
   dplyr::mutate(
-    situation = factor(situation, levels = c("Current", "Worst case")),
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
     region = factor(region, levels = c("north", "central", "east")),
     soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
     initdenres_collapsed = factor(initdenres_collapsed,
                                   levels = c("LD-LR", "LD-HR", "HD-HR")))
 
-# Scatter plot - worst case productivity costs
-df_wc_pc <- read.csv("../output/prod costs_worst case vs current.csv", 
+# Fig S6(b) - productivity costs - sensitivity analysis
+ww_pc <- read.csv("../output/data for sensitivity analysis scatter_PC.csv", 
                      header = T) %>% 
   dplyr::mutate(
-    situation = factor(situation, levels = c("Current", "Worst case")),
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
     region = factor(region, levels = c("north", "central", "east")),
     soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
     initdenres_collapsed = factor(initdenres_collapsed,
                                   levels = c("LD-LR", "LD-HR", "HD-HR")))
-
-# Stacked bar chart, costs and output
-df_for_stack <- read.csv("../output/data for stacked bar plot.csv", 
-                     header = T) %>% 
-  dplyr::mutate(
-    xval = factor(xval,
-                  levels = c("BAU_LD-LR", "BAU_LD-HR", "BAU_HD-HR", 
-                             "MIT_LD-LR", "MIT_LD-HR", "MIT_HD-HR"))
-    )
-
-
-levels(df_for_stack$xval)
-
-# Scatter plot - effect of init condit on density
-density_3dr <- readRDS("../output/density_data_summarised_3dr.rds")
-density_3dr_hd <- readRDS("../output/density_data_summarised_3dr_hd.rds")
 ```
-
 
 
 # ----
@@ -448,8 +471,8 @@ anno_oc <- data.frame(
 ```
 
 ### 4.2.2. Specify plot  
-```{r Fig4a-plot-scatter-worstcase-oc-bw}
-scatt_oc_current_worst_bw <- ggplot(df_wc_oc, aes(initdenres_collapsed, oc*(-1), 
+```{r Fig4a-plot}
+fig4a <- ggplot(df_wc_oc, aes(initdenres_collapsed, oc*(-1), 
                     colour = situation, shape = situation)) + 
   facet_grid(region ~ soiltype,
              labeller = labeller(region = region.labs, 
@@ -489,7 +512,7 @@ scatt_oc_current_worst_bw <- ggplot(df_wc_oc, aes(initdenres_collapsed, oc*(-1),
            colour = "grey",  size=6) +
   theme(legend.position="none")
 
-scatt_oc_current_worst_bw
+fig4a
 ```
 Figure shows: Mean annual opportunity costs of switching from BAU to MIT rotations (i.e., the chosen option is MIT; the foregone option is BAU), for current conditions and worst-case conditions. ‘Current’ opportunity costs are calculated as BAU, current density – MIT, current density. ‘Worst-case ’ opportunity costs are calculated as BAU, worst-case density – MIT, current density. ‘Worst-case’ is defined as 100% of surveyed grid cells in a field having very high black-grass density. **Points below the line at y=0 indicate that MIT strategies did better than BAU strategies.** Error bars show 95% CIs, which indicate year-to-year variation within a rotation. x-axis abbreviations: D, density; R, resistance; L, low; H, high. Annotations show number of spring crops, ‘s’, and winter wheat crops, ‘w’, in the 6-year rotation.
 
@@ -575,7 +598,7 @@ anno_pc <- data.frame(
 
 ### 4.3.2. Specify plot 
 ```{r Fig4b-plot}
-scatt_pc_current_worst_bw <- ggplot(df_wc_pc, aes(initdenres_collapsed, pc*(-1), 
+fig4b <- ggplot(df_wc_pc, aes(initdenres_collapsed, pc*(-1), 
                     colour = situation, shape = situation)) + 
   facet_grid(region ~ soiltype,
              labeller = labeller(region = region.labs, 
@@ -617,34 +640,32 @@ scatt_pc_current_worst_bw <- ggplot(df_wc_pc, aes(initdenres_collapsed, pc*(-1),
   geom_text(data = anno_pc, aes(x = x,  y = y, label = lab),
            colour = "grey",  size=6) 
 
-scatt_pc_current_worst_bw
+fig4b
 ```
 **Figure shows:** Mean annual productivity costs of switching from BAU to MIT rotations (i.e., the chosen option is MIT; the foregone option is BAU), for current conditions and worst-case conditions. Current’ productivity costs are calculated as BAU, current density – MIT, current density. ‘Worst-case’ productivity costs – in other words, is it better for wheat production to switch pre-emptively to MIT, or is it better for wheat production to continue with BAU in the knowledge that weed density will get worse – are calculated as BAU, worst-case density – MIT, current density. ‘Worst-case’ is defined as 100% of surveyed grid cells in a field having very high black-grass density. **Points below the line at y=0 indicate that MIT strategies did better than BAU strategies.** Error bars show 95% CIs, which indicate year-to-year variation within a rotation. x-axis abbreviations: D, density; R, resistance; L, low; H, high. Annotations show numbers of winter wheat crops in the 6-year rotation.
 
 
 ## 4.4. Make panel plot
 ```{r Fig4-arrange-panels}
-scatt_wc_oc_pc_bw <- (scatt_oc_current_worst_bw + scatt_pc_current_worst_bw) + 
+fig4 <- (fig4a + fig4b) + 
   plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
   theme(plot.tag = element_text(size = 24, face="bold"))
-scatt_wc_oc_pc_bw
+fig4
 ```
 
 
 
-# 5. When does it flip?
+# 5. Figure 5: When does it flip?
 See script 4e.
 
 # ----
 # SUPPLEMENTARY FIGURES ----
 # 6. Figure S4: Scatter plot, density - LD-HR with init HD
-Scatter plot of density by 3 init conditions, just BAU and MIT scenarios. Use the `prophvh_3dr` dataset: this contains the mean proportion of squares in high or very high density states, with initial density/resistance states collapsed to three levels.
+Scatter plot of final density (density at year 6) by 3 initial conditions, for BAU and MIT scenarios. Use the `prophvh_3dr` data set: this contains the mean proportion of quadrats in high or very high density states, with initial density-resistance states collapsed to three levels.
 
-N.B. I checked whether it made any difference to the error bars if I calculated the mean first, then collapsed init den res levels and combined h&vh, then calculated new mean, OR if I collapsed init den res levels and combined h&vh first and then calculated mean. It made no difference.
-
-#### Plot
+## 6.1. Specify panel labels
 Specify what you want written in the facet strips.
-```{r specify-facets-sp1}
+```{r FigS4-panel-labels}
 region.labs <- c("Northern England", "Central England", "Eastern England") # new
 names(region.labs) <- c("north", "central", "east") # original
 
@@ -652,10 +673,10 @@ soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
 names(soiltype.labs) <- c("heavy", "medium", "light") # original
 ```
 
-
-Specify the plot annotations. These will show the **numbers of spring crops** in each rotation.
-```{r annotations-scatter-worstcase-oc}
-anno_den <- data.frame(
+## 6.2. Specify plot annotations
+These will show the **numbers of spring crops** in each rotation.
+```{r FigS4-annotations}
+anno_FigS4 <- data.frame(
   x = c("HD-HR","HD-HR","HD-HR",
         "HD-HR","HD-HR","HD-HR",
         "HD-HR","HD-HR","HD-HR",
@@ -730,9 +751,10 @@ anno_den <- data.frame(
   )
 ```
 
-Specify plot.
-```{r plot-sp1}
-sp1 <- ggplot(density_3dr %>% dplyr::filter(year == 6 & !scenario=="CWW"), #Keep only yr 6, remove CWW
+## 6.3. Specify plot
+For fields with high initial density, I want to see whether black-grass density is reduced by the LD-HR strategies. In these fields, the HD-HR strategies did successfully reduce BG density, but would LD-HR strategies also be successful? Add red points to show the LD-HR scenario run with initial high density.
+```{r FigS4-plot}
+figS4 <- ggplot(density_3dr %>% dplyr::filter(year == 6 & !scenario=="CWW"), #Keep only yr 6, remove CWW
        aes(initDR3, hvh_mean, colour = scenario, shape = scenario)) + 
   facet_grid(region ~ soiltype, labeller = labeller(region = region.labs, 
                                                     soiltype = soiltype.labs)) +
@@ -759,119 +781,21 @@ sp1 <- ggplot(density_3dr %>% dplyr::filter(year == 6 & !scenario=="CWW"), #Keep
   geom_pointrange(aes(ymin = hvh_ci_l, 
                       ymax = hvh_ci_u),
                   size = 0.9) + 
-  geom_text(data = anno_den, aes(x = x,  y = y, label = lab),
-           colour = "gray48", size=7) 
-
-sp1
-```
-
-#### Save plot
-```{r save-sp1}
-png("../figures/Script 10_prop hvh_yr6_effect of scenario and initcondit_3dr_scatter_noCWW.png",
-    height = 10, width = 10, units = "in", res = 300)
-print(sp1)
-dev.off()
-```
-
-###        To the above plot I need to add the LD-HR scenario run with initial high density.
-**Lines 482-584 have not been updated since receiving the final density simulations from Rob G, 13th Feb 2023.**
-See original script, "03b. Analyse simulated density data.R", lines 480-550.
-Also see section at line 962.
-
-For fields with high initial density, I want to see whether black-grass density is reduced by the LD-HR strategies. In these fields, the HD-HR strategies did successfully reduce BG density, but would LD-HR strategies also be successful?
-
-#### Load data
-```{r, eval=FALSE, echo=FALSE}
-prophvh_3dr_hd <- read.csv("../output/simulated_yearly_mean_prophvh_3dr_hd.csv", 
-                header = T) %>% 
-  dplyr::mutate(
-    scenario = factor(scenario),
-    region = factor(region, levels = c("north", "central","east")),
-    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
-    initDR3 = factor(initDR3),
-    strategy = factor(strategy)
-  )
-
-prophvh_3dr_vd <- read.csv("../output/simulated_yearly_mean_prophvh_3dr_vd.csv", 
-                header = T) %>% 
-  dplyr::mutate(
-    scenario = factor(scenario),
-    region = factor(region, levels = c("north", "central","east")),
-    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
-    initDR3 = factor(initDR3),
-    strategy = factor(strategy)
-  )
-```
-
-
-#### Re-specify plot
-**Add LD-HR run with init high density, and run with initial very high density, to this plot**
-
-Actually, the two runs (all at initial high density, and all at initial very high density), produce almost the same final density estimations for year 6. This means that if I plot both new points, they overlap each other, so just plot the point from one of the runs (either HD or VD).
-```{r, eval=FALSE, echo=FALSE}
-sp2 <- ggplot(density_3dr_hd %>% dplyr::filter(year == 6 & !scenario=="CWW"), #Keep only yr 6, remove CWW
-       aes(initDR3, hvh_mean, colour = scenario, shape = scenario)) + 
-  facet_grid(region ~ soiltype, labeller = labeller(region = region.labs, 
-                                                    soiltype = soiltype.labs)) +
-  scale_x_discrete(guide = guide_axis(angle = 45)) +
-  ylim(-0.15, 1) +
-  labs(x = "Initial density and resistance of Black-grass population", 
-       y = "Proportion of field with economically- \ndamaging Black-grass density at year 6") +
-  # specify colours and shapes for 'scenario':
-  scale_color_manual(name = "Scenario",
-                     values = c("#00306F", # BAU, madison blue
-                                "#00C2F9")) + # MIT, capri blue
-  scale_shape_manual(name = "Scenario",
-                     values=c(15, 16)) + # BAU 15 = square; MIT 16 = circle
-  theme(strip.placement = 'outside',
-        strip.text.x = element_text(size = 18),
-        strip.text.y = element_text(size = 18),
-        #plot.title = element_text(size=22),
-        axis.title=element_text(size=20),
-        axis.text.x=element_text(size=rel(1.8)),
-        axis.text.y=element_text(size=rel(1.8)),
-        legend.title=element_text(size=20),
-        legend.text=element_text(size=18)
-        ) +
-  geom_pointrange(aes(ymin = hvh_ci_l, 
-                      ymax = hvh_ci_u),
-                  size = 0.9) + 
-  geom_text(data = anno_den, aes(x = x,  y = y, label = lab),
-           colour = "gray48", size=6) +
+  geom_text(data = anno_FigS4, aes(x = x,  y = y, label = lab),
+           colour = "gray48", size=7)  +
   # add new point:
   # re-define data and overwrite top layer inheritance
-  #geom_pointrange(data = prophvh_3dr_hd %>% 
-  #                  dplyr::filter(year == 6 & initDR3=="LD-HR" & scenario=="MIT") %>% 
-  #                  dplyr::mutate(
-  #                    initDR3 = recode_factor(initDR3, "LD-HR" = "HR-HD")),
-  #                aes(ymin = hvh_ci_l, 
-  #                    ymax = hvh_ci_u),
-  #                color = "orange",
-  #                #position=position_dodge(width=0.3),
-  #                size = 0.9,
-  #                show.legend = FALSE) +
   geom_pointrange(data = density_3dr_hd %>% 
                   dplyr::filter(year == 6 & initDR3=="LD-HR" & scenario=="MIT") %>% 
                   dplyr::mutate(
                     initDR3 = recode_factor(initDR3, "LD-HR" = "HD-HR")),
-                    #initDR3 = recode_factor(initDR3, "LD-HR" = "HR-HD")),
                   aes(ymin = hvh_ci_l, 
                       ymax = hvh_ci_u),
                   color = "red",
-                  #position=position_dodge(width=0.3),
                   size = 0.9,
                   show.legend = FALSE)
 
-sp2
-```
-
-
-Save plot.
-```{r, eval=FALSE, echo=FALSE}
-png("../figures/Script 10_prop hvh_yr6_noCWW_LD-HR added.png",
-    height = 10, width = 10, units = "in", res = 300)
-print(sp2)
-dev.off()
+figS4
 ```
 
 
@@ -1164,11 +1088,11 @@ scatt_gp_wwyld <- (plot_scatter_gp + plot_scatter_wwyld) +
 scatt_gp_wwyld
 ```
 
-# 8. SI: Sensitivity analysis plots
+# 8. Figure S6: Sensitivity analysis plots
 
-## 9.1. Scatter plot, gp, MIT & BAU
-If not done above, specify the labels for the panels.  
-```{r specify-panel-labels-SA-gp}
+## 8.1. Figure S6(a): Scatter plot, gp, MIT & BAU
+### 8.1.1. Specify panel labels  
+```{r FigS6-panel-labels}
 region.labs <- c("Northern England", "Central England", "Eastern England") # new
 names(region.labs) <- c("north", "central", "east") # original
 
@@ -1176,9 +1100,10 @@ soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
 names(soiltype.labs) <- c("heavy", "medium", "light") # original
 ```
 
-Then specify the plot.
-```{r plot-gp-sensanaly-noCWW}
-scatt_SA_gp <- ggplot(gp_oc %>% filter(!scenario=="CWW"), 
+### 8.1.2. Specify plot
+Plot results of sensitivity analysis for gross profit, BAU and MIT scenarios.
+```{r FigS6a-plot}
+figS6a <- ggplot(gp_oc %>% filter(!scenario=="CWW"), 
                 aes(initdenres_collapsed, gp, 
                     colour = ID, shape = ID)) + 
   facet_grid(region ~ soiltype,
@@ -1217,19 +1142,11 @@ yield penalties",
                   position=position_dodge(width=0.6),
                   size = 0.9) 
 
-scatt_SA_gp
-```
-
-Save plot.
-```{r save-SA-econ-plot-noCWW}
-png("../figures/Script 10_SA_gp by initcondit_BAU & MIT.png",
-    height = 10, width = 10, units = "in", res = 300)
-print(scatt_SA_gp)
-dev.off()
+figS6a
 ```
 
 
-## 9.2. Scatter plot, ww, MIT & BAU
+## 8.2. Figure S6(a): Scatter plot, ww, MIT & BAU
 If not done above, specify the labels for the panels.  
 ```{r specify-panel-labels-SA-ww}
 region.labs <- c("Northern England", "Central England", "Eastern England") # new
