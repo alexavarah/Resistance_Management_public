@@ -281,13 +281,10 @@ line_gp_yr_initDR
 
 Save the plot.
 ```{r, eval=FALSE, echo=FALSE}
-#ggsave("../figures/Script 4c_effect of scenario and initDR on GP by year.png", 
-#       height = 5, width = 10, dpi = 300) # dpi also accepts “retina” (320 dpi), “print” (300 dpi), “screen” (72 dpi)
-
-png("../figures/SA_03c_effect of scenario and initDR on GP by year.png",
-    height = 5, width = 10, units = "in", res = 300)
-print(line_gp_yr_initDR)
-dev.off()
+#png("../figures/SA_03c_effect of scenario and initDR on GP by year.png",
+#    height = 5, width = 10, units = "in", res = 300)
+#print(line_gp_yr_initDR)
+#dev.off()
 ```
 
 
@@ -430,15 +427,11 @@ plot1
 
 Save plot.
 ```{r save-plot1, eval=FALSE, echo=FALSE}
-#ggsave("figures/SensAnaly_Gross profit.png", height = 10, width = 10)
-
-png("../figures/SA_05_gp by initcondit_all scenarios.png",
-    height = 10, width = 10, units = "in", res = 300)
-print(plot1)
-dev.off()
+#png("../figures/SA_05_gp by initcondit_all scenarios.png",
+#    height = 10, width = 10, units = "in", res = 300)
+#print(plot1)
+#dev.off()
 ```
-
-
 
 
 
@@ -500,12 +493,10 @@ plot2
 
 Save plot.
 ```{r save-plot2, eval=FALSE, echo=FALSE}
-#ggsave("figures/SA_05_gp by initcondit_BAU & MIT.png", height = 10, width = 10)
-
-png("../figures/SA_05_gp by initcondit_BAU & MIT.png",
-    height = 10, width = 10, units = "in", res = 300)
-print(plot2)
-dev.off()
+#png("../figures/SA_05_gp by initcondit_BAU & MIT.png",
+#    height = 10, width = 10, units = "in", res = 300)
+#print(plot2)
+#dev.off()
 ```
 
 
@@ -605,17 +596,14 @@ scatt_oc_by_reg_and_initDR
 
 Save the plot.
 ```{r, eval=FALSE, echo=FALSE}
-#ggsave("../figures/Script 4c_opp costs by region.png", 
-#              height = 10, width = 10)
-
-png("../figures/SA_05_opp costs by region.png",
-    height = 10, width = 10, units = "in", res = 300)
-print(scatt_oc_by_reg_and_initDR)
-dev.off()
+#png("../figures/SA_05_opp costs by region.png",
+#    height = 10, width = 10, units = "in", res = 300)
+#print(scatt_oc_by_reg_and_initDR)
+#dev.off()
 ``` 
 
 # 7. Session info
 ```{r}
-sessionInfo()
+#sessionInfo()
 ```
 
