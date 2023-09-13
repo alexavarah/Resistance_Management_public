@@ -205,7 +205,7 @@ rm(bau_vhig, mit_current, oppcosts_current, oppcosts_worstcase)
 
 
 ## 4.4. Save data frame
-```{r, eval=FALSE, echo=FALSE}
+```{r}
 write.csv(oc_both, "../output/opp costs_worst case vs current.csv",
           row.names = FALSE)
 ```
