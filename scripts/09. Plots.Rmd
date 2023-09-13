@@ -112,9 +112,9 @@ density_3dr_hd <- readRDS("../output/density_data_summarised_3dr_hd.rds")
 
 
 
-# 2. Line graphs, density and gross profit by year
+# 2. Figure 2: Line graphs, density and gross profit by year
 
-## 2.1. Weed density
+## 2.1. Figure 2(a): Weed density
 Specify the labels for the panels.   
 ```{r panel-labels-line-den}
 initDR3.labs <- c("(i) Low density,\n low resistance", "(ii) Low density,\n high resistance", "(iii) High density,\n high resistance") # new
