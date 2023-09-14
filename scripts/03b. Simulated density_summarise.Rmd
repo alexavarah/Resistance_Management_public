@@ -216,7 +216,34 @@ saveRDS(summarised_density_3dr, file = "../output/density_data_summarised_3dr.rd
 
 
 
-## 3.4. Clear up
+## 3.4. Table 1: Calculate mean density by scenario
+Create table of mean density state by scenario and initial density-resistance state.
+
+### 3.4.1. Mean final density
+i.e. the density in year 6 of the rotation
+```{r}
+summarised_density_3dr %>% 
+  dplyr::filter(year==6) %>% 
+  dplyr::group_by(scenario) %>% 
+  dplyr::summarise(across(hvh_mean,.fns = list(   #starts_with("wtd")
+    mean=~mean(.x, na.rm = TRUE), 
+    ci_l=~mean(.x, na.rm = TRUE) - (1.96 * sd(.x, na.rm = TRUE)/sqrt(length(.x))),
+    ci_u=~mean(.x, na.rm = TRUE) + (1.96 * sd(.x, na.rm = TRUE)/sqrt(length(.x))),
+    n=~nobs(.x))))
+```
+
+### 3.4.2. Mean annual density
+```{r}
+summarised_density_3dr %>% 
+  dplyr::group_by(scenario) %>% 
+  dplyr::summarise(across(hvh_mean,.fns = list(   #starts_with("wtd")
+    mean=~mean(.x, na.rm = TRUE), 
+    ci_l=~mean(.x, na.rm = TRUE) - (1.96 * sd(.x, na.rm = TRUE)/sqrt(length(.x))),
+    ci_u=~mean(.x, na.rm = TRUE) + (1.96 * sd(.x, na.rm = TRUE)/sqrt(length(.x))),
+    n=~nobs(.x))))
+```
+
+## 3.5. Clear up
 ```{r}
 rm(means_3dr)
 ```
