@@ -144,10 +144,12 @@ means_3dr <- res_tidy %>%
   dplyr::mutate(
     # mds
     mds_mean = mean(mds),# calculate mean values
+    mds_sd = sd(mds),
     mds_ci_l = mds_mean - (1.96 * (sd(mds) / sqrt(length(mds)))),
     mds_ci_u = mds_mean + (1.96 * (sd(mds) / sqrt(length(mds)))),
     #hvh
     hvh_mean = mean(hvh),# calculate mean values
+    hvh_sd = sd(hvh),
     hvh_ci_l = hvh_mean - (1.96 * (sd(hvh) / sqrt(length(hvh)))),
     hvh_ci_u = hvh_mean + (1.96 * (sd(hvh) / sqrt(length(hvh)))),
     #pdec
