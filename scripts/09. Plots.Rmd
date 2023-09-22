@@ -951,14 +951,14 @@ plot_scatter_gp <- ggplot(df_scatter_gp %>%
   scale_shape_manual(name = "Scenario",
                      values=c(15, 16)) + # BAU, 15 = square; MIT, 16 = circle
   theme(strip.placement = 'outside',
-        strip.text.x = element_text(size = 16),
-        strip.text.y = element_text(size = 16),
+        strip.text.x = element_text(size = 18),
+        strip.text.y = element_text(size = 18),
         plot.title = element_text(size=22),
-        axis.title=element_text(size=18),
-        axis.text.x=element_text(size=rel(1.7)),
-        axis.text.y=element_text(size=rel(1.7)),
-        legend.title=element_text(size=18),
-        legend.text=element_text(size=16)
+        axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(2)),
+        axis.text.y=element_text(size=rel(2)),
+        legend.title=element_text(size=22),
+        legend.text=element_text(size=20)
         ) +
   geom_pointrange(aes(ymin = gp_ci_l, 
                       ymax = gp_ci_u
@@ -978,7 +978,7 @@ plot_scatter_gp <- ggplot(df_scatter_gp %>%
                   size = 0.9,
                   show.legend = FALSE) + 
   geom_text(data = anno_gp, aes(x = x,  y = y, label = lab),
-           colour = "grey",  size=6) 
+           colour = "grey",  size=7) 
 
 plot_scatter_gp
 ```
@@ -1088,14 +1088,14 @@ plot_scatter_wwyld <- ggplot(df_scatter_wwyld %>%
   scale_shape_manual(name = "Scenario",
                      values=c(15, 16)) + # BAU, 15 = square; MIT, 16 = circle
   theme(strip.placement = 'outside',
-        strip.text.x = element_text(size = 16),#, color = "red", face = "bold.italic"
-        strip.text.y = element_text(size = 16),
+        strip.text.x = element_text(size = 18),#, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 18),
         plot.title = element_text(size=22),
-        axis.title=element_text(size=18),
-        axis.text.x=element_text(size=rel(1.7)),#, 
-        axis.text.y=element_text(size=rel(1.7)),
-        legend.title=element_text(size=18),
-        legend.text=element_text(size=16)
+        axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(2)),#, 
+        axis.text.y=element_text(size=rel(2)),
+        legend.title=element_text(size=22),
+        legend.text=element_text(size=20)
         ) +
   geom_pointrange(aes(ymin = ww_ci_l,# 
                       ymax = ww_ci_u
@@ -1114,7 +1114,7 @@ plot_scatter_wwyld <- ggplot(df_scatter_wwyld %>%
                   size = 0.9,
                   show.legend = FALSE) + 
   geom_text(data = anno_ww, aes(x = x,  y = y, label = lab),
-           colour = "grey",  size=6) 
+           colour = "grey",  size=7) 
 
 plot_scatter_wwyld
 ```
