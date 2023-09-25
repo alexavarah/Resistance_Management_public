@@ -66,6 +66,15 @@ df_wc_pc <- read.csv("../output/prod costs_worst case vs current.csv",
                                   levels = c("LD-LR", "LD-HR", "HD-HR")))
 
 
+# Fig 5: Scatter plot - tipping point
+oc_fig5 <- read.csv("../output/data_for_Figure_5.csv", 
+                     header = T) %>% 
+  dplyr::mutate(
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium","light")),
+    initdenres = factor(initdenres, levels = c("LD-HR", "HD-HR")))
+
+
 ## SUPPLEMENTARY FIGURES
 
 # Fig S4: Scatter plot - effect of init condition on weed density
@@ -268,7 +277,7 @@ fig2
 
 ## 2.5. Save plot
 ```{r Fig2-save}
-png("../figures/Figure 2.png",
+png("../figures/Figure_2.png",
     height = 15, width = 20, units = "in", res = 300)
 print(fig2)
 dev.off()
@@ -400,7 +409,7 @@ Brackets and annotations on plot were added in MS Word.
 
 ## 3.2. Save plot
 ```{r}
-png("../figures/Figure 3.png",
+png("../figures/Figure_3.png",
     height = 10, width = 17, units = "in", res = 300)
 print(fig3)
 dev.off()
@@ -681,14 +690,110 @@ fig4
 
 ## 4.5. Save plot
 ```{r}
-png("../figures/Figure 4.png",
+png("../figures/Figure_4.png",
     height = 10, width = 20, units = "in", res = 300)
 print(fig4)
 dev.off()
 ```
 
 # 5. Figure 5: When does it flip?
-See script 4e.
+## 5.1. Specify panel labels
+```{r Fig5-panel-labels}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("north", "central", "east") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("heavy", "medium", "light") # original
+```
+
+## 5.2. Figure 5(a): Opp costs, LD-HR fields
+```{r Fig5a-plot-LDHR}
+fig_5a <- ggplot(oc_fig5 %>% 
+                       dplyr::filter(initdenres == "LD-HR"), aes(vh, oc)) + 
+  geom_hline(aes(yintercept = 0), color="grey") + #, linetype="dashed"
+  geom_line() +
+  geom_point() +
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs),
+             scales = 'free'
+             ) +
+  labs(x = "Proportion of grid cells in very high density state", 
+       y = "Mean annual opportunity cost, LD-HR fields, BAU-MIT (£/ha)") +
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 18),#, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 18),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(2)),#, 
+        axis.text.y=element_text(size=rel(2)),
+        legend.title=element_text(size=22),
+        legend.text=element_text(size=20)
+        ) +
+  
+  geom_pointrange(aes(ymin = oc_ci_l, 
+                      ymax = oc_ci_u), 
+                  #position=position_dodge(width=0.3),
+                  size = 0.9) +
+  
+  # Change spacing between facets on both axis
+  theme(panel.spacing = unit(1, "lines"))
+```
+
+
+## 5.3. Figure 5(b): Opp costs, HD-HR fields
+```{r Fig5b-plot-HDHR}
+fig_5b <- ggplot(oc_fig5 %>% 
+                       dplyr::filter(initdenres == "HD-HR"), aes(vh, oc)) + 
+  geom_hline(aes(yintercept = 0), color="grey") + #, linetype="dashed"
+  geom_line() +
+  geom_point() +
+  #geom_point(size = 4) +
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs),
+             scales = 'free'
+             ) +
+  labs(x = "Proportion of grid cells in very high density state", 
+       y = "Mean annual opportunity cost, HD-HR fields, BAU-MIT (£/ha)") +
+  theme(strip.placement = 'outside',
+        #strip.background.x = element_blank(),
+        #strip.text.x = element_blank(), #removes facet labels
+        strip.text.x = element_text(size = 18),#, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 18),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(2)),#, 
+        axis.text.y=element_text(size=rel(2)),
+        legend.title=element_text(size=22),
+        legend.text=element_text(size=20)
+        ) +
+  
+  geom_pointrange(aes(ymin = oc_ci_l, 
+                      ymax = oc_ci_u), 
+                  #position=position_dodge(width=0.3),
+                  size = 0.9) +
+  
+  # Change spacing between facets on both axis
+  theme(panel.spacing = unit(1, "lines"))
+```
+
+## 5.4. Make panel plot
+```{r Fig5-arrange-panels}
+fig5 <- (fig_5a + fig_5b) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 24, face="bold"))
+fig5
+```
+
+## 5.5. Save plot
+```{r Fig5-save}
+png("../figures/Figure_5.png",
+    height = 10, width = 20, units = "in", res = 300)
+print(fig5)
+dev.off()
+```
+
 
 # ----
 # SUPPLEMENTARY FIGURES ----
