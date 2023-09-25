@@ -534,6 +534,12 @@ opp_costs <- flipdf %>%
     )
 ```
 
+## Save data frame for use in 'Plots' script.
+```{r}
+write.csv(opp_costs, '../output/data_for_Figure_5.csv', row.names = FALSE)
+```
+
+
 # 6. Plot
 Scatter plot, opportunity costs worst case vs now across the range of black-grass density distributions.
 
