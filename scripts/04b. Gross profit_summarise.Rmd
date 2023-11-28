@@ -20,7 +20,6 @@ Load functions
 nobs <- function(x) length(x[!is.na(x)])
 ```
 
-
 # 2. Load data
 ```{r}
 econ_allimp <- read.csv("../output/economic_data_for_analysis-all_imputations.csv", header = T) %>% 
