@@ -1,0 +1,1653 @@
+---
+title: "Sensitivity anslysis - run ECOMOD"
+author: "Alexa Varah"
+date: "11/02/2022"
+output: html_document
+---
+
+This script runs ECOMOD with upper and lower yield penalty limits. Limits for this sensitivity analysis are the same as those used in the sensitivity analysis in Varah et. al., 2020, and are given in table S10 in the supplementary info in that paper.  
+
+```{r setup, include=FALSE, purl=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load-packages}
+rm(list=ls())
+pkgs <- c("tidyverse" # for data manipulation (includes dplyr, tidyr, stringr, 
+                       # ggplot2, purr, tibble, readr, forcats)
+          ,"knitr" # for generating tables
+          ,"kableExtra" # for generating tables
+          ,"readxl" # for reading in Excel workbooks / spreadsheets
+          )
+vapply(pkgs, library, logical(1), character.only = TRUE, logical.return = TRUE,
+       quietly = TRUE)
+```
+
+# Yield penalty limits  
+These values are given in Table S2 in the Supplementary Info.  
+  
+Specify the yield penalties to be used in the sensitivity analysis.  
+```{r make-yield-penalty-dataframe}
+yldpen.tbl <- data.frame(
+  `Black-grass density state` = c("low", "medium", "high", "very high"),
+  `Black-grass density (plants per 20x20m grid cell)` = 
+    c("1 - 160", "161 - 450", "451 - 1450", ">1450"),
+  `lowest value` = c("0.00", "0.00", "0.00", "13.02"),
+  `highest value` = c("0.00", "5.14", "28.10", "68.90"),
+  `lowest value` = c("0.00", "0.00", "0.00", "13.00"),
+  `highest value` = c("0.00", "5.14", "45.00", "70.00")
+  )
+```
+
+Pass the data frame to kable to show the yield penalty limits in a table.
+```{r make-table, echo = FALSE}
+
+kable(yldpen.tbl,
+      # Set column headers (N.B. must match the vector names specified above)
+      col.names = c("Black-grass density state",
+                    "Black-grass density (plants per 20x20m grid cell)",
+                    "lowest \nvalue",
+                    "highest \nvalue",
+                    "lowest \nvalue",
+                    "highest \nvalue"
+                    ),
+      align = c('l', 'l', 'r', 'r', 'r', 'r'),
+      # The following line forces the font to be black (kable_styling default is white font).
+      # You don't need this line if you use kable_paper or other kable options 
+      # such as _material, _minimal, _classic, _paper etc.
+      # Adding 'escape = FALSE' allows line breaks within cells; otherwise, 
+      # the '<br>' in column text is just printed as text.
+      format = "html", escape = FALSE, table.attr = "style = \"color: black;\""
+      #) %>% 
+      ) %>%
+  # Specify column widths
+  column_spec(column = 1, width = "1.1in") %>%
+  column_spec(column = 2, width = "2in") %>%
+  column_spec(column = c(3:6), width = "1.1in") %>% 
+  # Specify the look of the table
+  kable_styling(bootstrap_options = c( "hover", "responsive", 
+                                       font_size = 10, fixed_thead = T)) %>% 
+  # Add header row above existing headers for lowest and highest value columns
+  add_header_above(
+    c(
+    " " = 2, # nothing above the first 2 columns
+    "Limits suggested by our model \n(% reduction)" = 2, #header for cols 3-4
+    "Yield penalties used in sensitivity analysis (% reduction)" = 2 # cols 5-6
+    )
+    ) 
+  
+```
+
+# Load ECOMOD 
+
+It takes ages to load ECOMOD in R Markdown so it's not included here. Load ECOMOD versions from script 'Sensitivity Analyses_01.ECOMOD.R' before continuing here. There are 4 versions: 2 with the lower yield penalties, one each with yield set to 'estimate' and 'actual'; and 2 with the higher yield penalties, one each with yield set to 'estimate' and 'actual.'
+
+File 'Sensitivity Analyses_01. Load ECOMOD.R' contains the 4 ECOMOD functions used here.
+``` {r ECOMOD, purl=FALSE}
+source("07. Sensitivity Analyses - ECOMOD.R")
+```
+
+
+# Run ECOMOD
+Run each input file through ECOMOD twice: once with yield set to 'estimate' and once with yield set to 'actual.  
+
+## MIT scenario
+
+Because there are crops in the Mitigation strategies that ECOMOD can't model 
+(e.g. spring oats), we read in two versions of the MIT strategies. One version 
+has yield set to 'actual', in which average yields for spring oats are given. 
+The second version has yield set to 'estimate', so ECOMOD will estimate yields.
+  
+Read in the raw data.
+```{r MIT-raw-data}
+mit_est = read_xlsx("../data/InputData_FF_ECOMOD&CFT_2021-12-03.xlsx",3) %>% 
+  select(-"lookup_ref") %>%  # remove 'lookup_ref' column
+  mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
+  mutate_at(3, round, 2) # soil texture needs 2 decimal places
+
+#write.csv(mit_est,'output/sensitivity analyses/sens-analy_lower_MIT_ECOMOD_inputdata_estimated-yield.csv')
+
+mit_act = read_xlsx("../data/InputData_FF_ECOMOD&CFT_2021-12-03.xlsx",4) %>% 
+  select(-"lookup_ref") %>%  # remove 'lookup_ref' column
+  mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
+  mutate_at(3, round, 2) # soil texture needs 2 decimal places
+
+#write.csv(ff_act,'output/ff_ECOMOD_inputdata_actual-yield.csv')
+```
+
+Create input files for each black-grass density state.
+```{r MIT-create-input-files}
+# LOW / ABSENT
+mit_l_est <- mit_est %>%
+  dplyr::mutate(across(starts_with('blackgrass'), 
+                       ~replace(., . %in% c("medium","high","veryhigh"), "low"))) %>%
+  # remove extra 'row identifier' column added by R when reading in the file:
+  #dplyr::select(-X) %>% 
+  data.frame()
+
+mit_l_act <- mit_act %>%
+  dplyr::mutate(across(starts_with('blackgrass'), 
+                       ~replace(., . %in% c("medium","high","veryhigh"), "low"))) %>% 
+  # remove extra 'row identifier' column added by R when reading in the file:
+  #dplyr::select(-X) %>% 
+  data.frame()
+
+# MEDIUM
+mit_m_est = mit_l_est %>%
+  dplyr::mutate(across(starts_with('blackgrass'), 
+                       ~replace(., . %in% "low", "medium"))) %>% 
+  data.frame()
+
+mit_m_act = mit_l_act %>%
+  dplyr::mutate(across(starts_with('blackgrass'), 
+                       ~replace(., . %in% "low", "medium"))) %>% 
+  data.frame()
+
+# HIGH
+mit_h_est = mit_l_est %>%
+  dplyr::mutate(across(starts_with('blackgrass'), 
+                       ~replace(., . %in% "low", "high"))) %>% 
+  data.frame()
+
+mit_h_act = mit_l_act %>%
+  dplyr::mutate(across(starts_with('blackgrass'), 
+                       ~replace(., . %in% "low", "high"))) %>% 
+  data.frame()
+
+# VERY HIGH
+mit_v_est = mit_l_est %>%
+  dplyr::mutate(across(starts_with('blackgrass'), 
+                       ~replace(., . %in% "low", "veryhigh"))) %>% 
+  data.frame()
+
+mit_v_act = mit_l_act %>%
+  dplyr::mutate(across(starts_with('blackgrass'), 
+                       ~replace(., . %in% "low", "veryhigh"))) %>% 
+  data.frame()
+```
+
+## Sensitivity analysis - lower limits to yield penalties
+  
+Run input files through ECOMOD
+  
+### Low/absent model run
+
+**Estimated yield.**
+```{r run-ECOMOD-lower-sens-analy-MIT-lowrun-estimatedyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_lower_low-run_est.csv" 
+
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_l_est %>% 
+  dplyr::mutate_at(vars(crop1:crop6), 
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+  # 52 secs
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+**Actual yield.**
+```{r run-ECOMOD-lower-sens-analy-MIT-lowrun-actualyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_lower_low-run_act.csv"
+
+# Set up input file (only need to run the rows containing spring oats).
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_l_act %>% 
+  # Extract just the spring oats rows:
+  dplyr::filter_all(any_vars(grepl("springoats", .))) %>% 
+  # Replace spring oats with spring barley, otherwise ECOMOD won't run:
+  dplyr::mutate_at(vars(crop1:crop6),
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_act(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="actual",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+Now add the 'actual' spring oat output into the 'estimated' output file.
+```{r lower-sens-analy-MIT-lowrun-combine}
+# Read in the ECOMOD output files.
+est_l <- read.csv("../output/sensitivity analyses/MIT_lower_low-run_est.csv", 
+                  header=T)
+# The 'actual' file only has rows containing spring oats
+act_l <- read.csv('../output/sensitivity analyses/MIT_lower_low-run_act.csv', 
+                  header=T) 
+
+# Extract rows 1-4 to deal with those first
+# For these rows, spring oats is the 4th crop and was run as spring barley
+act_l_1to4 <- act_l %>% 
+  dplyr::filter(Field_no %in% c(1,2,3,4)) %>% 
+  dplyr::select(!Field_no)
+
+est_l_to_merge <- est_l %>% 
+  dplyr::select(!Field_no)
+
+low_den_output1 <- rows_update(
+  est_l_to_merge,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_l_1to4, field_name, totalrotgrossprof, ends_with("4")),
+  by = "field_name"
+)
+
+act_l_5to6 <- act_l %>% 
+  dplyr::filter(Field_no %in% c(5,6)) %>% 
+  dplyr::select(!Field_no)
+
+low_den_output <- rows_update(
+  low_den_output1,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_l_5to6, field_name, totalrotgrossprof, ends_with("5")),
+  by = "field_name"
+)
+
+write.csv(low_den_output,
+          '../output/sensitivity analyses/MIT_lower_L_combined.csv')
+
+rm(act_l_1to4)
+rm(est_l_to_merge)
+rm(low_den_output1)
+rm(act_l_5to6)
+rm(act_l)
+rm(est_l)
+```
+  
+  
+### Medium model run
+
+**Estimated yield.**
+```{r run-ECOMOD-lower-sens-analy-MIT-medrun-estimatedyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_lower_med-run_est.csv" 
+
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_m_est %>% 
+  dplyr::mutate_at(vars(crop1:crop6), 
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+**Actual yield.**
+```{r run-ECOMOD-lower-sens-analy-MIT-medrun-actualyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_lower_med-run_act.csv"
+
+# Set up input file (only need to run the rows containing spring oats).
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_m_act %>% 
+  # Extract just the spring oats rows:
+  dplyr::filter_all(any_vars(grepl("springoats", .))) %>% 
+  # Replace spring oats with spring barley, otherwise ECOMOD won't run:
+  dplyr::mutate_at(vars(crop1:crop6),
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_act(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="actual",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+ 
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+Now add the 'actual' spring oat output into the 'estimated' output file.
+```{r lower-sens-analy-MIT-medrun-combine}
+# Read in the ECOMOD output files.
+est_m <- read.csv('../output/sensitivity analyses/MIT_lower_med-run_est.csv', 
+                  header=T)
+# The 'actual' file only has rows containing spring oats
+act_m <- read.csv('../output/sensitivity analyses/MIT_lower_med-run_act.csv', 
+                  header=T) 
+
+# Extract rows 1-4 to deal with those first
+# For these rows, spring oats is the 4th crop and was run as spring barley
+act_m_1to4 <- act_m %>% 
+  dplyr::filter(Field_no %in% c(1,2,3,4)) %>% 
+  dplyr::select(!Field_no)
+
+est_m_to_merge <- est_m %>% 
+  dplyr::select(!Field_no)
+
+med_den_output1 <- rows_update(
+  est_m_to_merge,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_m_1to4, field_name, totalrotgrossprof, ends_with("4")),
+  by = "field_name"
+)
+
+act_m_5to6 <- act_m %>% 
+  dplyr::filter(Field_no %in% c(5,6)) %>% 
+  dplyr::select(!Field_no)
+
+med_den_output <- rows_update(
+  med_den_output1,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_m_5to6, field_name, totalrotgrossprof, ends_with("5")),
+  by = "field_name"
+)
+
+write.csv(med_den_output,
+          '../output/sensitivity analyses/MIT_lower_M_combined.csv')
+
+rm(act_m_1to4)
+rm(est_m_to_merge)
+rm(med_den_output1)
+rm(act_m_5to6)
+rm(act_m)
+rm(est_m)
+```
+  
+  
+### High model run
+
+**Estimated yield.**
+```{r run-ECOMOD-lower-sens-analy-MIT-highrun-estimatedyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_lower_high-run_est.csv" 
+
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_h_est %>% 
+  dplyr::mutate_at(vars(crop1:crop6), 
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+**Actual yield.**
+```{r run-ECOMOD-lower-sens-analy-MIT-highrun-actualyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_lower_high-run_act.csv"
+
+# Set up input file (only need to run the rows containing spring oats).
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_h_act %>% 
+  # Extract just the spring oats rows:
+  dplyr::filter_all(any_vars(grepl("springoats", .))) %>% 
+  # Replace spring oats with spring barley, otherwise ECOMOD won't run:
+  dplyr::mutate_at(vars(crop1:crop6),
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_act(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="actual",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+Now add the 'actual' spring oat output into the 'estimated' output file.
+```{r lower-sens-analy-MIT-highrun-combine}
+# Read in the ECOMOD output files.
+est_h <- read.csv('../output/sensitivity analyses/MIT_lower_high-run_est.csv', 
+                  header=T)
+# The 'actual' file only has rows containing spring oats
+act_h <- read.csv('../output/sensitivity analyses/MIT_lower_high-run_act.csv', 
+                  header=T) 
+
+# Extract rows 1-4 to deal with those first
+# For these rows, spring oats is the 4th crop and was run as spring barley
+act_h_1to4 <- act_h %>% 
+  dplyr::filter(Field_no %in% c(1,2,3,4)) %>% 
+  dplyr::select(!Field_no)
+
+est_h_to_merge <- est_h %>% 
+  dplyr::select(!Field_no)
+
+high_den_output1 <- rows_update(
+  est_h_to_merge,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_h_1to4, field_name, totalrotgrossprof, ends_with("4")),
+  by = "field_name"
+)
+
+act_h_5to6 <- act_h %>% 
+  dplyr::filter(Field_no %in% c(5,6)) %>% 
+  dplyr::select(!Field_no)
+
+high_den_output <- rows_update(
+  high_den_output1,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_h_5to6, field_name, totalrotgrossprof, ends_with("5")),
+  by = "field_name"
+)
+
+write.csv(high_den_output,
+          '../output/sensitivity analyses/MIT_lower_H_combined.csv')
+
+rm(act_h_1to4)
+rm(est_h_to_merge)
+rm(high_den_output1)
+rm(act_h_5to6)
+rm(act_h)
+rm(est_h)
+```
+  
+  
+### Very high model run
+
+**Estimated yield.**
+```{r run-ECOMOD-lower-sens-analy-MIT-veryhighrun-estimatedyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_lower_veryhigh-run_est.csv" 
+
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_v_est %>% 
+  dplyr::mutate_at(vars(crop1:crop6), 
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+**Actual yield.**
+```{r run-ECOMOD-lower-sens-analy-MIT-veryhighrun-actualyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_lower_veryhigh-run_act.csv"
+
+# Set up input file (only need to run the rows containing spring oats).
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_v_act %>% 
+  # Extract just the spring oats rows:
+  dplyr::filter_all(any_vars(grepl("springoats", .))) %>% 
+  # Replace spring oats with spring barley, otherwise ECOMOD won't run:
+  dplyr::mutate_at(vars(crop1:crop6),
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_act(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="actual",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+ 
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+Now add the 'actual' spring oat output into the 'estimated' output file.
+```{r lower-sens-analy-MIT-veryhighrun-combine}
+# Read in the ECOMOD output files.
+est_v <- read.csv('../output/sensitivity analyses/MIT_lower_veryhigh-run_est.csv', 
+                  header=T)
+# The 'actual' file only has rows containing spring oats
+act_v <- read.csv('../output/sensitivity analyses/MIT_lower_veryhigh-run_act.csv', 
+                  header=T) 
+
+# Extract rows 1-4 to deal with those first
+# For these rows, spring oats is the 4th crop and was run as spring barley
+act_v_1to4 <- act_v %>% 
+  dplyr::filter(Field_no %in% c(1,2,3,4)) %>% 
+  dplyr::select(!Field_no)
+
+est_v_to_merge <- est_v %>% 
+  dplyr::select(!Field_no)
+
+vhigh_den_output1 <- rows_update(
+  est_v_to_merge,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_v_1to4, field_name, totalrotgrossprof, ends_with("4")),
+  by = "field_name"
+)
+
+act_v_5to6 <- act_v %>% 
+  dplyr::filter(Field_no %in% c(5,6)) %>% 
+  dplyr::select(!Field_no)
+
+vhigh_den_output <- rows_update(
+  vhigh_den_output1,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_v_5to6, field_name, totalrotgrossprof, ends_with("5")),
+  by = "field_name"
+)
+
+write.csv(vhigh_den_output,
+          '../output/sensitivity analyses/MIT_lower_V_combined.csv')
+
+rm(act_v_1to4)
+rm(est_v_to_merge)
+rm(vhigh_den_output1)
+rm(act_v_5to6)
+rm(act_v)
+rm(est_v)
+```
+  
+  
+## Sensitivity analysis - upper limits to yield penalties
+  
+Run input files through ECOMOD
+  
+### Low/absent model run
+
+**Estimated yield.**
+```{r run-ECOMOD-upper-sens-analy-MIT-lowrun-estimatedyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_upper_low-run_est.csv" 
+
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_l_est %>% 
+  dplyr::mutate_at(vars(crop1:crop6), 
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+  # 52 secs
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+**Actual yield.**
+```{r run-ECOMOD-upper-sens-analy-MIT-lowrun-actualyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_upper_low-run_act.csv"
+
+# Set up input file (only need to run the rows containing spring oats).
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_l_act %>% 
+  # Extract just the spring oats rows:
+  dplyr::filter_all(any_vars(grepl("springoats", .))) %>% 
+  # Replace spring oats with spring barley, otherwise ECOMOD won't run:
+  dplyr::mutate_at(vars(crop1:crop6),
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_act(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="actual",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+Now add the 'actual' spring oat output into the 'estimated' output file.
+```{r upper-sens-analy-MIT-lowrun-combine}
+# Read in the ECOMOD output files.
+est_l <- read.csv("../output/sensitivity analyses/MIT_upper_low-run_est.csv", 
+                  header=T)
+# The 'actual' file only has rows containing spring oats
+act_l <- read.csv('../output/sensitivity analyses/MIT_upper_low-run_act.csv', 
+                  header=T) 
+
+# Extract rows 1-4 to deal with those first
+# For these rows, spring oats is the 4th crop and was run as spring barley
+act_l_1to4 <- act_l %>% 
+  dplyr::filter(Field_no %in% c(1,2,3,4)) %>% 
+  dplyr::select(!Field_no)
+
+est_l_to_merge <- est_l %>% 
+  dplyr::select(!Field_no)
+
+low_den_output1 <- rows_update(
+  est_l_to_merge,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_l_1to4, field_name, totalrotgrossprof, ends_with("4")),
+  by = "field_name"
+)
+
+act_l_5to6 <- act_l %>% 
+  dplyr::filter(Field_no %in% c(5,6)) %>% 
+  dplyr::select(!Field_no)
+
+low_den_output <- rows_update(
+  low_den_output1,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_l_5to6, field_name, totalrotgrossprof, ends_with("5")),
+  by = "field_name"
+)
+
+write.csv(low_den_output,
+          '../output/sensitivity analyses/MIT_upper_L_combined.csv')
+
+rm(act_l_1to4)
+rm(est_l_to_merge)
+rm(low_den_output1)
+rm(act_l_5to6)
+rm(act_l)
+rm(est_l)
+```
+  
+  
+### Medium model run
+
+**Estimated yield.**
+```{r run-ECOMOD-upper-sens-analy-MIT-medrun-estimatedyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_upper_med-run_est.csv" 
+
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_m_est %>% 
+  dplyr::mutate_at(vars(crop1:crop6), 
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+**Actual yield.**
+```{r run-ECOMOD-upper-sens-analy-MIT-medrun-actualyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_upper_med-run_act.csv"
+
+# Set up input file (only need to run the rows containing spring oats).
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_m_act %>% 
+  # Extract just the spring oats rows:
+  dplyr::filter_all(any_vars(grepl("springoats", .))) %>% 
+  # Replace spring oats with spring barley, otherwise ECOMOD won't run:
+  dplyr::mutate_at(vars(crop1:crop6),
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_act(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="actual",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+ 
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+Now add the 'actual' spring oat output into the 'estimated' output file.
+```{r upper-sens-analy-MIT-medrun-combine}
+# Read in the ECOMOD output files.
+est_m <- read.csv('../output/sensitivity analyses/MIT_upper_med-run_est.csv', header=T)
+# The 'actual' file only has rows containing spring oats
+act_m <- read.csv('../output/sensitivity analyses/MIT_upper_med-run_act.csv', header=T) 
+
+# Extract rows 1-4 to deal with those first
+# For these rows, spring oats is the 4th crop and was run as spring barley
+act_m_1to4 <- act_m %>% 
+  dplyr::filter(Field_no %in% c(1,2,3,4)) %>% 
+  dplyr::select(!Field_no)
+
+est_m_to_merge <- est_m %>% 
+  dplyr::select(!Field_no)
+
+med_den_output1 <- rows_update(
+  est_m_to_merge,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_m_1to4, field_name, totalrotgrossprof, ends_with("4")),
+  by = "field_name"
+)
+
+act_m_5to6 <- act_m %>% 
+  dplyr::filter(Field_no %in% c(5,6)) %>% 
+  dplyr::select(!Field_no)
+
+med_den_output <- rows_update(
+  med_den_output1,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_m_5to6, field_name, totalrotgrossprof, ends_with("5")),
+  by = "field_name"
+)
+
+write.csv(med_den_output,
+          '../output/sensitivity analyses/MIT_upper_M_combined.csv')
+
+rm(act_m_1to4)
+rm(est_m_to_merge)
+rm(med_den_output1)
+rm(act_m_5to6)
+rm(mit_m_act)
+rm(mit_m_est)
+rm(act_m)
+rm(est_m)
+```
+  
+  
+### High model run
+
+**Estimated yield.**
+```{r run-ECOMOD-upper-sens-analy-MIT-highrun-estimatedyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_upper_high-run_est.csv" 
+
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_h_est %>% 
+  dplyr::mutate_at(vars(crop1:crop6), 
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+**Actual yield.**
+```{r run-ECOMOD-upper-sens-analy-MIT-highrun-actualyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_upper_high-run_act.csv"
+
+# Set up input file (only need to run the rows containing spring oats).
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_h_act %>% 
+  # Extract just the spring oats rows:
+  dplyr::filter_all(any_vars(grepl("springoats", .))) %>% 
+  # Replace spring oats with spring barley, otherwise ECOMOD won't run:
+  dplyr::mutate_at(vars(crop1:crop6),
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_act(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="actual",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+Now add the 'actual' spring oat output into the 'estimated' output file.
+```{r upper-sens-analy-MIT-highrun-combine}
+# Read in the ECOMOD output files.
+est_h <- read.csv('../output/sensitivity analyses/MIT_upper_high-run_est.csv', 
+                  header=T)
+# The 'actual' file only has rows containing spring oats
+act_h <- read.csv('../output/sensitivity analyses/MIT_upper_high-run_act.csv', 
+                  header=T) 
+
+# Extract rows 1-4 to deal with those first
+# For these rows, spring oats is the 4th crop and was run as spring barley
+act_h_1to4 <- act_h %>% 
+  dplyr::filter(Field_no %in% c(1,2,3,4)) %>% 
+  dplyr::select(!Field_no)
+
+est_h_to_merge <- est_h %>% 
+  dplyr::select(!Field_no)
+
+high_den_output1 <- rows_update(
+  est_h_to_merge,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_h_1to4, field_name, totalrotgrossprof, ends_with("4")),
+  by = "field_name"
+)
+
+act_h_5to6 <- act_h %>% 
+  dplyr::filter(Field_no %in% c(5,6)) %>% 
+  dplyr::select(!Field_no)
+
+high_den_output <- rows_update(
+  high_den_output1,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_h_5to6, field_name, totalrotgrossprof, ends_with("5")),
+  by = "field_name"
+)
+
+write.csv(high_den_output,
+          '../output/sensitivity analyses/MIT_upper_H_combined.csv')
+
+rm(act_h_1to4)
+rm(est_h_to_merge)
+rm(high_den_output1)
+rm(act_h_5to6)
+rm(act_h)
+rm(est_h)
+```
+  
+  
+### Very high model run
+
+**Estimated yield.**
+```{r run-ECOMOD-upper-sens-analy-MIT-veryhighrun-estimatedyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_upper_veryhigh-run_est.csv" 
+
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_v_est %>% 
+  dplyr::mutate_at(vars(crop1:crop6), 
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+**Actual yield.**
+```{r run-ECOMOD-upper-sens-analy-MIT-veryhighrun-actualyield}
+# name the output file
+fn = "../output/sensitivity analyses/MIT_upper_veryhigh-run_act.csv"
+
+# Set up input file (only need to run the rows containing spring oats).
+# Replace spring oats with spring barley and ensure soil is to two decimal 
+# places or ECOMOD won't run.
+fd = mit_v_act %>% 
+  # Extract just the spring oats rows:
+  dplyr::filter_all(any_vars(grepl("springoats", .))) %>% 
+  # Replace spring oats with spring barley, otherwise ECOMOD won't run:
+  dplyr::mutate_at(vars(crop1:crop6),
+            list(~recode(.,"springoats" = "springbarley"))) %>% 
+  data.frame()
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_act(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="actual",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+ 
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+Now add the 'actual' spring oat output into the 'estimated' output file.
+```{r upper-sens-analy-MIT-veryhighrun-combine}
+# Read in the ECOMOD output files.
+est_v <- read.csv('../output/sensitivity analyses/MIT_upper_veryhigh-run_est.csv', 
+                  header=T)
+# The 'actual' file only has rows containing spring oats
+act_v <- read.csv('../output/sensitivity analyses/MIT_upper_veryhigh-run_act.csv', 
+                  header=T) 
+
+# Extract rows 1-4 to deal with those first
+# For these rows, spring oats is the 4th crop and was run as spring barley
+act_v_1to4 <- act_v %>% 
+  dplyr::filter(Field_no %in% c(1,2,3,4)) %>% 
+  dplyr::select(!Field_no)
+
+est_v_to_merge <- est_v %>% 
+  dplyr::select(!Field_no)
+
+vhigh_den_output1 <- rows_update(
+  est_v_to_merge,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_v_1to4, field_name, totalrotgrossprof, ends_with("4")),
+  by = "field_name"
+)
+
+act_v_5to6 <- act_v %>% 
+  dplyr::filter(Field_no %in% c(5,6)) %>% 
+  dplyr::select(!Field_no)
+
+vhigh_den_output <- rows_update(
+  vhigh_den_output1,
+  ## use only the columns from df2 that you want to update
+  ## plus the joining column
+  dplyr::select(act_v_5to6, field_name, totalrotgrossprof, ends_with("5")),
+  by = "field_name"
+)
+
+write.csv(vhigh_den_output,
+          '../output/sensitivity analyses/MIT_upper_V_combined.csv')
+
+rm(act_v_1to4)
+rm(est_v_to_merge)
+rm(vhigh_den_output1)
+rm(act_v_5to6)
+rm(act_v)
+rm(est_v)
+```
+      
+
+## BAU scenario
+
+Once the data is read in I'll need to insert the additional scenarios that Rob G can run. He can differentiate between low and medium, and high and very high density states:  
+* LD-LR becomes LD-LR and MD-LR  
+* LD-HR becomes LD-HR and MD-HR  
+* HD-HR becomes HD-HR and VD-HR  
+  
+Read in the raw BAU data.
+```{r BAU-raw-data}
+bau_econdata = read_xlsx("../data/InputData_BAU_ECOMOD&CFT_2021-12-02.xlsx",5) %>% 
+  mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
+  mutate_at(3, round, 2) %>%  # soil texture needs 2 decimal places
+  # replace density and resistance abbreviations with even shorter forms:
+  mutate(
+    farm_id = gsub('L-Dsty.L-Res', 'LD-LR', farm_id), 
+    farm_id = gsub('L-Dsty.H-Res', 'LD-HR', farm_id),
+    farm_id = gsub('H-Dsty.H-Res', 'HD-HR', farm_id),
+    farm_id = gsub('\\.', '_', farm_id), # replace . with _
+  )
+```
+
+Insert the additional rows for the differentiated density states.
+```{r}
+# make a new dataframe with the missing density states
+bau_insert.df <- bau_econdata %>% 
+  mutate(
+    farm_id = gsub('LD-LR', 'MD-LR', farm_id), # replace LD-LR with MD-LR
+    farm_id = gsub('LD-HR', 'MD-HR', farm_id), # replace LD-HR with MD-HR
+    farm_id = gsub('HD-HR', 'VD-HR', farm_id)  # replace HD-HR with VD-HR
+  )
+    
+# join the two data frames
+bau_out.df <- rbind(bau_econdata, bau_insert.df)
+
+# re-order so that new rows are inserted every other row
+n <- nrow(bau_econdata)
+bau_econ.input.data <- bau_out.df[kronecker(1:n, c(0, n), "+"), ]
+
+rm(bau_econdata, bau_out.df, bau_insert.df)
+```
+
+
+Create input files for each black-grass density state.
+```{r BAU-create-input-files}
+# LOW / ABSENT
+bau_l <- bau_econ.input.data %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% c("medium","high","veryhigh"), "low"))) %>%
+  data.frame()
+
+# MEDIUM
+bau_m <- bau_l %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "low", "medium"))) %>% 
+  data.frame()
+
+# HIGH
+bau_h = bau_m %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "medium", "high"))) %>% 
+  data.frame()
+
+# VERY HIGH
+bau_v = bau_h %>%
+  mutate(across(starts_with('blackgrass'), ~replace(., . %in% "high", "veryhigh"))) %>% 
+  data.frame()
+```
+
+## Sensitivity analysis - lower limits to yield penalties
+  
+Run input files through ECOMOD.
+  
+### Low/absent model run
+
+```{r run-ECOMOD-lower-sens-analy-MIT-lowrun}
+# name the output file
+fn = "../output/sensitivity analyses/BAU_lower_low-run.csv" 
+fd = bau_l
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### Medium model run
+
+```{r run-ECOMOD-lower-sens-analy-BAU-medrun}
+# name the output file
+fn = "../output/sensitivity analyses/BAU_lower_med-run.csv"
+fd = bau_m
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+  
+### High model run
+
+```{r run-ECOMOD-lower-sens-analy-BAU-highrun}
+# name the output file
+fn = "../output/sensitivity analyses/BAU_lower_high-run.csv"
+fd = bau_h
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### Very high model run
+
+```{r run-ECOMOD-lower-sens-analy-BAU-veryhighrun}
+# name the output file
+fn = "../output/sensitivity analyses/BAU_lower_veryhigh-run.csv"
+fd = bau_v
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+
+## Sensitivity analysis - upper limits to yield penalties
+  
+Run input files through ECOMOD.
+  
+### Low/absent model run
+
+```{r run-ECOMOD-upper-sens-analy-MIT-lowrun}
+# name the output file
+fn = "../output/sensitivity analyses/BAU_upper_low-run.csv" 
+fd = bau_l
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### Medium model run
+
+```{r run-ECOMOD-upper-sens-analy-BAU-medrun}
+# name the output file
+fn = "../output/sensitivity analyses/BAU_upper_med-run.csv"
+fd = bau_m
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+  
+### High model run
+
+```{r run-ECOMOD-upper-sens-analy-BAU-highrun}
+# name the output file
+fn = "../output/sensitivity analyses/BAU_upper_high-run.csv"
+fd = bau_h
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### Very high model run
+
+```{r run-ECOMOD-upper-sens-analy-BAU-veryhighrun}
+# name the output file
+fn = "../output/sensitivity analyses/BAU_upper_veryhigh-run.csv"
+fd = bau_v
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+
+## CWW scenario
+
+Once the data is read in I'll need to insert the additional scenarios that Rob G can run. He can differentiate between low and medium, and high and very high density states:  
+* LD-LR becomes LD-LR and MD-LR  
+* LD-HR becomes LD-HR and MD-HR  
+* HD-HR becomes HD-HR and VD-HR  
+  
+Read in the raw CWW data.
+```{r CWW-raw-data}
+cww_econdata = read_xlsx("../data/InputData_CWW_ECOMOD&CFT_2021-12-02.xlsx",5) %>% 
+  mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
+  mutate_at(3, round, 2) %>%  # soil texture needs 2 decimal places
+  # replace density and resistance abbreviations with even shorter forms:
+  mutate(
+    farm_id = gsub('L-Dsty.L-Res', 'LD-LR', farm_id), 
+    farm_id = gsub('L-Dsty.H-Res', 'LD-HR', farm_id),
+    farm_id = gsub('H-Dsty.H-Res', 'HD-HR', farm_id),
+    farm_id = gsub('\\.', '_', farm_id), # replace . with _
+  )
+```
+
+Insert the additional rows for the differentiated density states.
+```{r CWW-insert-extra-initdenres}
+# make a new dataframe with the missing density states
+cww_insert.df <- cww_econdata %>% 
+  mutate(
+    farm_id = gsub('LD-LR', 'MD-LR', farm_id), # replace LD-LR with MD-LR
+    farm_id = gsub('LD-HR', 'MD-HR', farm_id), # replace LD-HR with MD-HR
+    farm_id = gsub('HD-HR', 'VD-HR', farm_id)  # replace HD-HR with VD-HR
+  )
+    
+# join the two data frames
+cww_out.df <- rbind(cww_econdata, cww_insert.df)
+
+# re-order so that new rows are inserted every other row
+rm(n)
+n <- nrow(cww_econdata)
+cww_econ.input.data <- cww_out.df[kronecker(1:n, c(0, n), "+"), ]
+
+rm(cww_econdata, cww_out.df, cww_insert.df)
+```
+
+Create input files for each black-grass density state.
+```{r CWW-create-input-files}
+# LOW / ABSENT
+cww_l <- cww_econ.input.data %>%
+  mutate(across(starts_with('blackgrass'), 
+                ~replace(., . %in% c("medium","high","veryhigh"), "low"))) %>%
+  data.frame()
+
+# MEDIUM
+cww_m <- cww_l %>%
+  mutate(across(starts_with('blackgrass'), 
+                ~replace(., . %in% "low", "medium"))) %>% 
+  data.frame()
+
+# HIGH
+cww_h = cww_m %>%
+  mutate(across(starts_with('blackgrass'), 
+                ~replace(., . %in% "medium", "high"))) %>% 
+  data.frame()
+
+# VERY HIGH
+cww_v = cww_h %>%
+  mutate(across(starts_with('blackgrass'), 
+                ~replace(., . %in% "high", "veryhigh"))) %>% 
+  data.frame()
+```
+
+## Sensitivity analysis - lower limits to yield penalties
+  
+Run input files through ECOMOD.
+  
+### Low/absent model run
+```{r CWW-lower--run-ECOMOD-lowrun}
+# name the output file
+fn = "../output/sensitivity analyses/CWW_lower_low-run.csv" 
+fd = cww_l
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### Medium model run
+```{r CWW-lower--run-ECOMOD-medrun}
+# name the output file
+fn = "../output/sensitivity analyses/CWW_lower_med-run.csv"
+fd = cww_m
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### High model run
+```{r CWW-lower--run-ECOMOD-highrun}
+# name the output file
+fn = "../output/sensitivity analyses/CWW_lower_high-run.csv"
+fd = cww_h
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### Very high model run
+```{r CWW-lower--run-ECOMOD-veryhighrun}
+# name the output file
+fn = "../output/sensitivity analyses/CWW_lower_veryhigh-run.csv"
+fd = cww_v
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_l_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+
+## Sensitivity analysis - upper limits to yield penalties
+  
+Run input files through ECOMOD.
+  
+### Low/absent model run
+```{r CWW-upper--run-ECOMOD-lowrun}
+# name the output file
+fn = "../output/sensitivity analyses/CWW_upper_low-run.csv" 
+fd = cww_l
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### Medium model run
+```{r CWW-upper--run-ECOMOD-medrun}
+# name the output file
+fn = "../output/sensitivity analyses/CWW_upper_med-run.csv"
+fd = cww_m
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### High model run
+```{r CWW-upper--run-ECOMOD-highrun}
+# name the output file
+fn = "../output/sensitivity analyses/CWW_upper_high-run.csv"
+fd = cww_h
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
+### Very high model run
+```{r CWW-upper--run-ECOMOD-veryhighrun}
+# name the output file
+fn = "../output/sensitivity analyses/CWW_upper_veryhigh-run.csv"
+fd = cww_v
+fd$soil = as.numeric(format(round(as.numeric(fd$soil), 2), nsmall = 2))
+
+# Run ECOMOD
+mfm = solve_BGRI_ECOMOD_u_est(
+  filename=fn,
+  farmdata=fd,
+  default=NULL,farm="multiple",soil=2.5,
+  rotlength=6,rotprob=1/6,
+  crops,tillages,seedrate,delsowing,Nfert,Pfert,Kfert,
+  bgherbdose,glyphosatedose,numberofsprays,subsidy="yes",
+  blackgrass,cropprice,cropyield,yieldoption="estimate",
+  Nfertprice,Pfertprice,Kfertprice,seedprice,
+  herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+
+rm(fn)
+rm(fd)
+rm(mfm)
+```
+
