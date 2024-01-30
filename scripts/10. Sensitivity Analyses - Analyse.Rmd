@@ -1,0 +1,281 @@
+---
+title: "Sensitivity Analysis"
+author: "Alexa Varah"
+date: "2024-01-30"
+output: html_document
+---
+
+# 1. Set up
+## 1.1. Load packages
+```{r load-packages, message=FALSE}
+rm(list=ls())
+library(tidyverse) # for data manipulation; includes dplyr, ggplot2 & more
+library(patchwork) # for panel plots
+#R.Version() #"R version 4.3.2 (2023-10-31)"
+```
+
+## 1.2. Load functions
+This counts complete observations
+```{r load-functions}
+nobs <- function(x) length(x[!is.na(x)])
+```
+
+## 1.3. Load data
+```{r load-data}
+# Weighted economic values - sensitivity analysis
+weighted_sa <- readRDS("../output/sensitivity analyses/SA_weighted-gp-yield-oc-pc.rds") %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels=c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soiltype = factor(soiltype, levels = c("heavy", "medium", "light")),
+    initcondit = factor(initcondit)
+  )
+
+# Weighted economic values - main analysis
+weighted_main <- readRDS("../output/weighted-gp-yield-oc_orig.rds") %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels=c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("n", "c","e")),
+    soiltype = factor(soiltype, levels = c("h", "m","l")),
+    initcondit = factor(initcondit)
+  )
+```
+  
+  
+## 1.4. Process data  
+Collapse the economic and yield data back to the three initial density-resistance levels presented to farmers (LD-LR, LD-HR, HD-HR).  
+Calculate rotation mean for each strategy.  
+```{r}
+# Data from main analysis
+econ_yld_main <- weighted_main %>% 
+  
+  # Collapse initial density and resistance states to original three
+  dplyr::mutate(
+    initDR = forcats::fct_recode(initdenres, # collapse categories
+                                  "LD-LR" = "MD-LR", # new, old
+                                  "LD-HR" = "MD-HR", 
+                                  "HD-HR" = "VD-HR"),
+    initDR = factor(initDR, levels = c("LD-LR", "LD-HR", "HD-HR")),
+    # specify order of factor levels for scenario
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW"))
+                ) %>% 
+  
+  # Calculate mean values across imputations for each year of each strategy
+  group_by(scenario, year, initDR, region, soiltype) %>% 
+  dplyr::mutate(
+    gpmean = mean(wtd_gp),
+    wwmean = mean(ww_yield)
+    ) %>% 
+  ungroup() %>% 
+  distinct(scenario, year, initDR, region, soiltype, .keep_all = TRUE) %>% 
+  dplyr::select(ID, strategy, scenario, region, soiltype, initDR, initcondit, year, crop, 
+                gpmean, wwmean) %>% 
+  
+  # Calculate rotation means
+  dplyr::group_by(scenario, region, soiltype, initDR) %>% 
+  dplyr::mutate(
+    gp_mean = mean(gpmean),
+    gp_min = min(gpmean),
+    gp_max = max(gpmean),
+    ww_mean = mean(wwmean),
+    ww_min = min(wwmean),
+    ww_max = max(wwmean)
+    ) %>% 
+  ungroup() %>% 
+  distinct(scenario, region, soiltype, initDR, .keep_all = TRUE) %>% 
+  dplyr::select(scenario:initcondit, crop, gp_mean:ww_max) %>% 
+  dplyr::mutate(sensanaly = "no") %>% 
+  dplyr::relocate(sensanaly) %>% 
+  
+  # Make new column combining scenario and sensitivity analysis - used in join
+  dplyr::mutate(ID = paste(scenario, sensanaly, sep = "_")) %>% 
+  dplyr::relocate(ID)
+
+
+# Data from sensitivity analysis
+econ_yld_sa <- weighted_df %>% 
+  
+  # Collapse initial density and resistance states to original three
+  dplyr::mutate(
+    initDR = forcats::fct_recode(initdenres, # collapse categories
+                                  "LD-LR" = "MD-LR", # new, old
+                                  "LD-HR" = "MD-HR", 
+                                  "HD-HR" = "VD-HR"),
+    initDR = factor(initDR, levels = c("LD-LR", "LD-HR", "HD-HR")),
+    # specify order of factor levels for scenario
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    # re-code factor levels for soil and region
+    soiltype = dplyr::recode(soiltype,  # rename levels of 'soiltype'
+                             "heavy" = "h", #old, new
+                             "medium" = "m", #old, new
+                             "light" = "l"), #old, new
+    soiltype = factor(soiltype, levels = c("h", "m", "l")),# specify order of levels
+    region = dplyr::recode(region, # rename levels of 'region'
+                           "north" = "n", #old, new
+                           "central" = "c", #old, new
+                           "east" = "e"), #old, new
+    region = factor(region, levels = c("n", "c", "e")) # specify order of levels
+                ) %>% 
+  
+  # Calculate mean values across imputations for each year of each strategy
+  group_by(sensanaly, scenario, year, initDR, region, soiltype) %>% 
+  dplyr::mutate(
+    gpmean = mean(wtd_gp),
+    wwmean = mean(ww_yield)
+    ) %>% 
+  ungroup() %>% 
+  distinct(sensanaly, scenario, year, initDR, region, soiltype, .keep_all = TRUE) %>% 
+  dplyr::select(ID, sensanaly, scenario, region, soiltype, initDR, initcondit, year, crop, 
+                gpmean, wwmean) %>% 
+  
+  # Calculate rotation means
+  dplyr::group_by(sensanaly, scenario, region, soiltype, initDR) %>% 
+  dplyr::mutate(
+    gp_mean = mean(gpmean),
+    gp_min = min(gpmean),
+    gp_max = max(gpmean),
+    ww_mean = mean(wwmean),
+    ww_min = min(wwmean),
+    ww_max = max(wwmean)
+    ) %>% 
+  ungroup() %>% 
+  distinct(sensanaly, scenario, region, soiltype, initDR, .keep_all = TRUE) %>% 
+  dplyr::select(sensanaly, scenario:initcondit, crop, gp_mean:ww_max) %>% 
+  
+  # Make new column combining scenario and sensitivity analysis - used in join
+  dplyr::mutate(ID = paste(scenario, sensanaly, sep = "_")) %>% 
+  dplyr::relocate(ID)
+```
+  
+  
+Join the two data sets.  
+```{r}
+gp_ww <- rbind(econ_yld_main, econ_yld_sa)  %>% 
+  # Remove '_no' from ID column
+  dplyr::mutate(
+    ID = gsub('_no', '', ID),
+    ID = factor(ID, levels = c("BAU", "BAU_lower", "BAU_upper",
+                               "MIT", "MIT_lower", "MIT_upper",
+                               "CWW", "CWW_lower", "CWW_upper")),
+    )
+```
+
+# 2. Plot Figure S5  
+## 2.1. Specify panel labels  
+```{r specify-panel-labels}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("n", "c", "e") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("h", "m", "l") # original
+```
+
+## 2.2. Specify Fig S5a - gross profit 
+```{r plot-S5a}
+figS5a <- ggplot(gp_ww %>% filter(!scenario=="CWW"), 
+                aes(initDR, gp_mean, colour = ID, shape = ID)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance", 
+       y = "Mean annual gross profit (£/ha)") +
+  
+  # Specify colours and point styles:
+  scale_color_manual(name = "Scenario & 
+yield penalties",
+                     values = c("#88CCEE", # BAU
+                                "#005FCC", # BAU, lower yield penalty
+                                "#00306F", # BAU, upper yield penalty
+                                
+                                "#DDCC77", # MIT
+                                "#999933", # MIT, lower yield penalty
+                                "#117733"  # MIT, upper yield penalty
+                                )) + 
+  scale_shape_manual(name = "Scenario & 
+yield penalties",
+                     values=c(15, 15, 15,    # BAU 15 = square
+                              16, 16, 16)) + # MIT 16 = circle
+  
+  # Specify font sizes, backgrounds etc.
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 18),
+        strip.text.y = element_text(size = 18),
+        axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(2.2)),
+        axis.text.y=element_text(size=rel(2.2))
+        ) +
+  
+  # Specify error bars
+  geom_pointrange(aes(ymin = gp_min, 
+                      ymax = gp_max), 
+                  position=position_dodge(width=0.6),
+                  size = 0.9) +
+  theme(legend.position="none")
+
+figS5a
+```
+
+  
+## 2.2. Specify Fig S5b - wheat yield
+```{r plot-S5a}
+figS5b <- ggplot(gp_ww %>% filter(!scenario=="CWW"), 
+                aes(initDR, ww_mean, colour = ID, shape = ID)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance", 
+       y = "Mean annual gross profit (£/ha)") +
+  
+  # Specify colours and point styles:
+  scale_color_manual(name = "Scenario & 
+yield penalties",
+                     values = c("#88CCEE", # BAU
+                                "#005FCC", # BAU, lower yield penalty
+                                "#00306F", # BAU, upper yield penalty
+                                
+                                "#DDCC77", # MIT
+                                "#999933", # MIT, lower yield penalty
+                                "#117733"  # MIT, upper yield penalty
+                                )) + 
+  scale_shape_manual(name = "Scenario & 
+yield penalties",
+                     values=c(15, 15, 15,    # BAU 15 = square
+                              16, 16, 16)) + # MIT 16 = circle
+  
+  # Specify font sizes, backgrounds etc.
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 18),
+        strip.text.y = element_text(size = 18),
+        axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(2.2)),
+        axis.text.y=element_text(size=rel(2.2)),
+        legend.title=element_text(size=22),
+        legend.text=element_text(size=22),
+        legend.key = element_blank(),# removes grey background behind symbols in legend
+        ) +
+  
+  # Specify error bars
+  geom_pointrange(aes(ymin = ww_min, 
+                      ymax = ww_max), 
+                  position=position_dodge(width=0.6),
+                  size = 0.9) 
+
+figS5b
+```
+
+
+## 2.3. Make panel plot Fig 5 and save
+```{r panel-plot}
+figS5 <- (figS5a / figS5b) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 24, face="bold"))
+
+png("../figures/Figure_S5.png",
+    height = 20, width = 15, units = "in", res = 300)
+print(figS5)
+dev.off()
+```

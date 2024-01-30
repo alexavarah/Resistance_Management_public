@@ -1,0 +1,872 @@
+---
+title: "Sensitivity Analyses - Estimate weighted gross profit and summarise"
+author: "Alexa Varah"
+date: "2023-02-10"
+output: html_document
+---
+
+# 1. Intro / rationale
+
+This script manipulates ECOMOD output files to create data frames that can be used for analysis. I calculate the weighted gross profit for a field. This is done by weighting by the proportion of squares in each density state.  
+
+# 2. Load packages
+```{r load-packages}
+rm(list=ls())
+library(tidyverse) # for easy data manipulation; includes dplyr, ggplot & more
+library(gmodels) # to calculate 95% CIs
+```
+
+
+# 3. Load and tidy data
+## 3.1. Load & prep ECOMOD data
+### 3.1.1. Lower limits of yield penalty
+#### MIT, lower
+Load data.
+```{r MIT-lower--Load-economic-data}
+# Low density model run
+mit_low_l <- read.csv("../output/sensitivity analyses/MIT_lower_L_combined.csv", 
+                    header=TRUE) %>% 
+  select(-X) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# Medium density model run
+mit_med_l <- read.csv("../output/sensitivity analyses/MIT_lower_M_combined.csv", 
+                    header=TRUE) %>% 
+  select(-X) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# High density model run
+mit_high_l <- read.csv("../output/sensitivity analyses/MIT_lower_H_combined.csv", 
+                     header=TRUE) %>% 
+  select(-X) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# Very high density model run
+mit_vhig_l <- read.csv("../output/sensitivity analyses/MIT_lower_V_combined.csv", 
+                     header=TRUE) %>% 
+  select(-X) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+```
+
+Convert ECOMOD output to long-format and join data frames together.
+```{r MIT-lower--Reshape-economic-data}
+## Low density model run
+mit_low_l <- reshape(mit_low_l, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "low") # add a column to indicate the model run
+
+## Medium density model run
+mit_med_l <- reshape(mit_med_l, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "medium") # add a column to indicate the model run
+
+## High density model run
+mit_high_l <- reshape(mit_high_l, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "high") # add a column to indicate the model run
+
+## Very high density model run
+mit_vhig_l <- reshape(mit_vhig_l, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "veryhigh") # add a column to indicate the model run
+
+## Join data frames.
+mit_economicdata_lower <- rbind(mit_low_l, mit_med_l, mit_high_l, mit_vhig_l)
+```
+
+Create an 'initcondit' variable in the economic data set that is in the same format as in the simulated density data. The 'initcondit' variable combines English region, soil type and initial density and resistance state, e.g. n_h_VD-HR.   
+I also need to a column on which to join the economic and density data frames This needs to identify initial conditions and year in the rotation.  
+```{r MIT-lower--Make-initcondit-&-joinID}
+mit_econdata_lower <- mit_economicdata_lower %>% 
+  dplyr::select(-meanrotgrossprof) %>% 
+  dplyr::rename(year = rotation) %>% 
+  mutate(
+    field_name = gsub('\\.', '_', field_name), # replace . with _
+    initdenres = sub('_.*', '', field_name), # extract chrs before first '_'
+    soiltype = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    region = substr(field_name, start = 7, stop = 7), # extract 7th character
+    region = tolower(region),
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "mit",
+    joinID = paste(scenario, initcondit, year, sep = "_"),
+    sensanaly = "lower"
+    ) %>% 
+  dplyr::relocate(joinID, scenario, modelrun, initcondit, 
+                  initdenres, region, soiltype) %>% 
+  dplyr::select(-field_name)
+```
+
+Clean up. 
+```{r}
+rm(mit_low_l)
+rm(mit_med_l)
+rm(mit_high_l)
+rm(mit_vhig_l)
+rm(mit_economicdata_lower)
+```
+
+
+#### BAU, lower
+Load data.
+```{r BAU-lower--Load-economic-data}
+# Low density model run
+bau_low_l <- read.csv("../output/sensitivity analyses/BAU_lower_low-run.csv", 
+                    header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# Medium density model run
+bau_med_l <- read.csv("../output/sensitivity analyses/BAU_lower_med-run.csv", 
+                    header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# High density model run
+bau_high_l <- read.csv("../output/sensitivity analyses/BAU_lower_high-run.csv", 
+                     header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# Very high density model run
+bau_vhig_l <- read.csv("../output/sensitivity analyses/BAU_lower_veryhigh-run.csv", 
+                     header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+```
+
+Convert ECOMOD output to long-format and join data frames together.
+```{r BAU-lower--Reshape-economic-data}
+## Low density model run
+bau_low_l <- reshape(bau_low_l, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "low") # add a column to indicate the model run
+
+## Medium density model run
+bau_med_l <- reshape(bau_med_l, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "medium") # add a column to indicate the model run
+
+## High density model run
+bau_high_l <- reshape(bau_high_l, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "high") # add a column to indicate the model run
+
+## Very high density model run
+bau_vhig_l <- reshape(bau_vhig_l, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "veryhigh") # add a column to indicate the model run
+
+## Join data frames.
+bau_economicdata_lower <- rbind(bau_low_l, bau_med_l, bau_high_l, bau_vhig_l)
+```
+
+Create an 'initcondit' variable in the economic data set that is in the same format as in the simulated density data. The 'initcondit' variable combines English region, soil type and initial density and resistance state, e.g. n_h_VD-HR.   
+I also need to a column on which to join the economic and density data frames This needs to identify initial conditions and year in the rotation.  
+```{r BAU-lower--Make-initcondit-&-joinID}
+bau_econdata_lower <- bau_economicdata_lower %>% 
+  dplyr::select(-meanrotgrossprof) %>% 
+  dplyr::rename(year = rotation) %>% 
+  dplyr::mutate(
+    initdenres = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    
+    # extract characters between 1st and 2nd underscore ( x[2] pulls out the 
+    # 2nd split string when split on underscores):
+    soiltype = sapply(strsplit(field_name, "_"), function(x) x[2]), 
+    soiltype = substr(soiltype, start = 1, stop = 1), # extract 1st character
+    
+    region = sub('_.*', '', field_name), # extract chrs before first '_'
+    region = tolower(region),
+
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "bau",
+    joinID = paste(scenario, initcondit, year, sep = "_"),
+    sensanaly = "lower"
+  ) %>% 
+  dplyr::relocate(joinID, scenario, modelrun, initcondit, 
+                  initdenres, region, soiltype) %>% 
+  dplyr::select(-field_name)
+```
+
+Clean up.
+```{r}
+## Clean up.
+rm(bau_low_l)
+rm(bau_med_l)
+rm(bau_high_l)
+rm(bau_vhig_l)
+rm(bau_economicdata_lower)
+```
+  
+  
+#### CWW, lower
+Load data.
+```{r CWW-lower--Load-economic-data}
+# Low density model run
+cww_low_l <- read.csv("../output/sensitivity analyses/CWW_lower_low-run.csv", 
+                    header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# Medium density model run
+cww_med_l <- read.csv("../output/sensitivity analyses/CWW_lower_med-run.csv", 
+                    header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# High density model run
+cww_high_l <- read.csv("../output/sensitivity analyses/CWW_lower_high-run.csv", 
+                     header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# Very high density model run
+cww_vhig_l <- read.csv("../output/sensitivity analyses/CWW_lower_veryhigh-run.csv", 
+                     header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+```
+
+Convert ECOMOD output to long-format and join data frames together.
+```{r CWW-lower--Reshape-economic-data}
+## Low density model run
+cww_low_l <- reshape(cww_low_l, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "low") # add a column to indicate the model run
+
+## Medium density model run
+cww_med_l <- reshape(cww_med_l, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "medium") # add a column to indicate the model run
+
+## High density model run
+cww_high_l <- reshape(cww_high_l, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "high") # add a column to indicate the model run
+
+## Very high density model run
+cww_vhig_l <- reshape(cww_vhig_l, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "veryhigh") # add a column to indicate the model run
+
+## Join data frames.
+cww_economicdata_lower <- rbind(cww_low_l, cww_med_l, cww_high_l, cww_vhig_l)
+```
+
+Create an 'initcondit' variable in the economic data set that is in the same format as in the simulated density data. The 'initcondit' variable combines English region, soil type and initial density and resistance state, e.g. n_h_VD-HR.   
+I also need to a column on which to join the economic and density data frames This needs to identify initial conditions and year in the rotation.  
+```{r CWW-lower--Make-initcondit-&-joinID}
+cww_econdata_lower <- cww_economicdata_lower %>% 
+  dplyr::select(-meanrotgrossprof) %>% 
+  dplyr::rename(year = rotation) %>% 
+  dplyr::mutate(
+    initdenres = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    
+    # extract characters between 1st and 2nd underscore ( x[2] pulls out the 
+    # 2nd split string when split on underscores):
+    soiltype = sapply(strsplit(field_name, "_"), function(x) x[2]), 
+    soiltype = substr(soiltype, start = 1, stop = 1), # extract 1st character
+    
+    region = sub('_.*', '', field_name), # extract chrs before first '_'
+    region = tolower(region),
+
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "cww",
+    joinID = paste(scenario, initcondit, year, sep = "_"),
+    sensanaly = "lower"
+  ) %>% 
+  dplyr::relocate(joinID, scenario, modelrun, initcondit, 
+                  initdenres, region, soiltype) %>% 
+  dplyr::select(-field_name)
+```
+
+Clean up.
+```{r}
+## Clean up.
+rm(cww_low_l)
+rm(cww_med_l)
+rm(cww_high_l)
+rm(cww_vhig_l)
+rm(cww_economicdata_lower)
+```
+
+
+
+### 3.1.2. Upper limits of yield penalty
+#### MIT, upper
+Load data.
+```{r MIT-upper--Load-economic-data}
+# Low density model run
+mit_low_u <- read.csv("../output/sensitivity analyses/MIT_upper_L_combined.csv", 
+                    header=TRUE) %>% 
+  select(-X) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# Medium density model run
+mit_med_u <- read.csv("../output/sensitivity analyses/MIT_upper_M_combined.csv", 
+                    header=TRUE) %>% 
+  select(-X) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# High density model run
+mit_high_u <- read.csv("../output/sensitivity analyses/MIT_upper_H_combined.csv", 
+                     header=TRUE) %>% 
+  select(-X) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# Very high density model run
+mit_vhig_u <- read.csv("../output/sensitivity analyses/MIT_upper_V_combined.csv", 
+                     header=TRUE) %>% 
+  select(-X) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+```
+
+Convert ECOMOD output to long-format and join data frames together.
+```{r MIT-upper--Reshape-economic-data}
+## Low density model run
+mit_low_u <- reshape(mit_low_u, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "low") # add a column to indicate the model run
+
+## Medium density model run
+mit_med_u <- reshape(mit_med_u, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "medium") # add a column to indicate the model run
+
+## High density model run
+mit_high_u <- reshape(mit_high_u, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "high") # add a column to indicate the model run
+
+## Very high density model run
+mit_vhig_u <- reshape(mit_vhig_u, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "veryhigh") # add a column to indicate the model run
+
+## Join data frames.
+mit_economicdata_upper <- rbind(mit_low_u, mit_med_u, mit_high_u, mit_vhig_u)
+```
+
+Create an 'initcondit' variable in the economic data set that is in the same format as in the simulated density data. The 'initcondit' variable combines English region, soil type and initial density and resistance state, e.g. n_h_VD-HR.   
+I also need to a column on which to join the economic and density data frames This needs to identify initial conditions and year in the rotation.  
+```{r MIT-upper--Make-initcondit-&-joinID}
+mit_econdata_upper <- mit_economicdata_upper %>% 
+  dplyr::select(-meanrotgrossprof) %>% 
+  dplyr::rename(year = rotation) %>% 
+  mutate(
+    field_name = gsub('\\.', '_', field_name), # replace . with _
+    initdenres = sub('_.*', '', field_name), # extract chrs before first '_'
+    soiltype = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    region = substr(field_name, start = 7, stop = 7), # extract 7th character
+    region = tolower(region),
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "mit",
+    joinID = paste(scenario, initcondit, year, sep = "_"),
+    sensanaly = "upper"
+    ) %>% 
+  dplyr::relocate(joinID, scenario, modelrun, initcondit, 
+                  initdenres, region, soiltype) %>% 
+  dplyr::select(-field_name)
+```
+
+Clean up. 
+```{r}
+rm(mit_low_u)
+rm(mit_med_u)
+rm(mit_high_u)
+rm(mit_vhig_u)
+rm(mit_economicdata_upper)
+```
+
+
+#### BAU, upper
+Load data.
+```{r BAU-upper--Load-economic-data}
+# Low density model run
+bau_low_u <- read.csv("../output/sensitivity analyses/BAU_upper_low-run.csv", 
+                    header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# Medium density model run
+bau_med_u <- read.csv("../output/sensitivity analyses/BAU_upper_med-run.csv", 
+                    header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# High density model run
+bau_high_u <- read.csv("../output/sensitivity analyses/BAU_upper_high-run.csv", 
+                     header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# Very high density model run
+bau_vhig_u <- read.csv("../output/sensitivity analyses/BAU_upper_veryhigh-run.csv", 
+                     header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+```
+
+Convert ECOMOD output to long-format and join data frames together.
+```{r BAU-upper--Reshape-economic-data}
+## Low density model run
+bau_low_u <- reshape(bau_low_u, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "low") # add a column to indicate the model run
+
+## Medium density model run
+bau_med_u <- reshape(bau_med_u, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "medium") # add a column to indicate the model run
+
+## High density model run
+bau_high_u <- reshape(bau_high_u, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "high") # add a column to indicate the model run
+
+## Very high density model run
+bau_vhig_u <- reshape(bau_vhig_u, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "veryhigh") # add a column to indicate the model run
+
+## Join data frames.
+bau_economicdata_upper <- rbind(bau_low_u, bau_med_u, bau_high_u, bau_vhig_u)
+```
+
+Create an 'initcondit' variable in the economic data set that is in the same format as in the simulated density data. The 'initcondit' variable combines English region, soil type and initial density and resistance state, e.g. n_h_VD-HR.   
+I also need to a column on which to join the economic and density data frames This needs to identify initial conditions and year in the rotation.  
+```{r BAU-upper--Make-initcondit-&-joinID}
+bau_econdata_upper <- bau_economicdata_upper %>% 
+  dplyr::select(-meanrotgrossprof) %>% 
+  dplyr::rename(year = rotation) %>% 
+  dplyr::mutate(
+    initdenres = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    
+    # extract characters between 1st and 2nd underscore ( x[2] pulls out the 
+    # 2nd split string when split on underscores):
+    soiltype = sapply(strsplit(field_name, "_"), function(x) x[2]), 
+    soiltype = substr(soiltype, start = 1, stop = 1), # extract 1st character
+    
+    region = sub('_.*', '', field_name), # extract chrs before first '_'
+    region = tolower(region),
+
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "bau",
+    joinID = paste(scenario, initcondit, year, sep = "_"),
+    sensanaly = "upper"
+  ) %>% 
+  dplyr::relocate(joinID, scenario, modelrun, initcondit, 
+                  initdenres, region, soiltype) %>% 
+  dplyr::select(-field_name)
+```
+
+Clean up.
+```{r}
+## Clean up.
+rm(bau_low_u)
+rm(bau_med_u)
+rm(bau_high_u)
+rm(bau_vhig_u)
+rm(bau_economicdata_upper)
+```
+  
+  
+#### CWW, upper
+Load data.
+```{r CWW-upper--Load-economic-data}
+# Low density model run
+cww_low_u <- read.csv("../output/sensitivity analyses/CWW_upper_low-run.csv", 
+                    header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# Medium density model run
+cww_med_u <- read.csv("../output/sensitivity analyses/CWW_upper_med-run.csv", 
+                    header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# High density model run
+cww_high_u <- read.csv("../output/sensitivity analyses/CWW_upper_high-run.csv", 
+                     header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+# Very high density model run
+cww_vhig_u <- read.csv("../output/sensitivity analyses/CWW_upper_veryhigh-run.csv", 
+                     header=TRUE) %>% 
+  select(-Field_no) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' b4 the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+```
+
+Convert ECOMOD output to long-format and join data frames together.
+```{r CWW-upper--Reshape-economic-data}
+## Low density model run
+cww_low_u <- reshape(cww_low_u, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "low") # add a column to indicate the model run
+
+## Medium density model run
+cww_med_u <- reshape(cww_med_u, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "medium") # add a column to indicate the model run
+
+## High density model run
+cww_high_u <- reshape(cww_high_u, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "high") # add a column to indicate the model run
+
+## Very high density model run
+cww_vhig_u <- reshape(cww_vhig_u, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "veryhigh") # add a column to indicate the model run
+
+## Join data frames.
+cww_economicdata_upper <- rbind(cww_low_u, cww_med_u, cww_high_u, cww_vhig_u)
+```
+
+Create an 'initcondit' variable in the economic data set that is in the same format as in the simulated density data. The 'initcondit' variable combines English region, soil type and initial density and resistance state, e.g. n_h_VD-HR.   
+I also need to a column on which to join the economic and density data frames This needs to identify initial conditions and year in the rotation.  
+```{r CWW-upper--Make-initcondit-&-joinID}
+cww_econdata_upper <- cww_economicdata_upper %>% 
+  dplyr::select(-meanrotgrossprof) %>% 
+  dplyr::rename(year = rotation) %>% 
+  dplyr::mutate(
+    initdenres = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    
+    # extract characters between 1st and 2nd underscore ( x[2] pulls out the 
+    # 2nd split string when split on underscores):
+    soiltype = sapply(strsplit(field_name, "_"), function(x) x[2]), 
+    soiltype = substr(soiltype, start = 1, stop = 1), # extract 1st character
+    
+    region = sub('_.*', '', field_name), # extract chrs before first '_'
+    region = tolower(region),
+
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "cww",
+    joinID = paste(scenario, initcondit, year, sep = "_"),
+    sensanaly = "upper"
+  ) %>% 
+  dplyr::relocate(joinID, scenario, modelrun, initcondit, 
+                  initdenres, region, soiltype) %>% 
+  dplyr::select(-field_name)
+```
+
+Clean up.
+```{r}
+## Clean up.
+rm(cww_low_u)
+rm(cww_med_u)
+rm(cww_high_u)
+rm(cww_vhig_u)
+rm(cww_economicdata_upper)
+```
+
+
+
+
+### 3.1.3. Join all economic scenarios & tidy
+Now join all the economic data together before calculating weighted gross profit.
+```{r make-ridy-economic-data}
+econdata <- rbind(bau_econdata_lower,
+                   bau_econdata_upper,
+                   cww_econdata_lower,
+                   cww_econdata_upper,
+                   mit_econdata_lower,
+                   mit_econdata_upper) %>% 
+  relocate(sensanaly, .before = scenario) %>% 
+  dplyr::mutate(scenario = toupper(scenario),
+                #joinID = str_replace_all(joinID, "mit","MIT"),
+                #joinID = str_replace_all(joinID, "bau","BAU"),
+                #joinID = str_replace_all(joinID, "cww","CWW"),
+                ID = str_replace_all(joinID, c("mit" = "MIT", "bau" = "BAU", "cww" = "CWW")),
+                region = str_replace_all(region, c("e" = "east", "n" = "north", "c" = "central")), # NB e first
+                soiltype = str_replace_all(soiltype, c("h" = "heavy", "m" = "medium", "l" = "light"))
+                )
+```
+
+
+## 3.2. Load tidy density data
+```{r load-density-data}
+# Density data - initialised with current densities
+simden_curr <- readRDS("../output/simden_orig_tidy.rds") %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")), # specify order of levels
+    region = factor(region, levels = c("n", "c", "e")), # specify order of levels
+    soiltype = factor(soiltype, levels = c("h", "m", "l")), # specify order of levels
+    initcondit = paste(region, soiltype, initdenres, sep = "_")
+  )
+```
+
+
+# 4. Calculate weighted values
+## 4.1. Calculate
+To do this, join the simulated density-resistance data and the economic data.
+
+Only winter wheat yield will vary depending on black-grass density; yield of all other crops will be unaffected by the weighting process. I calculate weighted yield, fuel cost, labour cost and operations cost. Fuel, labour and operations costs all involve using work rates in their calculation. Work rate is a function of crop yield and so these variables  will be affected by black-grass density when the crop is wheat. When you do the join, the `econdata` rows will automatically repeat to fill the 37 iterations present in `simdata`.  
+
+Not all variables need to be weighted as they are not all affected by crop yield and will therefore not respond to changes in BG density. Furthermore, even weighted variables won't always show differences between imputations as at low and medium densities, Black-grass doesn't affect yield.  
+  
+Opportunity cost is calculated as CWW-BAU or MIT-BAU. This means that negative values indicate BAU had higher gross profit, so the other scenario makes the farmer less money.
+
+```{r calculate-weighted-values}
+weighted_df_pre <- left_join(simden_curr %>% dplyr::select(ID, imp, al, m, h, v), 
+                         econdata, 
+                         by="ID", 
+                         relationship = 'many-to-many') %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "low" ~ al*grossprof,
+      modelrun == "medium" ~ m*grossprof,
+      modelrun == "high" ~ h*grossprof,
+      modelrun == "veryhigh" ~ v*grossprof
+    ),
+    wtd_fuelcost = case_when(
+      modelrun == "low" ~ al*fuelcost,
+      modelrun == "medium" ~ m*fuelcost,
+      modelrun == "high" ~ h*fuelcost,
+      modelrun == "veryhigh" ~ v*fuelcost
+    ),
+    wtd_labcost = case_when(
+      modelrun == "low" ~ al*labcost,
+      modelrun == "medium" ~ m*labcost,
+      modelrun == "high" ~ h*labcost,
+      modelrun == "veryhigh" ~ v*labcost
+    ),
+    wtd_opcost = case_when(
+      modelrun == "low" ~ al*opcost,
+      modelrun == "medium" ~ m*opcost,
+      modelrun == "high" ~ h*opcost,
+      modelrun == "veryhigh" ~ v*opcost
+    ),
+    wtd_yield = case_when(
+      modelrun == "low" ~ al*yield,
+      modelrun == "medium" ~ m*yield,
+      modelrun == "high" ~ h*yield,
+      modelrun == "veryhigh" ~ v*yield
+    )
+  ) %>%
+  
+  # Add weighted variables across model runs (low, med, high & vhigh den) 
+  # to get total gross profit, yield etc (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy (ID), and for each imputation of that year-strategy (imp).
+  dplyr::group_by(imp, ID, sensanaly) %>% 
+  dplyr::mutate(
+    wtd_gp = sum(wtd_gp),
+    wtd_fuelcost = sum(wtd_fuelcost),
+    wtd_labcost = sum(wtd_labcost),
+    wtd_opcost = sum(wtd_opcost),
+    wtd_yield = sum(wtd_yield)
+  ) %>% 
+  ungroup() %>% 
+  distinct(ID, imp, year, sensanaly, .keep_all = T) %>% 
+  dplyr::select(
+    ID, imp, sensanaly, scenario, year, initcondit, initdenres, 
+    region, soiltype, crop, wtd_gp:wtd_yield) %>% 
+  
+  # Specify formats and order of levels (so later plots are in correct order):
+  dplyr::mutate( 
+    scenario = factor(scenario, levels=c("BAU", "MIT", "CWW")),
+    initdenres = factor(initdenres, levels = c("VD-HR", "HD-HR", "MD-HR",
+                                               "MD-LR", "LD-HR", "LD-LR")),
+    initcondit = factor(initcondit, levels = c(
+      "n_h_VD-HR", "n_m_VD-HR", "n_l_VD-HR", 
+      "c_h_VD-HR", "c_m_VD-HR", "c_l_VD-HR",
+      "e_h_VD-HR", "e_m_VD-HR", "e_l_VD-HR",
+      
+      "n_h_HD-HR", "n_m_HD-HR", "n_l_HD-HR",
+      "c_h_HD-HR", "c_m_HD-HR", "c_l_HD-HR",
+      "e_h_HD-HR", "e_m_HD-HR", "e_l_HD-HR",
+      
+      "n_h_MD-HR", "n_m_MD-HR", "n_l_MD-HR",
+      "c_h_MD-HR", "c_m_MD-HR", "c_l_MD-HR",
+      "e_h_MD-HR", "e_m_MD-HR", "e_l_MD-HR",
+      
+      "n_h_MD-LR", "n_m_MD-LR", "n_l_MD-LR",
+      "c_h_MD-LR", "c_m_MD-LR", "c_l_MD-LR",
+      "e_h_MD-LR", "e_m_MD-LR", "e_l_MD-LR",
+      
+      "n_h_LD-HR", "n_m_LD-HR", "n_l_LD-HR",
+      "c_h_LD-HR", "c_m_LD-HR", "c_l_LD-HR",
+      "e_h_LD-HR", "e_m_LD-HR", "e_l_LD-HR",
+      
+      "n_h_LD-LR", "n_m_LD-LR", "n_l_LD-LR",
+      "c_h_LD-LR", "c_m_LD-LR", "c_l_LD-LR",
+      "e_h_LD-LR", "e_m_LD-LR", "e_l_LD-LR"))
+  ) %>% 
+  ungroup() %>%
+ 
+  # Calculate opportunity cost of switching out of BAU
+  group_by(imp, sensanaly, initcondit, year) %>% 
+  dplyr::mutate(wtd_opp_cost = wtd_gp - wtd_gp[scenario == "BAU"]) %>% 
+  ungroup() %>% 
+  arrange(scenario, initcondit, year) %>% 
+  
+  # Calculate productivity cost of switching out of BAU
+  dplyr::mutate(ww_yield = ifelse(stringr::str_detect(crop,'wheat'),wtd_yield,0)) %>% # for any crop that isn't wheat, assign zero yield
+  group_by(imp, sensanaly, initcondit, year) %>% 
+  dplyr::mutate(wtd_prod_cost = ww_yield - ww_yield[scenario == "BAU"]) %>% 
+  ungroup() %>% 
+  arrange(scenario, initdenres, region, soiltype, year)
+
+
+# Join other variables back on:
+
+# First, select just the variables I want.
+econdata_small <- econdata %>% 
+  dplyr::select(ID, fertcost, seedcost, herbcost, sundry, varcost) %>% 
+  distinct(ID, .keep_all=TRUE)
+
+# Then join back on.
+weighted_df <- inner_join(econdata_small, weighted_df_pre,  by = "ID") %>% 
+  dplyr::relocate(imp, ID, sensanaly, scenario, region, soiltype, 
+                  initdenres, initcondit, year, crop, 
+                  wtd_gp, wtd_opp_cost, wtd_yield, ww_yield, wtd_prod_cost, wtd_fuelcost, wtd_labcost, wtd_opcost) %>% 
+  arrange(scenario, initdenres, region, soiltype) %>% 
+  dplyr::rename(wtd_opscost = wtd_opcost) %>% 
+  # Create variable for 'other' costs (to be used in a plot later):
+  dplyr::mutate(other = sundry + fertcost + seedcost) %>% 
+  dplyr::relocate(other, .after = varcost)
+```
+
+## 4.2. Save output file
+```{r}
+saveRDS(weighted_df, file = "../output/sensitivity analyses/SA_weighted-gp-yield-oc-pc.rds")
+```
+
+## 4.3. Clean up
+```{r clean-up, echo=FALSE}
+rm(econdata_small, weighted_df_pre,
+   bau_econdata_lower, bau_econdata_upper, 
+   cww_econdata_lower, cww_econdata_upper,
+   mit_econdata_lower, mit_econdata_upper,
+   econdata, simden_curr)
+```
+
+
+# 5. Session info
+```{r session-info}
+sessionInfo()
+```
+
