@@ -21,7 +21,7 @@ library(readxl) # for reading in Excel workbooks / spreadsheets
 ## 1.2. Load ECOMOD
 File '01. Load ECOMOD.R' contains the ECOMOD function used here.
 ``` {r ECOMOD, purl=FALSE}
-source("01. Load ECOMOD_2019 prices_2023-02-07.R")
+source("01. ECOMOD_2019 prices_2023-02-07.R")
 ```
 
 # 2. MIT
@@ -30,12 +30,12 @@ Because there are crops in the Farmer Focus strategies that ECOMOD can't model (
 ## 2.1. Make input files
 ```{r load-tidy-MIT}
 ## Read in the raw data.
-mit_est = read_xlsx("../data/ECOMOD_InputData_MIT.xlsx",1) %>% 
+mit_est = read_xlsx("../data/InputData_FF_ECOMOD&CFT_2021-12-03.xlsx",3) %>% 
   select(-"lookup_ref") %>%  # remove 'lookup_ref' column
   mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
   mutate_at(3, round, 2) # soil texture needs 2 decimal places
 
-mit_act = read_xlsx("../data/ECOMOD_InputData_MIT.xlsx",2) %>% 
+mit_act = read_xlsx("../data/InputData_FF_ECOMOD&CFT_2021-12-03.xlsx",4) %>% 
   select(-"lookup_ref") %>%  # remove 'lookup_ref' column
   mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
   mutate_at(3, round, 2) # soil texture needs 2 decimal places
@@ -86,9 +86,9 @@ mit_v_act = mit_l_act %>%
 ### 2.2.1. Run ECOMOD, low density, yield = "estimate" 
 Replace spring oats with spring barley and ensure soil is to two decimal places or ECOMOD won't run.
 ```{r runECOMOD-MIT-lowden-est}
+## (l.i)   Run ECOMOD, low density, yield = "estimate" ----
 fn = "../output/mit_ECOMOD_output_L_estimate.csv" # name the output file
 
-# Replace spring oats (not included in ECOMOD) 
 fd = mit_l_est %>% 
   mutate_at(vars(crop1:crop6), 
             list(~recode(.,"springoats" = "springbarley"))) %>% 
@@ -105,10 +105,10 @@ mfm = solve_BGRI_ECOMOD(filename=fn,
                         blackgrass,cropprice,cropyield,yieldoption="estimate",
                         Nfertprice,Pfertprice,Kfertprice,seedprice,
                         herbprice,glyphosateprice,machsize,fuelprice,labourwage)
+                        # 52 secs
 rm(fn)
 rm(fd)
 rm(mfm)
-rm(mit_l_est)
 ```
 
 ### 2.2.2. Run ECOMOD, low density, yield = "actual"
@@ -138,7 +138,6 @@ mfm = solve_BGRI_ECOMOD(filename=fn,
 rm(fn)
 rm(fd)
 rm(mfm)
-rm(mit_l_act)
 ```
 
 ### 2.2.3. Combine 'actual' and 'estimate' output
@@ -213,7 +212,6 @@ mfm = solve_BGRI_ECOMOD(filename=fn,
 rm(fn)
 rm(fd)
 rm(mfm)
-rm(mit_m_est)
 ```
 
 ### 2.3.2. Run ECOMOD, medium density, yield = "actual"
@@ -241,7 +239,6 @@ mfm = solve_BGRI_ECOMOD(filename=fn,
 rm(fn)
 rm(fd)
 rm(mfm)
-rm(mit_m_act)
 ```
 
 ### 2.3.3. Combine 'actual' and 'estimate' output
@@ -286,6 +283,8 @@ rm(act_m_1to4)
 rm(est_m_to_merge)
 rm(med_den_output1)
 rm(act_m_5to6)
+rm(mit_m_act)
+rm(mit_m_est)
 rm(act_m)
 rm(est_m)
 ```
@@ -502,15 +501,13 @@ rm(est_v)
 
 rm(mit_l_act)
 rm(mit_l_est)
-rm(mit_act)
-rm(mit_est)
 ```
 
 # 3. BAU
 ## 3.1. Make input files
 ```{r load-tidy-BAU}
 # Read in file and sort out a few things initially.
-bau_econdata = read_xlsx("../data/ECOMOD_InputData_BAU.xlsx") %>% 
+bau_econdata = read_xlsx("../data/InputData_BAU_ECOMOD&CFT_2021-12-02.xlsx",5) %>% 
   mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
   mutate_at(3, round, 2) %>%  # soil texture needs 2 decimal places
   # replace density and resistance abbreviations with even shorter forms:
@@ -528,6 +525,8 @@ bau_econdata = read_xlsx("../data/ECOMOD_InputData_BAU.xlsx") %>%
 # HD-HR becomes HD-HR and VD-HR
 
 # create new rows to be added
+#insert.df <- transform(bau_econdata, elevation = elevation - length)
+
 bau_insert.df <- bau_econdata %>% 
   mutate(
     farm_id = gsub('LD-LR', 'MD-LR', farm_id), # replace LD-LR with MD-LR
@@ -661,10 +660,6 @@ rm(bau_insert.df)
 rm(bau_out.df)
 rm(bau_econ.input.data)
 rm(n)
-rm(low_den_output)
-rm(med_den_output)
-rm(high_den_output)
-rm(vhigh_den_output)
 ```
 
 
@@ -672,8 +667,7 @@ rm(vhigh_den_output)
 # 4. CWW
 ## 4.1. Make input files 
 ```{r load-tidy-CWW}
-#cww_econdata = read_xlsx("../data/InputData_CWW_ECOMOD&CFT_2021-12-02.xlsx",5) %>%
-cww_econdata = read_xlsx("../data/ECOMOD_InputData_CWW.xlsx") %>% 
+cww_econdata = read_xlsx("../data/InputData_CWW_ECOMOD&CFT_2021-12-02.xlsx",5) %>% 
   mutate(soil = as.numeric(soil)) %>% # soil texture should be numeric
   mutate_at(3, round, 2) %>% # soil texture needs 2 decimal places
   # replace density and resistance abbreviations with even shorter forms:
@@ -691,6 +685,8 @@ cww_econdata = read_xlsx("../data/ECOMOD_InputData_CWW.xlsx") %>%
 # HD-HR becomes HD-HR and VD-HR
 
 # create new rows to be added
+#insert.df <- transform(bau_econdata, elevation = elevation - length)
+
 cww_insert.df <- cww_econdata %>% 
   mutate(
     farm_id = gsub('LD-LR', 'MD-LR', farm_id), # replace LD-LR with MD-LR
@@ -698,7 +694,7 @@ cww_insert.df <- cww_econdata %>%
     farm_id = gsub('HD-HR', 'VD-HR', farm_id)
   )
 
-# join the two dataframes
+# joint the two dataframes
 cww_out.df <- rbind(cww_econdata, cww_insert.df)
 
 # re-order so that new rows are inserted every other row
