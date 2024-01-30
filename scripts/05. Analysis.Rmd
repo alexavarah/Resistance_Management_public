@@ -1,0 +1,2459 @@
+---
+title: "Analysis"
+author: "Alexa Varah"
+date: "2024-01-19"
+output: html_document
+---
+
+# 1. Rationale / intro
+This script analyses model output from model runs simulating 'current' conditions (also called the 'original' model runs) and from the 'worst case' model runs.  
+
+## 1.1. Current conditions  
+For *'current' conditions*, models were run as follows:  
+- Weed density estimation simulations were initialised with the initial density distribution for which each strategy was designed (based on observed weed densities in the field in 2014).  
+- ECOMOD output was weighted by the initial density distribution for which each strategy was designed.  
+  
+We use the weighted values for gross profit and yield, and compare outcomes across the three scenarios (BAU, CWW and MIT).  
+Opportunity costs are calculated as follows (productivity costs are calculated in the same way):  
+  
+Opportunity costs~(BAU, current density – MIT, current density)~  *vs*  Opportunity costs~(BAU, very high density – MIT, very high density)~  
+
+We investigate which scenario is better for profits and yield, and whether there is a situation where we should act preemptively. In other words, is it ever better for profits or wheat production to switch preemptively to MIT, or is it better to continue with BAU in the knowledge that weed density will get worse?  
+  
+  
+## 1.2. Worst case conditions  
+In this analysis, under current conditions, we show that it's only worth switching to MIT at low densities and low resistance.  
+**LD-LR** For low density and low resistance it is already financially viable to switch.  
+**LD-HR** For low density and high resistance the opportunity costs are mostly small to negligible, so might it become worth switching under higher densities?  
+**HD-HR** For high density and resistance it's not worth switching to MIT. **Does it ever become worth switching?**  
+  
+This suggests that in LD-HR and HD-HR fields farmers are unlikely to switch to MIT strategies. However, our previous work shows that repeated use of selective herbicides (as found in BAU strategies) drives high resistance and high density. So, in a future where resistance is potentially very high everywhere, does BAU drive up densities more than MIT, such that it eventually becomes worth switching to MIT? We model this by assuming high density and very high resistance as a starting point and seeing what happens to black-grass density under various sequences of BAU and MIT. (N.B. We don't assert that it is a situation that's ever likely to happen: we're just exploring it as a 'worst case' situation).  
+  
+For *'worst case' conditions*, models were therefore run as follows:  
+- Weed density estimation simulations were all initialised with very high density distribution (i.e., we initiliased model runs with very high density distributions for all strategies).  
+- We only used ECOMOD output from models run with very high initial density.  
+  
+The density estimation models don't allow resistance to evolve, but this is a moot point here as we assume resistance has already evolved (so that it's high everywhere) and we run forward from that point. No further evolution of resistance is possible (we have already set it to 'high') and resistance doesn't disappear as there are no fitness costs. We start model runs with a very high density distribution (A 0.1, L 0.1, M 0.2, H 0.3, VH 0.3). This of course leaves space for further grid cells to switch into higher densities. We then simulate what will happen to black-grass densities under these conditions of high resistance and very high initial density distribution when we run the switching sequences outlined below.  
+  
+For the worst case analysis, we investigate gross profit and yield outcomes of switching from BAU to MIT immediately, after one 6-year BAU rotation, or after two 6-year BAU rotations, as follows:  
+- (a) BAU -> BAU -> BAU (never switch to MIT)  
+- (b) BAU -> BAU -> MIT (switch to MIT after two 6-year BAU rotations)  
+- (c) BAU -> MIT -> MIT (switch to MIT after one 6-year BAU rotation)  
+- (d) MIT -> MIT -> MIT (switch to MIT immediately)  
+  
+We investigate whether, at very high black-grass density, it is ever better (for either profits or yield) to be doing MIT strategies. And if so, when?  
+  
+We don't include CWW in the worst case analysis as we show in the analysis using 'current' densities that CWW is nether financially better than BAU nor does it control black-grass populations.
+  
+# 2. Set up
+## 2.1. Load packages
+```{r load-packages, message=FALSE}
+rm(list=ls())
+library(tidyverse) # for data manipulation; includes dplyr, ggplot2 & more
+library(patchwork) # for panel plots
+#R.Version() #"R version 4.3.2 (2023-10-31)"
+```
+
+## 2.2. Load functions
+This counts complete observations
+```{r load-functions}
+nobs <- function(x) length(x[!is.na(x)])
+```
+
+## 2.3. Load data
+```{r load-data}
+# Density data - initialised with current densities
+simden_curr <- readRDS("../output/simden_orig_tidy.rds") %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")), # specify order of levels
+    region = factor(region, levels = c("n", "c", "e")), # specify order of levels
+    soiltype = factor(soiltype, levels = c("h", "m", "l")), # specify order of levels
+    initcondit = paste(region, soiltype, initdenres, sep = "_")
+  )
+
+# Density data - initialised with worst case densities
+simden_worstcase <- readRDS("../output/simden_worstcase_tidy.rds") %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")), # specify order of levels
+    rotn_seq = factor(rotn_seq, levels = c("BBB", "BBM", "BMM", "MMM")), # specify order of levels
+    region = factor(region, levels = c("n", "c", "e")), # specify order of levels
+    soiltype = factor(soiltype, levels = c("h", "m", "l")), # specify order of levels
+    initcondit = paste(region, soiltype, initdenres, sep = "_")
+  )
+
+# Weighted economic values - current densities
+weighted_curr <- readRDS("../output/weighted-gp-yield-oc_orig.rds") %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels=c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("n", "c","e")),
+    soiltype = factor(soiltype, levels = c("h", "m","l")),
+    initcondit = factor(initcondit)
+  )
+
+# Weighted economic values - worst case densities
+weighted_worstcase <- readRDS("../output/weighted-gp-yield-oc_worstcase.rds") %>% 
+  dplyr::mutate(
+    Rob_initDR = factor(Rob_initDR),
+    rotn_seq = factor(rotn_seq),
+    scenario = factor(scenario, levels=c("BAU", "MIT", "CWW")),
+    region = factor(region, levels = c("n", "c","e")),
+    soiltype = factor(soiltype, levels = c("h", "m","l")),
+  )
+
+# Cereal areas
+cereal <- read.csv("../output/cerealarea_by_localauthority_and_denres_3DR_2021.csv", header = TRUE) %>% 
+  dplyr::mutate(initDR = as.factor(initDR),
+                initDR = fct_recode(initDR,
+                                    "LD-LR" = "LDLR",
+                                    "LD-HR" = "LDHR",
+                                    "HD-HR" = "HDHR")
+                ) %>% 
+  mutate(region = recode(region, 
+                         north = "n", # old, new
+                         central = "c", 
+                         east = "e"
+                         )
+         )
+
+# Details of management strategies
+strats <- readRDS("../data/rotation_data.rds")
+```
+
+## 2.4. Data processing
+### 2.4.1. Economic data
+Collapse the economic data back to the three initial density-resistance levels presented to farmers (LD-LR, LD-HR, HD-HR).
+```{r}
+# At current densities
+econ_curr <- weighted_curr %>% 
+  
+  # Collapse initial density and resistance states to original three
+  dplyr::mutate(
+    initDR = forcats::fct_recode(initdenres, # collapse categories
+                                  "LD-LR" = "MD-LR", # new, old
+                                  "LD-HR" = "MD-HR", 
+                                  "HD-HR" = "VD-HR"),
+    initDR = factor(initDR, levels = c("LD-LR", "LD-HR", "HD-HR"))
+                ) %>% 
+  
+  # Calculate mean values across imputations for each year of each strategy
+  group_by(scenario, year, initDR, region, soiltype) %>% 
+  dplyr::mutate(
+    gpmean = mean(wtd_gp),
+    ocmean = mean(wtd_opp_cost),
+    wwmean = mean(ww_yield),
+    pcmean = mean(wtd_prod_cost),
+    cylmean = mean(wtd_cyl),
+    outputmean = mean(wtd_output),
+    potoutmean = mean(potential_output),
+    fuelmean = mean(wtd_fuelcost),
+    labmean = mean(wtd_labcost),
+    opsmean = mean(wtd_opscost)
+    ) %>% 
+  ungroup() %>% 
+  distinct(scenario, year, initDR, region, soiltype, .keep_all = TRUE) %>% 
+  dplyr::select(ID, strategy, scenario, region, soiltype, initDR, initcondit, year, crop, 
+                gpmean:opsmean, fertcost:other) %>% 
+  dplyr::mutate(scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")))
+
+
+# At worst case densities
+econ_wc <- weighted_worstcase %>% 
+  
+  # Collapse initial density and resistance states to original three
+  dplyr::mutate(
+    initDR = forcats::fct_recode(initdenres, # collapse categories
+                                  "LD-LR" = "MD-LR", # new, old
+                                  "LD-HR" = "MD-HR", 
+                                  "HD-HR" = "VD-HR"),
+    initDR = factor(initDR, levels = c("LD-LR", "LD-HR", "HD-HR"))
+                ) %>% 
+  
+  # Calculate mean values across imputations for each year of each strategy
+  group_by(rotn_seq, year, initDR, region, soiltype) %>% 
+  dplyr::mutate(
+    gpmean = mean(wtd_gp),
+    ocmean = mean(wtd_opp_cost),
+    wwmean = mean(ww_yield),
+    pcmean = mean(wtd_prod_cost),
+    outputmean = mean(wtd_output),
+    fuelmean = mean(wtd_fuelcost),
+    labmean = mean(wtd_labcost),
+    opsmean = mean(wtd_opscost)
+    ) %>% 
+  ungroup() %>% 
+  distinct(rotn_seq, year, initDR, region, soiltype, .keep_all = TRUE) %>% 
+  dplyr::select(ID, strategy, rotn_seq, scenario, region, soiltype, initDR, 
+                initcondit, year, rotation, crop, gpmean:opsmean) %>% 
+  dplyr::mutate(
+    scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")),
+    rotn_seq = factor(rotn_seq, levels = c("BBB", "BBM", "BMM", "MMM"))
+    )
+```
+
+### 2.4.2. Density data
+To estimate the black-grass density resulting from the different strategies (crop rotations), we ran 37 imputations per strategy. This produced 37 simulated density distributions at each yearly time step for each strategy. Here, we calculate the mean proportion high and very high density squares in a field by averaging across imputations. We collapse the data back to the three initial density-resistance levels presented to farmers (LD-LR, LD-HR, HD-HR).
+
+In the paper we present the mean proportion of a field with economically-damaging (i.e., high and very high density) black-grass. 
+
+**Rationale for presenting proportion of field with economically-damaging black-grass**
+We calculate mean proportions of the two highest density states per field because they are economically important - they affect wheat yield and thus also gross profit. The lower density states are not economically important as they have zero yield penalty on winter wheat crops (Varah et al., 2020).  
+An alternative would be to use the mean density state across the whole field. We discounted this approach because a mean state of 3 (high), for example, could signify that the whole field had a high density of black-grass; alternatively, it could mean that part of the field had absent (0), low (1) or medium (2) density black-grass and part of the field had very high (4) densities of black-grass. These two situations have different implications for field-scale wheat yield and profit. 
+```{r}
+# Process simulated density data initialised with current densities
+prop_hvh <- simden_curr %>%
+  
+  # Sum the proportions of high and very high density black-grass
+  rowwise() %>% 
+  dplyr::mutate(hvh = sum(c_across(h:v), na.rm = T)) %>%  # new category: h & vh
+  ungroup() %>% 
+  
+  # Collapse initial density and resistance states to original three
+  dplyr::mutate(
+    initDR = forcats::fct_recode(initdenres, # collapse categories
+                                  "LD-LR" = "MD-LR", # new, old
+                                  "LD-HR" = "MD-HR", 
+                                  "HD-HR" = "VD-HR"),
+    initDR = factor(initDR, levels = c("LD-LR", "LD-HR", "HD-HR"))
+                ) %>% 
+  
+  # Calculate mean hvh across imputations for each year of each strategy
+  group_by(scenario, year, initDR, region, soiltype) %>% 
+  dplyr::mutate(
+    hvh_mean = mean(hvh),
+    hvh_sd = sd(hvh)) %>% 
+  ungroup() %>% 
+  distinct(scenario, year, initDR, region, soiltype, .keep_all = TRUE) %>% 
+  dplyr::select(ID, strategy, scenario, region, soiltype, initDR, year, hvh_mean, hvh_sd) %>% 
+  dplyr::arrange(scenario, initDR, region, soiltype)
+
+# Process simulated density data initialised with worst case densities
+prop_hvh_wc <- simden_worstcase %>%
+  
+  # Sum the proportions of high and very high density black-grass
+  rowwise() %>% 
+  dplyr::mutate(hvh = sum(c_across(h:v), na.rm = T)) %>%  # new category: h & vh
+  ungroup() %>% 
+  
+  # Collapse initial density and resistance states to original three
+  dplyr::mutate(
+    initDR = forcats::fct_recode(initdenres, # collapse categories
+                                  "LD-LR" = "MD-LR", # new, old
+                                  "LD-HR" = "MD-HR", 
+                                  "HD-HR" = "VD-HR"),
+    initDR = factor(initDR, levels = c("LD-LR", "LD-HR", "HD-HR"))
+                ) %>% 
+  
+  # Calculate mean hvh across imputations for each year of each strategy
+  group_by(rotn_seq, year, initDR, region, soiltype) %>% 
+  dplyr::mutate(
+    hvh_mean = mean(hvh),
+    hvh_sd = sd(hvh)) %>% 
+  ungroup() %>% 
+  distinct(rotn_seq, year, initDR, region, soiltype, .keep_all = TRUE) %>% 
+  dplyr::select(ID, strategy, rotn_seq, scenario, region, soiltype, initDR, year, hvh_mean, hvh_sd) %>% 
+  dplyr::arrange(rotn_seq, initDR, region, soiltype)
+
+# Clear up
+rm(simden_curr, simden_worstcase)
+```
+
+### 2.4.3. Cereal area data
+```{r}
+# Calculate cereal area of each density state (-> used to scale up values for Table 2).
+cereal_ds <- cereal %>% 
+  dplyr::group_by(initDR) %>% 
+  dplyr::summarise(cereal_area = sum(cereal_area_in_denres_state)) %>% 
+  dplyr::mutate(region="all") %>% 
+  dplyr::relocate(region)
+
+# Calculate cereal area of each region (-> used to scale up values for Table S7).
+cereal_region <- cereal %>% 
+  dplyr::group_by(region) %>% 
+  dplyr::summarise(cereal_area = sum(cereal_area_in_denres_state)) %>% 
+  dplyr::mutate(initDR="all") %>% 
+  dplyr::relocate(region, initDR)
+
+# Calculate cereal area of each density state within each region (-> used to scale up values for Table S7).
+cereal_ds_region <- cereal %>% 
+  dplyr::group_by(region, initDR) %>% 
+  dplyr::summarise(cereal_area = sum(cereal_area_in_denres_state))
+
+#Join data sets.
+cereal_for_scaling <- rbind(cereal_region, cereal_ds, cereal_ds_region) %>% 
+  dplyr::mutate(ID = paste(region, initDR, sep = "_"))
+```
+
+
+### 2.4.4. Management strategies
+Remove medium soils because the strategies for heavy soils are simply repeated for medium soils.
+```{r}
+strats <- strats %>% 
+  dplyr::filter(initdenres %in% c("LD-LR", "LD-HR", "HD-HR") & !soil_type == "medium") %>% 
+  dplyr::mutate(
+    initDR3 = factor(initDR3, levels = c("LD-LR", "LD-HR", "HD-HR")),
+    region = factor(region, levels = c("north", "central", "east")),
+    soil_type = factor(soil_type, levels = c("heavy", "medium", "light"))) %>% 
+  dplyr::arrange(scenario, region, initdenres, soil_type)
+```
+
+# 3. Main Analysis 
+## 3.1. Table 1 - Effect of scenario on weed density, profit and ww yield
+### 3.1.1. Table 1 (a) 
+#### Mean final density
+Mean proportion of field with high and/or very high black-grass density at year 6.
+```{r}
+tbl1_a_yr6 <- prop_hvh %>% 
+  dplyr::filter(year==6) %>% 
+  group_by(scenario) %>% 
+  dplyr::mutate(
+    hvh_yr6 = mean(hvh_mean),
+    hvh_yr6_min = min(hvh_mean),
+    hvh_yr6_max = max(hvh_mean)
+    ) %>% 
+  ungroup() %>% 
+  distinct(scenario, .keep_all = TRUE) %>% 
+  dplyr::select(scenario, hvh_yr6, hvh_yr6_min, hvh_yr6_max) %>% 
+  dplyr::arrange(scenario) %>% 
+  mutate(across(hvh_yr6:hvh_yr6_max, ~round(.x, 2)))
+
+tbl1_a_yr6
+```
+
+#### Mean annual density
+Mean proportion of field with high and/or very high black-grass density annually.
+Calculate mean value for each strategy first, then summarise across scenarios. In this way, the min and max values will show the range across region, soil type and initial den-res, rather than showing year-to-year variation.
+```{r}
+# find rotation mean first
+tbl1_a_ann <- prop_hvh %>% 
+  dplyr::group_by(scenario, region, soiltype, initDR) %>% 
+  dplyr::summarize(
+    mean_hvh = mean(hvh_mean)
+    ) %>% 
+  ungroup() %>%
+  # then find scenario means
+  dplyr::group_by(scenario) %>% 
+  dplyr::summarize(
+    hvh_ann = mean(mean_hvh),
+    hvh_ann_min = min(mean_hvh),
+    hvh_ann_max = max(mean_hvh)
+    ) %>% 
+  mutate(across(hvh_ann:hvh_ann_max, ~round(.x, 2)))
+
+tbl1_a_ann
+```
+
+### 3.1.2. Table 1 (b) and (c)
+Calculate mean annual gross profit for each strategy first, then summarise across scenarios. In this way, the min and max values will show the range across region, soil type and initial den-res, rather than showing year-to-year variation.
+```{r}
+tbl1_b_c <- econ_curr %>% 
+  # find rotation mean first
+  dplyr::group_by(scenario, region, soiltype, initDR) %>% 
+  dplyr::summarize(
+    gp_mean = mean(gpmean, na.rm = TRUE),
+    ww_mean = mean(wwmean, na.rm = TRUE)
+    ) %>% 
+  ungroup() %>%
+  # then find scenario means
+  dplyr::group_by(scenario) %>% 
+  dplyr::summarize(
+    gp = mean(gp_mean, na.rm = TRUE),
+    gp_min = min(gp_mean, na.rm = TRUE),
+    gp_max = max(gp_mean, na.rm = TRUE),
+    ww = mean(ww_mean, na.rm = TRUE),
+    ww_min = min(ww_mean, na.rm = TRUE),
+    ww_max = max(ww_mean, na.rm = TRUE)
+    ) %>% 
+  mutate(across(gp:ww_max, ~round(.x, 2)))
+
+tbl1_b_c
+```
+
+### 3.1.3. Table 1 
+```{r}
+Tbl_1 <- left_join(tbl1_a_yr6, tbl1_a_ann, by="scenario") %>% 
+  left_join(., tbl1_b_c, by="scenario")
+
+# Save
+write.csv(Tbl_1,  '../output/Table_1.csv', row.names = FALSE)
+
+Tbl_1
+```
+
+
+Clear up.
+```{r}
+rm(tbl1_a_ann, tbl1_a_yr6, tbl1_b_c)
+```
+
+## 3.2. Table 2 - Effect of switching on gp, ww yield, opp costs and prod costs
+Table 2 gives values for both current black-grass densities and worst-case black-grass densities, and at per-hectare scale and scaled up to regional level.  
+  
+### 3.2.1. At current densities: Mean annual gross profit and opportunity costs per scenario and initial density-resistance level
+```{r}
+tbl2_c_gp_oc_perha <- weighted_curr %>% 
+  
+  dplyr::filter(!scenario == "CWW") %>% 
+  
+  # Average across imputations 
+  dplyr::group_by(scenario, region, soiltype, initdenres, year) %>% 
+  dplyr::mutate(
+    mean_gp_across_imp = mean(wtd_gp), # wheat yield
+    mean_oc_across_imp = mean(wtd_opp_cost), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(scenario, region, soiltype, initdenres, year, .keep_all = TRUE) %>% 
+  dplyr::select(-c(imp, wtd_gp:wtd_opp_cost)) %>% 
+  
+  # Find annual values
+  dplyr::group_by(scenario, region, soiltype, initdenres) %>% 
+  dplyr::mutate(
+    mean_ann_gp = mean(mean_gp_across_imp), # wheat yield
+    mean_ann_oc = mean(mean_oc_across_imp), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(scenario, region, soiltype, initdenres, .keep_all = TRUE) %>% 
+  
+  # Create new den-res categories
+  dplyr::mutate(
+    initDR = fct_recode(initdenres,
+                        "LD-LR" = "MD-LR", # LD-LR & MD-LR (best case)
+                        "LD-HR" = "MD-HR", # LD-HR & MD-HR (intermediate case) 
+                        "HD-HR" = "VD-HR"  # HD-HR & VD-HR (worst case)
+                        ),
+    initDR = factor(initDR, levels = c("LD-LR","LD-HR","HD-HR")) # specify order of new levels
+    ) %>% 
+  ungroup() %>% 
+  
+  # Average across region and soil type (i.e., find mean annual value for each scenario - initDR combo)
+  dplyr::group_by(scenario, initDR) %>% 
+  dplyr::mutate(
+    
+    # gross profit
+    gp_mean = mean(mean_ann_gp),
+    gp_min = min(mean_ann_gp),
+    gp_max = max(mean_ann_gp),
+    
+    # opportunity costs
+    oc_mean = (mean(mean_ann_oc))*(-1),# multiply by -1 so that negative values indicate that switching is worthwhile
+    oc_min = (min(mean_ann_oc))*(-1),
+    oc_max = (max(mean_ann_oc))*(-1)
+    
+    ) %>%
+  ungroup() %>% 
+  
+  # Remove duplicates
+  dplyr::distinct(scenario, initDR, .keep_all = TRUE) %>% 
+  
+  # Retain just the useful columns
+  dplyr::select(scenario, initDR, gp_mean:oc_max) %>% 
+  
+  # Specify how the data frame is ordered
+  dplyr::arrange(initDR, scenario) %>%
+  mutate(across(gp_mean:oc_max, ~round(.x, 0))) %>% 
+  
+  # Change 'scenario' column name
+  dplyr::rename(scenario_or_rotn_seq = scenario) %>% 
+  dplyr::relocate(oc_max, .before = oc_min) 
+
+tbl2_c_gp_oc_perha
+```
+
+
+### 3.2.2. At current densities: Mean annual wheat yield and productivity costs per scenario and initial density-resistance level
+```{r}
+tbl2_c_ww_pc_perha <- weighted_curr %>%
+  
+  dplyr::filter(!scenario == "CWW") %>% 
+  
+  # Average across imputations 
+  dplyr::group_by(scenario, region, soiltype, initdenres, year) %>% 
+  dplyr::mutate(
+    mean_ww_across_imp = mean(ww_yield), # wheat yield
+    mean_pc_across_imp = mean(wtd_prod_cost), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(scenario, region, soiltype, initdenres, year, .keep_all = TRUE) %>% 
+  dplyr::select(-c(imp, ww_yield, wtd_gp:wtd_opp_cost)) %>% 
+  
+  # Find annual values
+  dplyr::group_by(scenario, region, soiltype, initdenres) %>% 
+  dplyr::mutate(
+    mean_ann_ww = mean(mean_ww_across_imp), # wheat yield
+    mean_ann_pc = mean(mean_pc_across_imp), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(scenario, region, soiltype, initdenres, .keep_all = TRUE) %>% 
+  
+  # Create new den-res categories
+  dplyr::mutate(
+    initDR = fct_recode(initdenres,
+                        "LD-LR" = "MD-LR", # LD-LR & MD-LR (best case)
+                        "LD-HR" = "MD-HR", # LD-HR & MD-HR (intermediate case) 
+                        "HD-HR" = "VD-HR"  # HD-HR & VD-HR (worst case)
+                        ),
+    initDR = factor(initDR, levels = c("LD-LR","LD-HR","HD-HR")) # specify order of new levels
+    ) %>% 
+  dplyr::select(-initdenres) %>% 
+  ungroup() %>% 
+  
+  # Average across region and soil type (i.e., find mean annual value for each scenario - initDR combo)
+  dplyr::group_by(scenario, initDR) %>% 
+  dplyr::mutate(
+    
+    # gross profit
+    ww_mean = mean(mean_ann_ww),
+    ww_min = min(mean_ann_ww),
+    ww_max = max(mean_ann_ww),
+    
+    # opportunity costs
+    pc_mean = (mean(mean_ann_pc))*(-1),# multiply by -1 so that negative values indicate that switching is worthwhile
+    pc_min = (min(mean_ann_pc))*(-1),
+    pc_max = (max(mean_ann_pc))*(-1)
+    
+    ) %>%
+  ungroup() %>% 
+  
+  # Remove duplicates
+  dplyr::distinct(scenario, initDR, .keep_all = TRUE) %>% 
+  
+  # Retain just the useful columns
+  dplyr::select(scenario, initDR, ww_mean:pc_max) %>% 
+  
+  # Specify how the data frame is ordered
+  dplyr::arrange(initDR, scenario) %>%
+  mutate(across(ww_mean:pc_max, ~round(.x, 2))) %>% 
+  
+  # Change 'scenario' column name
+  dplyr::rename(scenario_or_rotn_seq = scenario) %>% 
+  dplyr::relocate(pc_max, .before = pc_min)
+
+tbl2_c_ww_pc_perha 
+```
+
+### 3.2.3. At current densities: Scaled up values
+Add opportunity and productivity costs onto the cereal data and calculate scaled-up costs.
+```{r}
+# add region and ID columns onto data frames of opp and prod costs
+ann_oc_current <- tbl2_c_gp_oc_perha %>% 
+  dplyr::filter(scenario_or_rotn_seq == "MIT") %>% 
+  dplyr::select(-c(gp_mean:gp_max)) %>% 
+  dplyr::mutate(region = "all") %>% 
+  dplyr::relocate(region)
+
+ann_pc_current <- tbl2_c_ww_pc_perha %>% 
+  dplyr::filter(scenario_or_rotn_seq == "MIT") %>% 
+  dplyr::select(-c(ww_mean:ww_max, scenario_or_rotn_seq)) %>% 
+  dplyr::mutate(region = "all") %>% 
+  dplyr::relocate(region)
+
+# Join both onto 'cereal' data frame
+tbl2_c_upscaled <- left_join(cereal_ds, ann_oc_current, by=c("region" ,"initDR")) %>%
+                left_join(., ann_pc_current, by=c("region" ,"initDR")) %>% 
+  # scale up opp costs
+  dplyr::mutate(
+    oc_reg = oc_mean*cereal_area,
+    oc_reg_min = oc_min*cereal_area,
+    oc_reg_max = oc_max*cereal_area,
+    pc_reg = pc_mean*cereal_area,
+    pc_reg_min = pc_min*cereal_area,
+    pc_reg_max = pc_max*cereal_area
+  ) %>% 
+  # Remove columns we no longer need
+  dplyr::select(-c(oc_mean:pc_min)) %>% 
+  # Specify order of factor levels
+  dplyr::mutate(initDR = factor(initDR , # specify order of levels
+                                levels = c("LD-LR", "LD-HR", "HD-HR")
+                                )
+  ) %>% 
+  dplyr::arrange(initDR) %>% 
+  dplyr::mutate(across(pc_reg:pc_reg_max, 
+         # Anonymous function \(x) to round each element to the nearest integer
+         \(x) round(x, 0)
+         )
+  ) %>% 
+  dplyr::relocate(oc_reg_max, .before = oc_reg_min) %>% 
+  dplyr::relocate(pc_reg_max, .before = pc_reg_min) %>% 
+  dplyr::relocate(scenario_or_rotn_seq)
+
+tbl2_c_upscaled
+```
+
+
+### 3.2.4. At worst case densities: Mean gross profit and opportunity costs
+```{r}
+tbl2_wc_gp_oc_perha <- weighted_worstcase %>%
+
+  # Average across imputations 
+  dplyr::group_by(rotn_seq, region, soiltype, initdenres, year) %>% 
+  dplyr::mutate(
+    mean_gp_across_imp = mean(wtd_gp), # wheat yield
+    mean_oc_across_imp = mean(wtd_opp_cost), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(rotn_seq, region, soiltype, initdenres, year, .keep_all = TRUE) %>% 
+  dplyr::select(-c(imp, wtd_gp:wtd_opp_cost)) %>% 
+  
+  # Find annual values
+  dplyr::group_by(rotn_seq, region, soiltype, initdenres) %>% 
+  dplyr::mutate(
+    mean_ann_gp = mean(mean_gp_across_imp), # wheat yield
+    mean_ann_oc = mean(mean_oc_across_imp), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(rotn_seq, region, soiltype, initdenres, .keep_all = TRUE) %>% 
+  
+  # Create new den-res categories
+  dplyr::mutate(
+    initDR = fct_recode(initdenres,
+                        "LD-LR" = "MD-LR", # LD-LR & MD-LR (best case)
+                        "LD-HR" = "MD-HR", # LD-HR & MD-HR (intermediate case) 
+                        "HD-HR" = "VD-HR"  # HD-HR & VD-HR (worst case)
+                        ),
+    initDR = factor(initDR, levels = c("LD-LR","LD-HR","HD-HR")) # specify order of new levels
+    ) %>% 
+  ungroup() %>% 
+  
+  # Average across region and soil type (i.e., find mean annual value for each sequence - initDR combo)
+  dplyr::group_by(rotn_seq, initDR) %>% 
+  dplyr::mutate(
+    
+    # gross profit
+    gp_mean = mean(mean_ann_gp),
+    gp_min = min(mean_ann_gp),
+    gp_max = max(mean_ann_gp),
+    
+    # opportunity costs
+    oc_mean = (mean(mean_ann_oc))*(-1),# multiply by -1 so that negative values indicate that switching is worthwhile
+    oc_min = (min(mean_ann_oc))*(-1),
+    oc_max = (max(mean_ann_oc))*(-1)
+    
+    ) %>%
+  ungroup() %>% 
+  
+  # Remove duplicates
+  dplyr::distinct(rotn_seq, initDR, .keep_all = TRUE) %>% 
+  
+  # Retain just the useful columns
+  dplyr::select(rotn_seq, initDR, gp_mean:oc_max) %>% 
+  
+  # Specify how the data frame is ordered
+  dplyr::arrange(initDR, rotn_seq) %>%
+  mutate(across(gp_mean:oc_max, ~round(.x, 0))) %>% 
+  #dplyr::mutate(across(gp_mean:oc_max, round, 0)) %>% 
+  
+  # Change 'rotn_seq' column name
+  dplyr::rename(scenario_or_rotn_seq = rotn_seq) %>% 
+  dplyr::relocate(oc_max, .before = oc_min)
+
+tbl2_wc_gp_oc_perha 
+```
+
+The min and max values in this table show variation in annual gross profit (and thus opportunity costs) due to region, soil type, and sub-categories of density-resistance categories.
+
+### 3.2.5. At worst case densities: Mean wheat yield and productivity costs
+```{r}
+tbl2_wc_ww_pc_perha <- weighted_worstcase %>%
+  
+  # Average across imputations 
+  dplyr::group_by(rotn_seq, region, soiltype, initdenres, year) %>% 
+  dplyr::mutate(
+    mean_ww_across_imp = mean(ww_yield), # wheat yield
+    mean_pc_across_imp = mean(wtd_prod_cost), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(rotn_seq, region, soiltype, initdenres, year, .keep_all = TRUE) %>% 
+  dplyr::select(-c(imp, ww_yield, wtd_gp:wtd_opp_cost)) %>% 
+  
+  # Find annual values
+  dplyr::group_by(rotn_seq, region, soiltype, initdenres) %>% 
+  dplyr::mutate(
+    mean_ann_ww = mean(mean_ww_across_imp), # wheat yield
+    mean_ann_pc = mean(mean_pc_across_imp), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(rotn_seq, region, soiltype, initdenres, .keep_all = TRUE) %>% 
+  
+  # Create new den-res categories
+  dplyr::mutate(
+    initDR = fct_recode(initdenres,
+                        "LD-LR" = "MD-LR", # LD-LR & MD-LR (best case)
+                        "LD-HR" = "MD-HR", # LD-HR & MD-HR (intermediate case) 
+                        "HD-HR" = "VD-HR"  # HD-HR & VD-HR (worst case)
+                        ),
+    initDR = factor(initDR, levels = c("LD-LR","LD-HR","HD-HR")) # specify order of new levels
+    ) %>% 
+  dplyr::select(-initdenres) %>% 
+  ungroup() %>% 
+  
+  # Average across region and soil type (i.e., find mean annual value for each sequence - initDR combo)
+  dplyr::group_by(rotn_seq, initDR) %>% 
+  dplyr::mutate(
+    
+    # gross profit
+    ww_mean = mean(mean_ann_ww),
+    ww_min = min(mean_ann_ww),
+    ww_max = max(mean_ann_ww),
+    
+    # opportunity costs
+    pc_mean = (mean(mean_ann_pc))*(-1),# multiply by -1 so that negative values indicate that switching is worthwhile
+    pc_min = (min(mean_ann_pc))*(-1),
+    pc_max = (max(mean_ann_pc))*(-1)
+    
+    ) %>%
+  ungroup() %>% 
+  
+  # Remove duplicates
+  dplyr::distinct(rotn_seq, initDR, .keep_all = TRUE) %>% 
+  
+  # Retain just the useful columns
+  dplyr::select(rotn_seq, initDR, ww_mean:pc_max) %>% 
+  
+  # Specify how the data frame is ordered
+  dplyr::arrange(initDR, rotn_seq) %>%
+  mutate(across(ww_mean:pc_max, ~round(.x, 2))) %>% 
+  #dplyr::mutate(across(ww_mean:pc_max, round, 2)) %>%
+  
+  # Change 'rotn_seq' column name
+  dplyr::rename(scenario_or_rotn_seq = rotn_seq) %>% 
+  dplyr::relocate(pc_max, .before = pc_min)
+
+tbl2_wc_ww_pc_perha 
+```
+
+The min and max values in this table show variation in annual wheat yield (and thus productivity costs) due to region, soil type, and sub-categories of density-resistance categories.
+
+### 3.2.6. At worst case densities: Scaled up values
+Add worst case opportunity and productivity costs onto the cereal data and calculate scaled-up costs.
+```{r}
+# select just the opportunity and productivity costs
+ann_oc_worstcase <- tbl2_wc_gp_oc_perha %>% 
+  dplyr::filter(!scenario_or_rotn_seq == "BBB") %>% 
+  dplyr::select(-c(gp_mean:gp_max)) 
+
+ann_pc_worstcase <- tbl2_wc_ww_pc_perha %>% 
+  dplyr::filter(!scenario_or_rotn_seq == "BBB") %>% 
+  dplyr::select(-c(ww_mean:ww_max)) 
+
+# Join both onto 'cereal' data frame
+tbl2_wc_upscaled <- left_join(cereal_ds, ann_oc_worstcase, by="initDR", relationship = 'many-to-many') %>%
+  left_join(., ann_pc_worstcase, by=c("initDR", "scenario_or_rotn_seq")) %>%
+  # scale up opp costs
+  dplyr::mutate(
+    oc_reg = oc_mean*cereal_area,
+    oc_reg_min = oc_min*cereal_area,
+    oc_reg_max = oc_max*cereal_area,
+    pc_reg = pc_mean*cereal_area,
+    pc_reg_min = pc_min*cereal_area,
+    pc_reg_max = pc_max*cereal_area
+  ) %>% 
+  # Remove columns we no longer need
+  dplyr::select(-c(oc_mean:pc_min)) %>% 
+  # Specify order of init den-res levels
+  dplyr::mutate(initDR = factor(initDR , 
+                                levels = c("LD-LR", "LD-HR", "HD-HR")
+                                )
+  ) %>% 
+  dplyr::arrange(initDR) %>% 
+  dplyr::mutate(across(pc_reg:pc_reg_max, 
+         # Anonymous function \(x) to round each element to the nearest integer
+         \(x) round(x, 0)
+         )
+  ) %>% 
+  dplyr::relocate(oc_reg_max, .before = oc_reg_min) %>% 
+  dplyr::relocate(pc_reg_max, .before = pc_reg_min) %>% 
+  dplyr::relocate(scenario_or_rotn_seq) %>% 
+  dplyr::select(-c(region, cereal_area))
+  
+tbl2_wc_upscaled
+```
+
+
+### 3.2.7. Table 2
+
+Join the 'current' and 'worst case' parts of Table 2 and save.
+```{r}
+tbl2_c <- left_join(tbl2_c_gp_oc_perha, tbl2_c_ww_pc_perha, by = c("scenario_or_rotn_seq", "initDR")) %>% 
+  left_join(., tbl2_c_upscaled, by = c("scenario_or_rotn_seq", "initDR")) %>% 
+  dplyr::select(-c(region, cereal_area)) %>% 
+  dplyr::relocate(c(oc_reg:oc_reg_min), .after = oc_min)
+
+
+tbl2_wc <- left_join(tbl2_wc_gp_oc_perha, tbl2_wc_ww_pc_perha, by = c("scenario_or_rotn_seq", "initDR")) %>% 
+  left_join(., tbl2_wc_upscaled, by = c("scenario_or_rotn_seq", "initDR")) %>% 
+  dplyr::relocate(c(oc_reg:oc_reg_min), .after = oc_min) 
+
+
+tbl2 <- rbind(tbl2_c, tbl2_wc) %>% 
+  dplyr::mutate(scenario_or_rotn_seq = factor(scenario_or_rotn_seq, levels=c("BAU", "MIT", "BBB", "BBM", "BMM", "MMM"))) %>% 
+  dplyr::arrange(initDR, scenario_or_rotn_seq) %>% 
+  dplyr::mutate(across(c(gp_mean:oc_reg_min, pc_reg:pc_reg_min), 
+         # Anonymous function \(x) to round each element to the nearest integer
+         \(x) round(x, 0)
+         )
+  ) 
+
+write.csv(tbl2,  '../output/Table_2.csv', row.names = FALSE)
+
+rm(tbl2_c, tbl2_c_gp_oc_perha, tbl2_c_upscaled, tbl2_c_ww_pc_perha, tbl2_wc, tbl2_wc_gp_oc_perha, tbl2_wc_upscaled, tbl2_wc_ww_pc_perha)
+
+tbl2
+```
+
+
+
+
+## 3.3. Figure 3 - line graphs, density and gross profit
+Annual weed density and gross profit per scenario and initial density-resistance category.  
+  
+### 3.3.1. Summarise density data
+Calculate the annual mean proportion of squares with high and very high density black-grass (`hvh`) per scenario and initial density-resistance state.
+```{r}
+hvh_yr_s_idr <- prop_hvh %>% 
+  group_by(scenario, year, initDR) %>% 
+  dplyr::mutate(
+    hvh = mean(hvh_mean),
+    hvh_min = min(hvh_mean),
+    hvh_max = max(hvh_mean)
+    ) %>% 
+  ungroup() %>% 
+  distinct(scenario, year, initDR, .keep_all = TRUE) %>% 
+  dplyr::select(scenario, year, initDR, hvh, hvh_min, hvh_max) %>% 
+  dplyr::mutate(scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")))
+```
+
+### 3.3.2. Plot Fig 3a
+
+Specify panel labels
+```{r panel-labels-line-den}
+initDR.labs <- c("(i) Low density,\n low resistance", "(ii) Low density,\n high resistance", "(iii) High density,\n high resistance") # new
+names(initDR.labs) <- c("LD-LR", "LD-HR", "HD-HR") # original
+```
+
+Specify plot
+```{r plot-line-den-bw}
+fig3a <- ggplot(hvh_yr_s_idr, 
+       aes(x = year, y = hvh, group = scenario, colour = scenario, linetype=scenario)) +
+  facet_wrap(~initDR, labeller = labeller(initDR = initDR.labs)) +
+  geom_ribbon(aes(ymin = hvh_min, ymax = hvh_max, fill = scenario), 
+              alpha = 0.1, # controls transparency
+              linetype = "blank" # gets rid of upper and lower lines
+              ) +
+  geom_line() + 
+  scale_linetype_manual(name = "Scenario", values=c(1,2,3)) + #line types: 1 bold, 2 dashed, 3 dotted
+  scale_fill_manual(
+    name = "Scenario",
+    values = c("black", # BAU
+               "grey40",  # MIT
+               "grey61" # CWW
+               )
+    ) +
+  scale_color_manual(
+    name = "Scenario",
+    values = c("black", # BAU
+               "grey40",  # MIT
+               "grey61" # CWW
+               )
+    ) +
+  theme_classic() +
+  labs(#x = "Year in rotation", 
+       y = "Proportion of field with economically\ndamaging densities of Black-grass") +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    plot.title = element_blank(),
+    axis.title=element_text(size=24),
+    axis.title.x=element_blank(),
+    axis.text.x=element_blank(), #remove x axis labels
+    #axis.text.x=element_text(size=rel(2.2)),
+    axis.text.y=element_text(size=rel(2.2)),
+    legend.title=element_text(size=24),
+    legend.text=element_text(size=24),
+    strip.background = element_rect(color = "white",
+                                    fill = "grey"),# colour of rectangle round region labels
+    strip.text = element_text(size = 24)
+    ) +
+  theme(legend.position="none") 
+
+rm(hvh_yr_s_idr)
+fig3a
+```
+
+
+### 3.3.3. Summarise gross profit data
+Calculate mean gross profit plus min and max values for each scenario, year and initial density and resistance level.
+```{r}
+mean_gp <- econ_curr %>% 
+  group_by(scenario, year, initDR) %>% 
+  dplyr::mutate(
+    gp = mean(gpmean),
+    gp_min = min(gpmean),
+    gp_max = max(gpmean),
+    ) %>% 
+  distinct(scenario, year, initDR, .keep_all = TRUE) %>% 
+  dplyr::select(scenario, year, initDR, gp, gp_min, gp_max) %>% 
+  dplyr::mutate(scenario = factor(scenario, levels = c("BAU", "MIT", "CWW")))
+```
+
+### 3.3.4. Plot Fig 3b
+```{r plot-line-gp-bw}
+fig3b <- ggplot(mean_gp, aes(x = year, y = gp, group = scenario, colour = scenario, linetype=scenario)) +
+  facet_wrap(~initDR, labeller = labeller(initDR = initDR.labs)) +
+  geom_ribbon(aes(ymin = gp_min, ymax = gp_max, fill = scenario), 
+              alpha = 0.15, # controls transparency
+              linetype = "blank" # gets rid of upper and lower lines
+              ) +
+  geom_line() + 
+  scale_linetype_manual(name = "Scenario", values=c(1,2,3)) + #line types: 1 bold, 2 dashed, 3 dotted
+  scale_fill_manual(
+    name = "Scenario",
+    values = c("black", # BAU
+               "grey40",  # MIT
+               "grey61" # CWW
+               )
+    ) +
+  scale_color_manual(
+    name = "Scenario",
+    values = c("black", # BAU
+               "grey40",  # MIT
+               "grey61" # CWW
+               )
+    ) +
+  theme_classic() +
+  labs(x = "Year in rotation", 
+       y = "Annual gross profit (£/ha)") +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    plot.title = element_blank(),
+    axis.title=element_text(size=24),
+    axis.text.x=element_text(size=rel(2.2)),
+    axis.text.y=element_text(size=rel(2.2)),
+    strip.text.x = element_blank(), #remove facet labels
+    legend.position="bottom",
+    legend.title=element_text(size=24),
+    legend.text=element_text(size=24),
+    strip.background = element_rect(color = "white",
+                                    fill = "grey"),# colour of rectangle round region labels
+    strip.text = element_text(size = 24)
+    )
+
+fig3b
+```
+
+### 3.3.5. Plot Fig 3 and save
+Specify panel plot, save.
+```{r}
+fig3 <- (fig3a + fig3b) + 
+  plot_layout(ncol=1) +
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 24, face="bold"))
+
+png("../figures/Figure_3.png",
+    height = 15, width = 20, units = "in", res = 300)
+print(fig3)
+dev.off()
+```
+
+## 3.4. Figure 4 - stacked bar plot, cost components
+### 3.4.1. Summarise data
+Find the rotation mean values for each scenario and initial den-res.
+```{r}
+rotn_means <- econ_curr %>% 
+  # find rotation mean
+  dplyr::group_by(scenario, region, soiltype, initDR) %>% 
+  dplyr::summarise(across(c(gpmean:other),.fns = list( 
+    mean=~mean(.x, na.rm = TRUE), 
+    n=~nobs(.x) # should all be 6
+    ))) %>%
+  rename_with(~str_replace(., 'mean_', '_')) %>%  # strip out the unnecessary 'mean' in column names
+  ungroup() %>% 
+
+  # then find mean across scenario and initdenres
+  dplyr::group_by(scenario, initDR) %>% 
+  dplyr::summarise(across(ends_with("mean"),.fns = list( 
+    mean=~mean(.x, na.rm = TRUE), 
+    min =~min(.x, na.rm = TRUE), 
+    max =~max(.x, na.rm = TRUE), 
+    n=~nobs(.x) 
+    ))) %>%
+  rename_with(~str_replace(., '_mean_', '_')) %>% 
+  ungroup()
+```
+
+Get the data into a different format for plotting.
+```{r}
+df_for_stack <- rotn_means %>% 
+  dplyr::filter(!scenario == "CWW") %>% 
+  droplevels() %>% 
+  dplyr::mutate(xval = paste(scenario, initDR, sep="_")) %>% 
+  dplyr::select(-c('scenario','initDR')) %>% 
+  dplyr::select(xval, herbcost_mean, ops_mean, cyl_mean, other_mean) %>% 
+  rename_with(~str_replace(., '_mean', '')) %>% 
+  pivot_longer(!xval, names_to = "cost", values_to = "amount") %>% 
+  dplyr::mutate(cost = factor(cost, levels=c("herbcost", "cyl", "ops", "other"))) %>% 
+  dplyr::filter(!cost == "cyl") %>% 
+  dplyr::mutate(xval = factor(xval, levels = c("BAU_LD-LR", "BAU_LD-HR", "BAU_HD-HR", "MIT_LD-LR", "MIT_LD-HR", "MIT_HD-HR"))) #specify order of factor levels for plot
+```
+
+### 3.4.2. Print max and min values for error bars
+```{r}
+rotn_means %>% 
+  dplyr::filter(!scenario == "CWW") %>% 
+  dplyr::select(c(scenario, initDR, gp_mean, gp_min, gp_max, output_mean:output_max, potout_mean:potout_max))
+```
+
+
+### 3.4.3. Plot Fig 4 and save
+```{r stacked-plot-bw, echo=TRUE, fig.keep='all'}
+fig4 <- ggplot(df_for_stack, aes(x=xval, y=amount, fill=cost)) +
+  geom_bar(position="stack", stat="identity") +
+  scale_fill_manual(
+    name = "Cost \ncomponent",
+    values = c('grey81', 'grey56', 'grey40'),
+    labels = c('Herbicide', 'Operations', 'Other') # 'Lost yield', 
+    ) +
+
+  # 1. BAU LD-LR
+  
+  ## output
+  geom_point(aes(x = 1, y = 1416.308), cex = 4, show.legend = FALSE) + # point 
+  geom_segment(aes(x = 1, y = 1215.7172, xend = 1, yend = 1613.962)) + # min, max
+  
+  ## potential output (output with no BG)
+  geom_point(aes(x = 1.05, y = 1431.293), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 1.05, y = 1226.775, xend = 1.05, yend = 1619.083)) + # min, max
+  #geom_segment(aes(x = 1.05, y = 1320.006, xend = 1.05, yend = 1542.580)) + # CIs
+  
+  ## gross profit line
+  geom_segment(aes(x = 0.95, y = 1416.308-649.4691, xend = 0.95, yend = 1416.308, linetype = 'dotdash')) + # diff = gp 649.4691
+  
+  # 2. BAU LD-HR
+	
+  ## output
+  geom_point(aes(x = 2, y = 1378.1), cex = 4, show.legend = FALSE) + # point 
+  geom_segment(aes(x = 2, y = 1184.2618, xend = 2, yend = 1590.811)) + # min, max
+  #geom_segment(aes(x = 2, y = 1271.964, xend = 2, yend = 1484.184)) + # CIs
+
+  ## output with no BG
+  geom_point(aes(x = 2.05, y = 1431.293), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 2.05, y = 1226.775, xend = 2.05, yend = 1619.083)) + # min, max
+  #geom_segment(aes(x = 2.05, y = 1320.006, xend = 2.05, yend = 1542.580)) + # CIs
+  
+  ## gross profit line
+  geom_segment(aes(x = 1.95, y = 1378.1-612.0344, xend = 1.95, yend = 1378.1, linetype = 'dashed')) + # diff = 612.0344
+  
+  # 3. BAU HD-HR
+
+  ## output
+  geom_point(aes(x = 3, y = 1349.2), cex = 4, show.legend = FALSE) + # point 
+  geom_segment(aes(x = 3, y = 1156.7115, xend = 3, yend = 1558.674)) + # min, max
+  #geom_segment(aes(x = 3, y = 1244.473, xend = 3, yend = 1453.913)) + # CIs
+
+  ## output with no BG
+  geom_point(aes(x = 3.05, y = 1431.293), cex = 4, shape = 17, show.legend = FALSE) + 
+  geom_segment(aes(x = 3.05, y = 1226.775, xend = 3.05, yend = 1619.083)) + # min, max
+  #geom_segment(aes(x = 3.05, y = 1320.006, xend = 3.05, yend = 1542.580)) + # CIs 
+  	
+  ## gross profit line
+  geom_segment(aes(x = 2.95, y = 1349.2-581.7659, xend = 2.95, yend = 1349.2, linetype = 'dotted')) + scale_linetype_identity() + 
+
+  # 4. MIT LD-LR
+	
+  ## output
+  geom_point(aes(x = 4, y = 1447.7), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
+  geom_segment(aes(x = 4, y = 1237.4226, xend = 4, yend = 1644.501)) + # min, max
+  #geom_segment(aes(x = 4, y = 1349.828, xend = 4, yend = 1545.666)) + # CIs
+
+  ## output with no BG
+  geom_point(aes(x = 4.05, y = 1452.119), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 4.05, y = 1246.485, xend = 4.05, yend = 1647.453)) + # min, max
+  #geom_segment(aes(x = 4.05, y = 1354.349, xend = 4.05, yend = 1549.890)) + # CIs
+  
+  ## gross profit from BAU scenario
+  geom_segment(aes(x = 3.95, y = 1447.7-649.4691, xend = 3.95, yend = 1447.7, linetype = 'dotdash')) + 
+  
+  # 5. MIT LD-HR
+  	
+  ## output
+  geom_point(aes(x = 5, y = 1322.507), cex = 4, show.legend = FALSE) + # point 
+  geom_segment(aes(x = 5, y = 1145.681, xend = 5, yend = 1550.266)) + # min, max
+  #geom_segment(aes(x = 5, y = 1250.360, xend = 5, yend = 1413.200)) + # CIs
+  
+  ## output with no BG
+  geom_point(aes(x = 5.05, y = 1340.811), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 5.05, y = 1161.817, xend = 5.05, yend = 1560.050)) + # min, max
+  #geom_segment(aes(x = 5.05, y = 1259.247, xend = 5.05, yend = 1422.375)) + # CIs
+  
+  ## gross profit from BAU scenario
+  geom_segment(aes(x = 4.95, y = 1331.78-612.0344, xend = 4.95, yend = 1331.78, linetype = 'dashed')) + # diff = 612.0344
+  
+
+  # 6. MIT HD-HR
+  	
+  ## output
+  geom_point(aes(x = 6, y = 1196.057), cex = 4, show.legend = FALSE) + # point #colour = "#020E20", 
+  geom_segment(aes(x = 6, y = 986.334, xend = 6, yend = 1392.248)) + # min, max
+  #geom_segment(aes(x = 6, y = 1108.905, xend = 6, yend = 1272.553)) + # CIs
+  
+  ## output with no BG
+  geom_point(aes(x = 6.05, y = 1218.576), cex = 4, shape = 17, show.legend = FALSE) + # point
+  geom_segment(aes(x = 6.05, y = 1004.978, xend = 6.05, yend = 1433.782)) + # min, max
+  #geom_segment(aes(x = 6.05, y = 1137.202, xend = 6.05, yend = 1299.950)) + # CIs
+  
+  ## gross profit from BAU scenario
+  geom_segment(aes(x = 5.95, y = 1196.057-581.7659, xend = 5.95, yend = 1196.057, linetype = 'dotted')) +
+  
+  labs(x = "\n\nScenario and initial density-resistance state", 
+       y = "Mean annual costs and output (£/ha)") +
+  scale_x_discrete(labels=c('LD-LR', 'LD-HR', 'HD-HR',
+                              'LD-LR', 'LD-HR', 'HD-HR')) +
+  annotate("text", x=2, y=-230, label="BAU", size = 7) +
+  annotate("text", x=5, y=-230, label="MIT", size = 7) +
+  coord_cartesian(ylim=c(0,1600),clip="off") +
+  theme_classic() +
+  theme(axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(2)),#, 
+        axis.text.y=element_text(size=rel(2)),
+        legend.title=element_text(size=22),
+        legend.text=element_text(size=20)
+        ) 
+
+fig4
+```
+
+
+
+```{r}
+png("../figures/Figure_4.png",
+    height = 10, width = 17, units = "in", res = 300)
+print(fig4)
+dev.off()
+```
+
+
+## 3.5. Figure 5 - scatter plot, opportunity and productivity costs
+### 3.5.1. Summarise opportunity costs
+Create summarised data frame of *BAU, current density – MIT, current density* opportunity costs.
+```{r}
+oc_current <- econ_curr %>% 
+  dplyr::filter(scenario=="MIT") %>% 
+  # calculate rotation mean
+  dplyr::group_by(scenario, region, soiltype, initDR) %>% 
+  dplyr::summarise(
+    oc = mean(ocmean, na.rm = TRUE),
+    oc_min = min(ocmean, na.rm = TRUE),
+    oc_max = max(ocmean, na.rm = TRUE)
+    ) %>% 
+  arrange(scenario, region, soiltype, initDR) %>% 
+  dplyr::mutate(situation="Current") %>% 
+  ungroup() %>% 
+  dplyr::select(-scenario)
+```
+
+### 3.5.2. Plot Fig 5a - annual opportunity costs
+Specify the labels for the panels.  
+```{r panel-labels-scatter-worstcase-oc}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("n", "c", "e") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("h", "m", "l") # original
+```
+
+Specify the plot annotations. These will show the **numbers of spring crops and winter wheat crops** in each rotation.
+```{r annotations-scatter-worstcase-oc}
+anno_oc <- data.frame(
+  x = c("HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR"
+        ),
+  y = c(-550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550,
+        -550,-550,-550
+        ),
+  # numbers of spring / ww crops:
+  lab = c("s3,w2", "s3,w2", "s3,w2", # north, HD-HR
+          "s3,w2", "s3,w2", "s3,w2", # central, HD-HR
+          "s4,w2", "s4,w2", "s4,w2", # east, HD-HR
+          
+          "s2,w2", "s2,w2", "s2,w2", # north, LD-HR
+          "s2,w2", "s2,w2", "s2,w2", # central, LD-HR
+          "s1,w3", "s1,w3", "s1,w3", # east, LD-HR
+          
+          "s1,w3", "s1,w3", "s1,w3", # north, LD-LR
+          "s1,w3", "s1,w3", "s1,w3", # central, LD-LR
+          "s0,w4", "s0,w4", "s0,w4"  # east, LD-LR
+          ),
+  region = c("n", "n", "n", 
+             "c", "c", "c",
+             "e", "e", "e",
+             "n", "n", "n", 
+             "c", "c", "c",
+             "e", "e", "e",
+             "n", "n", "n", 
+             "c", "c", "c",
+             "e", "e", "e"
+             ),
+  soiltype = c("h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l"
+               ),
+  situation = c("Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current"
+                )
+           ) %>% 
+  dplyr::mutate(
+    region = factor(region,
+                    levels = c("n", "c", "e")
+                    ),
+    soiltype = factor(soiltype,
+                    levels = c("h", "m", "l")
+                    )
+  )
+```
+
+Specify the plot.
+```{r plot-fig5a}
+fig5a <- ggplot(
+  oc_current, aes(initDR, oc*(-1))) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  geom_hline(aes(yintercept = 0), color="grey") + #, linetype="dashed"
+  labs(x = "Initial density and resistance", 
+       y = "Mean annual opportunity cost, BAU-MIT (£/ha)") +
+  theme(strip.placement = 'outside',
+        panel.background = element_rect(fill = "white", colour = "black"),# white background in main panels
+        strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
+        strip.text.x = element_text(size = 22),
+        strip.text.y = element_text(size = 22),
+        axis.title=element_text(size=24),
+        axis.text.x=element_text(size=rel(2.2)),
+        axis.text.y=element_text(size=rel(2.2))
+        ) +
+  geom_pointrange(aes(ymin = oc_max*(-1), 
+                      ymax = oc_min*(-1)
+                      ), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) + 
+  geom_text(data = anno_oc, aes(x = x,  y = -600, label = lab),
+           colour = "grey",  size=6) +
+  theme(legend.position="none")
+
+fig5a
+```
+
+
+### 3.5.3. Summarise productivity costs
+Create summarised data frame of *BAU, current density – MIT, current density* productivity costs.
+```{r}
+pc_current <- econ_curr %>% 
+  dplyr::filter(scenario=="MIT") %>% 
+  # calculate rotation mean
+  dplyr::group_by(scenario, region, soiltype, initDR) %>% 
+  dplyr::summarise(
+    pc = mean(pcmean, na.rm = TRUE),
+    pc_min = min(pcmean, na.rm = TRUE),
+    pc_max = max(pcmean, na.rm = TRUE)
+    ) %>% 
+  arrange(scenario, region, soiltype, initDR) %>% 
+  dplyr::mutate(situation="Current") %>% 
+  ungroup() %>% 
+  dplyr::select(-scenario)
+```
+
+### 3.5.4. Plot Fig 5b - annual productivity costs
+Panel labels as for Fig5a.  
+
+Specify annotations. These show **numbers of winter wheat crops** in each rotation.
+```{r annotations-scatter-worstcase-pc}
+anno_pc <- data.frame(
+  x = c("HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR"
+        ),
+  y = c(-6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2,
+        -6.2,-6.2,-6.2
+        ),
+  # numbers of winter wheat crops:
+  lab = c("2", "2", "2", # north, HD-HR
+          "2", "2", "2", # central, HD-HR
+          "2", "2", "2", # east, HD-HR
+          
+          "2", "2", "2", # north, LD-HR
+          "2", "2", "2", # central, LD-HR
+          "3", "3", "3", # east, LD-HR
+          
+          "3", "3", "3", # north, LD-LR
+          "3", "3", "3", # central, LD-LR
+          "4", "4", "4"  # east, LD-LR
+          ),
+  region = c("n", "n", "n", 
+             "c", "c", "c",
+             "e", "e", "e",
+             "n", "n", "n", 
+             "c", "c", "c",
+             "e", "e", "e",
+             "n", "n", "n", 
+             "c", "c", "c",
+             "e", "e", "e"
+             ),
+  soiltype = c("h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l"
+               ),
+  situation = c("Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current",
+                "Current", "Current", "Current"
+                )
+           ) %>% 
+  dplyr::mutate(
+    region = factor(region,
+                    levels = c("n", "c", "e")
+                    ),
+    soiltype = factor(soiltype,
+                    levels = c("h", "m", "l")
+                    )
+  )
+```
+
+Specify the plot.
+```{r plot-fig5b}
+fig5b <- ggplot(
+  pc_current, aes(initDR, pc*(-1))) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)) +
+  ylim(-12, 9) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  geom_hline(aes(yintercept = 0), color="grey") + 
+  labs(x = "Initial density and resistance", 
+       y = "Mean annual productivity cost, BAU-MIT (t/ha)") +
+  theme(strip.placement = 'outside',
+        panel.background = element_rect(fill = "white", colour = "black"),# white background in main panels
+        strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
+        strip.text.x = element_text(size = 22),
+        strip.text.y = element_text(size = 22),
+        axis.title=element_text(size=24),
+        axis.text.x=element_text(size=rel(2.2)),
+        axis.text.y=element_text(size=rel(2.2)),
+        #legend.title=element_text(size=24),
+        #legend.text=element_text(size=24),
+        #legend.key = element_blank(),# removes grey background behind symbols in legend
+        ) +
+  geom_pointrange(aes(ymin = pc_max*(-1), ymax = pc_min*(-1)), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) + 
+  geom_text(data = anno_pc, aes(x = x,  y = -10.8, label = lab), colour = "grey",  size=6) 
+
+fig5b
+```
+
+
+### 3.5.5. Plot Fig 5 and save
+Specify panel plot, save.
+```{r}
+fig5 <- (fig5a + fig5b) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 24, face="bold"))
+
+png("../figures/Figure_5.png",
+    height = 10, width = 20, units = "in", res = 300)
+print(fig5)
+dev.off()
+```
+
+## 3.6. Figure 6 - Cumulative opportunity and productivity costs per strategy
+### 3.6.1. Calculate cumulative opportunity and productivity costs
+#### Opportunity costs
+For each strategy (i.e., for each soil type, region and initial den res), find the average cumulative opportunity cost of doing something other than BBB.
+```{r}
+cum_oc <- weighted_worstcase %>%
+  
+  # Find cumulative totals (i.e. sum over 18 years) for each imputation
+  dplyr::group_by(imp, rotn_seq, region, soiltype, initdenres) %>% 
+  dplyr::mutate(
+    cum_tot_gp = sum(wtd_gp),
+    cum_tot_oc = sum(wtd_opp_cost) 
+    ) %>% 
+  dplyr::distinct(imp, rotn_seq, region, soiltype, initdenres, .keep_all = TRUE) %>% 
+  dplyr::select(imp, rotn_seq, scenario, region, soiltype, initdenres, initcondit, cum_tot_gp, cum_tot_oc) %>% 
+  ungroup() %>% 
+  
+  # Calculate mean cumulative gross profit and opportunity costs across imputations, plus max and min values from imputations
+  dplyr::group_by(rotn_seq, region, soiltype, initdenres) %>% 
+  dplyr::mutate(
+    
+    # gross profit
+    cum_tot_gp_across_imp = mean(cum_tot_gp),
+    cum_tot_gp_across_imp_min = min(cum_tot_gp),
+    cum_tot_gp_across_imp_max = max(cum_tot_gp),
+    
+    # opportunity costs
+    cum_tot_oc_across_imp = mean(cum_tot_oc),
+    cum_tot_oc_across_imp_min = min(cum_tot_oc),
+    cum_tot_oc_across_imp_max = max(cum_tot_oc)
+    
+    ) %>% 
+  dplyr::distinct(rotn_seq, region, soiltype, initdenres, .keep_all = TRUE) %>% 
+  dplyr::select(-c(imp, cum_tot_gp)) %>% 
+  ungroup() %>% 
+  
+  # Create new den-res categories
+  dplyr::mutate(
+    initDR = fct_recode(initdenres,
+                        "LD-LR" = "MD-LR", # LD-LR & MD-LR (best case)
+                        "LD-HR" = "MD-HR", # LD-HR & MD-HR (intermediate case) 
+                        "HD-HR" = "VD-HR"  # HD-HR & VD-HR (worst case)
+                        ),
+    initDR = factor(initDR, levels = c("LD-LR","LD-HR","HD-HR")) # specify order of new levels
+    ) %>% 
+  ungroup() %>% 
+  
+  # Calculate mean cumulative total gross profit and opportunity costs across new den-res levels
+  dplyr::group_by(rotn_seq, region, soiltype, initDR) %>% 
+  dplyr::mutate(
+    
+    # gross profit
+    cum_tot_gp_mean = mean(cum_tot_gp_across_imp),
+    cum_tot_gp_min = mean(cum_tot_gp_across_imp_min), # min value across all imputations from LD-LR runs
+    cum_tot_gp_max = mean(cum_tot_gp_across_imp_max), # max value across all imputations from VD-HR runs
+      
+    # opportunity costs
+    cum_tot_oc_mean = mean(cum_tot_oc_across_imp),
+    cum_tot_oc_min = mean(cum_tot_oc_across_imp_min), # min value across all imputations from LD-LR runs
+    cum_tot_oc_max = mean(cum_tot_oc_across_imp_max), # max value across all imputations from VD-HR runs
+    
+    ) %>%
+  ungroup() %>% 
+  
+  # Remove duplicates
+  dplyr::distinct(rotn_seq, region, soiltype, initDR, .keep_all = TRUE) %>% 
+  
+  # Retain just the useful columns
+  dplyr::select(c(rotn_seq, scenario, region, soiltype, initDR,
+                  cum_tot_gp_mean, cum_tot_gp_min, cum_tot_gp_max,
+                  cum_tot_oc_mean, cum_tot_oc_min, cum_tot_oc_max)) %>% 
+  
+  # specify how the data frame is ordered
+  dplyr::arrange(rotn_seq, region, soiltype, initDR) %>% 
+  dplyr::relocate(cum_tot_gp_min, .after = cum_tot_gp_mean) %>% 
+  dplyr::relocate(cum_tot_gp_max, .after = cum_tot_gp_min) %>% 
+  dplyr::relocate(cum_tot_oc_min, .after = cum_tot_oc_mean) %>% 
+  dplyr::relocate(cum_tot_oc_max, .after = cum_tot_oc_min)
+```
+
+#### Productivity costs
+For each strategy (i.e., for each soil type, region and initial den res), find the average cumulative productivity cost of doing something other than BBB.  
+N.B. Only calculate productivity costs for winter wheat crops as we have no way of estimating the impact of weeds on yield of other crops.  
+```{r}
+cum_pc <- weighted_worstcase %>%
+
+  # Find cumulative wheat yield (i.e. sum over 18 years) for each imputation
+  dplyr::group_by(imp, rotn_seq, region, soiltype, initdenres) %>% 
+  dplyr::mutate(
+    cum_tot_ww = sum(ww_yield),
+    cum_tot_pc = sum(wtd_prod_cost) 
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(imp, rotn_seq, region, soiltype, initdenres, .keep_all = TRUE) %>% 
+  dplyr::select(imp, rotn_seq, scenario, region, soiltype, initdenres, initcondit, cum_tot_ww, cum_tot_pc) %>% 
+  
+  # Calculate mean cumulative wheat yield and productivity costs across imputations, plus max and min values from imputations
+  dplyr::group_by(rotn_seq, region, soiltype, initdenres) %>% 
+  dplyr::mutate(
+    
+    # wheat yield
+    cum_tot_ww_across_imp = mean(cum_tot_ww),
+    cum_tot_ww_across_imp_min = min(cum_tot_ww),
+    cum_tot_ww_across_imp_max = max(cum_tot_ww),
+    
+    # productivity costs
+    cum_tot_pc_across_imp = mean(cum_tot_pc),
+    cum_tot_pc_across_imp_min = min(cum_tot_pc),
+    cum_tot_pc_across_imp_max = max(cum_tot_pc)
+    
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(rotn_seq, region, soiltype, initdenres, .keep_all = TRUE) %>% 
+  dplyr::select(-c(imp, cum_tot_ww, cum_tot_pc)) %>% 
+  
+  # Create new den-res categories
+  dplyr::mutate(
+    initDR = fct_recode(initdenres,
+                        "LD-LR" = "MD-LR", # LD-LR & MD-LR (best case)
+                        "LD-HR" = "MD-HR", # LD-HR & MD-HR (intermediate case) 
+                        "HD-HR" = "VD-HR"  # HD-HR & VD-HR (worst case)
+                        ),
+    initDR = factor(initDR, levels = c("LD-LR","LD-HR","HD-HR")) # specify order of new levels
+    ) %>% 
+  ungroup() %>% 
+  
+  # Calculate mean cumulative wheat yield and productivity costs across new den-res levels
+  dplyr::group_by(rotn_seq, region, soiltype, initDR) %>% 
+  dplyr::mutate(
+    
+    # gross profit
+    cum_tot_ww_mean = mean(cum_tot_ww_across_imp),
+    cum_tot_ww_min = mean(cum_tot_ww_across_imp_min), # min value across all imputations from LD-LR runs
+    cum_tot_ww_max = mean(cum_tot_ww_across_imp_max), # max value across all imputations from VD-HR runs
+    
+    # opportunity costs
+    cum_tot_pc_mean = mean(cum_tot_pc_across_imp),
+    cum_tot_pc_min = mean(cum_tot_pc_across_imp_min), # min value across all imputations from LD-LR runs
+    cum_tot_pc_max = mean(cum_tot_pc_across_imp_max)  # max value across all imputations from VD-HR runs
+    
+    ) %>%
+  ungroup() %>% 
+  
+  # Remove duplicates
+  dplyr::distinct(rotn_seq, region, soiltype, initDR, .keep_all = TRUE) %>% 
+  
+  # Retain just the useful columns
+  dplyr::select(-c(initdenres, initcondit, 
+                   cum_tot_ww_across_imp, cum_tot_ww_across_imp_min, cum_tot_ww_across_imp_max,
+                   cum_tot_pc_across_imp, cum_tot_pc_across_imp_min, cum_tot_pc_across_imp_max)
+                ) %>% 
+  
+  # Specify how the data frame is ordered
+  dplyr::arrange(rotn_seq, region, soiltype, initDR) %>% 
+  dplyr::relocate(cum_tot_ww_min, .after = cum_tot_ww_mean) %>% 
+  dplyr::relocate(cum_tot_ww_max, .after = cum_tot_ww_min) %>% 
+  dplyr::relocate(cum_tot_pc_min, .after = cum_tot_pc_mean) %>% 
+  dplyr::relocate(cum_tot_pc_max, .after = cum_tot_pc_min)
+```
+
+### 3.6.2. Specify panel labels
+```{r specify-panel-labels-strategy}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("n", "c", "e") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("h", "m", "l") # original
+```
+
+### 3.6.3. Plot opportunity costs
+```{r scatter-plot-gp-oc-seq}
+fig6a <- ggplot(cum_oc %>% 
+  dplyr::filter(rotn_seq != "BBB"), 
+  aes(initDR, cum_tot_oc_mean*(-1), 
+                    colour = rotn_seq, shape = rotn_seq)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  geom_hline(aes(yintercept = 0), color="grey") + #, linetype="dashed"
+  labs(x = "Target density-resistance state\nfor management strategies", 
+       y = "Cumulative opportunity cost of switching out of BBB (£/ha)") +
+  # specify colours for 'sequence':
+  scale_color_manual(name = "Sequence",
+                     values = c(
+                       "#B1B1B1", # BBM, pewter
+                       "#747474", # BMM, grey
+                       "#0A0708"  # MMM, ebony
+                       )
+                     ) + 
+  scale_shape_manual(name = "Sequence",
+                     values=c(15, 16, 17)) + # BBM 15 square; BMM 16 circle, MMM triangle
+  # Specify sizes, backgrounds etc.
+  theme(strip.placement = 'outside',
+        panel.background = element_rect(fill = "white", colour = "black"),# white background in main panels
+        strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
+        strip.text.x = element_text(size = 18),
+        strip.text.y = element_text(size = 18),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(2.2)), 
+        axis.text.y=element_text(size=rel(2.2))
+        ) +
+  geom_pointrange(aes(
+    ymin = cum_tot_oc_min*(-1), ymax = cum_tot_oc_max*(-1)),
+    position=position_dodge(width=0.3),
+    size = 0.9) +
+  theme(legend.position="none")
+
+fig6a
+```
+
+### 3.6.4. Plot productivity costs
+```{r scatter-plot-gp-pc-seq}
+fig6b <- ggplot(cum_pc %>% dplyr::filter(rotn_seq != "BBB"), 
+                             aes(initDR, cum_tot_pc_mean*(-1), 
+                    colour = rotn_seq, shape = rotn_seq)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)
+  ) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  geom_hline(aes(yintercept = 0), color="grey") + #, linetype="dashed"
+  labs(x = "Target density-resistance state\nfor management strategies", 
+       y = "Cumulative productivity cost of switching out of BBB (t/ha)") +
+  # specify colours for 'sequence':
+  scale_color_manual(name = "Sequence",
+                     values = c(
+                       "#B1B1B1", # BBM, pewter
+                       "#747474", # BMM, grey
+                       "#0A0708"  # MMM, ebony
+                       )
+                     ) + 
+  scale_shape_manual(name = "Sequence",
+                     values=c(15, 16, 17)) + # BBM 15 square; BMM 16 circle, MMM triangle
+  # Specify sizes, backgrounds etc.
+  theme(strip.placement = 'outside',
+        panel.background = element_rect(fill = "white", colour = "black"),# white background in main panels
+        strip.background = element_rect(fill = "white", colour = "black"), # white background in strips
+        strip.text.x = element_text(size = 18),
+        strip.text.y = element_text(size = 18),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=22),
+        axis.text.x=element_text(size=rel(2.2)),
+        axis.text.y=element_text(size=rel(2.2)),
+        legend.title=element_text(size=22),
+        legend.text=element_text(size=22),
+        legend.key = element_blank(),# removes grey background behind symbols in legend
+        ) +
+  geom_pointrange(aes(
+    ymin = cum_tot_pc_min*(-1), ymax = cum_tot_pc_max*(-1)),
+    position=position_dodge(width=0.3),
+    size = 0.9)
+
+fig6b
+```
+
+### 3.6.5. Specify panel plot and save
+```{r}
+fig6 <- (fig6a + fig6b) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 24, face="bold"))
+
+png("../figures/Figure_6.png",
+    height = 10, width = 20, units = "in", res = 300)
+print(fig6)
+dev.off()
+```
+
+This table compares BAU and MIT at current black-grass densities, and BAU with MIT at worst case black grass densities. To do this, extract just the first six years of the BBB and MIT sequences, and work out the annual gross profit and opportunity costs, and annual wheat yield and productivity costs.
+
+# 4. Supplementary Figures and Tables
+## 4.1. Table S5 - Herbicides applied on all crops
+```{r}
+tblS5 <- strats %>% 
+  dplyr::group_by(scenario, initdenres) %>% 
+  dplyr::filter(initdenres %in% c("LD-LR", "LD-HR", "HD-HR")) %>% 
+  dplyr::summarise(
+    n_actives_mean = mean(h_bc_app), # calculate mean number of actives applied
+    n_actives_se = sd(h_bc_app)/sqrt(nobs((h_bc_app))),
+    sel_herb_vol_mean = mean(vol_sel_herb), # calculate mean volume of selective herbicide applied
+    sel_herb_vol_se = sd(vol_sel_herb)/sqrt(nobs((vol_sel_herb))), 
+    sel_herb_vol_max = max(vol_sel_herb, na.rm=TRUE), # calculate max volume of selective herbicide applied
+    gly_vol_mean = mean(vol_gly), # calculate mean volume of glyphosate applied
+    gly_vol_se = sd(vol_gly)/sqrt(nobs((vol_gly))),
+    gly_vol_max = max(vol_gly, na.rm=TRUE),
+    n_autgly_mean = mean(a_gly), # calculate mean number of autumn glyphosate applications
+    n_autgly_se = sd(a_gly)/sqrt(nobs((a_gly))),
+    n_autgly_max = max(a_gly, na.rm=TRUE), # calculate max number of autumn glyphosate applications
+    n_applic_mean = mean(spray_days), # calculate mean number of spraying days (i.e. mean number of applications)
+    n_applic_se = sd(spray_days)/sqrt(nobs((spray_days)))
+    ) %>% 
+  dplyr::mutate(across(where(is.numeric), ~round(.x, 2))) %>% 
+  dplyr::arrange(scenario, initdenres) %>% 
+  dplyr::relocate(c(n_applic_mean, n_applic_se), .after = initdenres)
+
+# Save
+write.csv(tblS5,  '../output/Table_S5.csv', row.names = FALSE)
+
+tblS5
+```
+
+
+## 4.2. Table S6 - Herbicides applied on winter wheat
+```{r}
+tblS6 <- strats %>% 
+  dplyr::group_by(scenario, initdenres) %>% 
+  dplyr::filter(initdenres %in% c("LD-LR", "LD-HR", "HD-HR") & crop == "winter wheat") %>% 
+  dplyr::summarise(
+    n_actives_mean = mean(h_bc_app), # calculate mean number of actives applied
+    n_actives_se = sd(h_bc_app)/sqrt(nobs((h_bc_app))),
+    sel_herb_vol_mean = mean(vol_sel_herb), # calculate mean volume of selective herbicide applied
+    sel_herb_vol_se = sd(vol_sel_herb)/sqrt(nobs((vol_sel_herb))), 
+    sel_herb_vol_max = max(vol_sel_herb, na.rm=TRUE), # calculate max volume of selective herbicide applied
+    gly_vol_mean = mean(vol_gly), # calculate mean volume of glyphosate applied
+    gly_vol_se = sd(vol_gly)/sqrt(nobs((vol_gly))),
+    gly_vol_max = max(vol_gly, na.rm=TRUE),
+    n_autgly_mean = mean(a_gly), # calculate mean number of autumn glyphosate applications
+    n_autgly_se = sd(a_gly)/sqrt(nobs((a_gly))),
+    n_autgly_max = max(a_gly, na.rm=TRUE), # calculate max number of autumn glyphosate applications
+    n_applic_mean = mean(spray_days), # calculate mean number of spraying days (i.e. mean number of applications)
+    n_applic_se = sd(spray_days)/sqrt(nobs((spray_days)))
+    ) %>% 
+  dplyr::mutate(across(where(is.numeric), ~round(.x, 2))) %>% 
+  dplyr::arrange(scenario, initdenres) %>% 
+  dplyr::relocate(c(n_applic_mean, n_applic_se), .after = initdenres)
+
+# Save
+write.csv(tblS6,  '../output/Table_S6.csv', row.names = FALSE)
+
+tblS6
+```
+
+
+
+## 4.3. Table S7 - Per hectare opportunity and productivity costs of switching from BAU to MIT
+Per hectare annual opportunity and productivity costs, by region and initial density-resistance level.  
+  
+### 4.3.1. Opportunity costs
+```{r}
+tblS7_oppcost <- weighted_curr %>% 
+  
+  dplyr::filter(scenario == "MIT") %>% 
+  
+  # Average across imputations 
+  dplyr::group_by(scenario, region, soiltype, initdenres, year) %>% 
+  dplyr::mutate(
+    mean_gp_across_imp = mean(wtd_gp), # wheat yield
+    mean_oc_across_imp = mean(wtd_opp_cost), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(scenario, region, soiltype, initdenres, year, .keep_all = TRUE) %>% 
+  dplyr::select(-c(imp, wtd_gp:wtd_opp_cost)) %>% 
+  
+  # Find annual values
+  dplyr::group_by(scenario, region, soiltype, initdenres) %>% 
+  dplyr::mutate(
+    mean_ann_gp = mean(mean_gp_across_imp), # wheat yield
+    mean_ann_oc = mean(mean_oc_across_imp), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(scenario, region, soiltype, initdenres, .keep_all = TRUE) %>% 
+  
+  # Create new den-res categories
+  dplyr::mutate(
+    initDR = fct_recode(initdenres,
+                        "LD-LR" = "MD-LR", # LD-LR & MD-LR (best case)
+                        "LD-HR" = "MD-HR", # LD-HR & MD-HR (intermediate case) 
+                        "HD-HR" = "VD-HR"  # HD-HR & VD-HR (worst case)
+                        ),
+    initDR = factor(initDR, levels = c("LD-LR","LD-HR","HD-HR")) # specify order of new levels
+    ) %>% 
+  ungroup() %>% 
+  
+  # Average across scenario and soil type (i.e., find mean annual value for each region - initDR combo)
+  dplyr::group_by(region, initDR) %>% 
+  dplyr::mutate(
+    
+    # gross profit
+    gp_mean = mean(mean_ann_gp),
+    gp_min = min(mean_ann_gp), # this will give the min value across scenario, region, soiltype, initdenres
+    gp_max = max(mean_ann_gp), # this will give the max value across scenario, region, soiltype, initdenres
+    
+    # opportunity costs
+    oc_mean = (mean(mean_ann_oc))*(-1),# multiply by -1 so that negative values indicate that switching is worthwhile
+    oc_min = (min(mean_ann_oc))*(-1), # this will give the min value across scenario, region, soiltype, initdenres
+    oc_max = (max(mean_ann_oc))*(-1)  # this will give the max value across scenario, region, soiltype, initdenres
+    
+    ) %>%
+  ungroup() %>% 
+  
+  # Remove duplicates
+  dplyr::distinct(region, initDR, .keep_all = TRUE) %>% 
+  
+  # Retain just the useful columns
+  dplyr::select(region, initDR, oc_mean:oc_max) %>% 
+  
+  # Specify how the data frame is ordered
+  dplyr::arrange(region, initDR) %>%
+  
+  # Round columns 'oc_mean' to 'oc_max'
+  dplyr::mutate(
+  # Applying the transformation using the across() function
+  across(oc_mean:oc_max, 
+         # Anonymous function \(x) to round each element to the nearest integer
+         \(x) round(x, 0)
+         )
+  ) %>% 
+  dplyr::relocate(oc_max, .before = oc_min)
+  
+tblS7_oppcost
+```
+
+### 4.3.2. Productivity costs
+```{r}
+tblS7_prodcost <- weighted_curr %>%
+
+  dplyr::filter(scenario == "MIT") %>% 
+  
+  # Average across imputations 
+  dplyr::group_by(scenario, region, soiltype, initdenres, year) %>% 
+  dplyr::mutate(
+    mean_ww_across_imp = mean(ww_yield), # wheat yield
+    mean_pc_across_imp = mean(wtd_prod_cost), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(scenario, region, soiltype, initdenres, year, .keep_all = TRUE) %>% 
+  dplyr::select(-c(imp, ww_yield, wtd_gp:wtd_opp_cost)) %>% 
+  
+  # Find annual values
+  dplyr::group_by(scenario, region, soiltype, initdenres) %>% 
+  dplyr::mutate(
+    mean_ann_ww = mean(mean_ww_across_imp), # wheat yield
+    mean_ann_pc = mean(mean_pc_across_imp), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(scenario, region, soiltype, initdenres, .keep_all = TRUE) %>% 
+  
+  # Create new den-res categories
+  dplyr::mutate(
+    initDR = fct_recode(initdenres,
+                        "LD-LR" = "MD-LR", # LD-LR & MD-LR (best case)
+                        "LD-HR" = "MD-HR", # LD-HR & MD-HR (intermediate case) 
+                        "HD-HR" = "VD-HR"  # HD-HR & VD-HR (worst case)
+                        ),
+    initDR = factor(initDR, levels = c("LD-LR","LD-HR","HD-HR")) # specify order of new levels
+    ) %>% 
+  dplyr::select(-initdenres) %>% 
+  ungroup() %>% 
+  
+  # Average across scenario and soil type (i.e., find mean annual value for each region - initDR combo)
+  dplyr::group_by(region, initDR) %>% 
+  dplyr::mutate(
+    
+    # gross profit
+    ww_mean = mean(mean_ann_ww),
+    ww_min = min(mean_ann_ww),
+    ww_max = max(mean_ann_ww),
+    
+    # opportunity costs
+    pc_mean = (mean(mean_ann_pc))*(-1),# multiply by -1 so that negative values indicate that switching is worthwhile
+    pc_min = (min(mean_ann_pc))*(-1),
+    pc_max = (max(mean_ann_pc))*(-1)
+    
+    ) %>%
+  ungroup() %>% 
+  
+  # Remove duplicates
+  dplyr::distinct(region, initDR, .keep_all = TRUE) %>% 
+  
+  # Retain just the useful columns
+  dplyr::select(region, initDR, pc_mean:pc_max) %>% 
+  
+  # Specify how the data frame is ordered
+  dplyr::arrange(region, initDR) %>%
+  
+  # Round columns 'gp_mean' to 'oc_max'
+  dplyr::mutate(
+  # Applying the transformation using the across() function
+  across(pc_mean:pc_max, 
+         # Anonymous function \(x) to round each element to 2 decimal places
+         \(x) round(x, 2)
+         )
+  ) %>% 
+  dplyr::relocate(pc_max, .before = pc_min)
+
+tblS7_prodcost 
+```
+
+### 4.3.3. Table S7 
+These data will later be scaled up to the cereal-producing regions in England where we had field sites. This will go into table S8.
+```{r}
+tblS7 <- left_join(tblS7_oppcost, tblS7_prodcost, by=c("region","initDR"))
+
+write.csv(tblS7,  '../output/Table_S7.csv', row.names = FALSE)
+
+tblS7
+```
+
+## 4.4. Table S8 - Regional-scale opportunity and productivity costs of switching from BAU to MIT
+Regional-scale annual opportunity and productivity costs, by region and initial density-resistance level.
+
+### 4.4.1. Opportunity costs
+```{r}
+tblS8_oppcost <- weighted_curr %>% 
+  
+  dplyr::filter(scenario == "MIT") %>% 
+  
+  # Average across imputations 
+  dplyr::group_by(scenario, region, soiltype, initdenres, year) %>% 
+  dplyr::mutate(
+    mean_gp_across_imp = mean(wtd_gp), # wheat yield
+    mean_oc_across_imp = mean(wtd_opp_cost), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(scenario, region, soiltype, initdenres, year, .keep_all = TRUE) %>% 
+  dplyr::select(-c(imp, wtd_gp:wtd_opp_cost)) %>% 
+  
+  # Find annual values
+  dplyr::group_by(scenario, region, soiltype, initdenres) %>% 
+  dplyr::mutate(
+    mean_ann_gp = mean(mean_gp_across_imp), # wheat yield
+    mean_ann_oc = mean(mean_oc_across_imp), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(scenario, region, soiltype, initdenres, .keep_all = TRUE) %>% 
+  
+  # Create new den-res categories
+  dplyr::mutate(
+    initDR = fct_recode(initdenres,
+                        "LD-LR" = "MD-LR", # LD-LR & MD-LR (best case)
+                        "LD-HR" = "MD-HR", # LD-HR & MD-HR (intermediate case) 
+                        "HD-HR" = "VD-HR"  # HD-HR & VD-HR (worst case)
+                        ),
+    initDR = factor(initDR, levels = c("LD-LR","LD-HR","HD-HR")) # specify order of new levels
+    ) %>% 
+  ungroup() %>% 
+  
+  # Average across regions and soil types
+  dplyr::group_by(initDR) %>% 
+  dplyr::mutate(
+    
+    # gross profit
+    gp_mean = mean(mean_ann_gp),
+    gp_min = min(mean_ann_gp), # this will give the min value across scenario, region, soiltype, initdenres
+    gp_max = max(mean_ann_gp), # this will give the max value across scenario, region, soiltype, initdenres
+    
+    # opportunity costs
+    oc_mean = (mean(mean_ann_oc))*(-1),# multiply by -1 so that negative values indicate that switching is worthwhile
+    oc_min = (min(mean_ann_oc))*(-1), # this will give the min value across scenario, region, soiltype, initdenres
+    oc_max = (max(mean_ann_oc))*(-1)  # this will give the max value across scenario, region, soiltype, initdenres
+    
+    ) %>%
+  ungroup() %>% 
+  
+  # Remove duplicates
+  dplyr::distinct(initDR, .keep_all = TRUE) %>% 
+  
+  # Retain just the useful columns
+  dplyr::select(initDR, oc_mean:oc_max) %>% 
+  
+  # Specify how the data frame is ordered
+  dplyr::arrange(initDR) %>%
+  
+  # Round columns 'gp_mean' to 'oc_max'
+  dplyr::mutate(
+  # Applying the transformation using the across() function
+  across(oc_mean:oc_max, 
+         # Anonymous function \(x) to round each element to the nearest integer
+         \(x) round(x, 0)
+         )
+  ) %>% 
+  dplyr::relocate(oc_max, .before = oc_min) %>% 
+  
+  # add region column to enable joining with table S7 data
+  dplyr::mutate(region = "all") %>% 
+  dplyr::relocate(region, .after = initDR) 
+  
+tblS8_oppcost
+```
+
+### 4.4.2. Productivity costs
+```{r}
+tblS8_prodcost <- weighted_curr %>%
+  
+  dplyr::filter(scenario == "MIT") %>% 
+  
+  # Average across imputations 
+  dplyr::group_by(scenario, region, soiltype, initdenres, year) %>% 
+  dplyr::mutate(
+    mean_ww_across_imp = mean(ww_yield), # wheat yield
+    mean_pc_across_imp = mean(wtd_prod_cost), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(scenario, region, soiltype, initdenres, year, .keep_all = TRUE) %>% 
+  dplyr::select(-c(imp, ww_yield, wtd_gp:wtd_opp_cost)) %>% 
+  
+  # Find annual values (i.e., rotation mean)
+  dplyr::group_by(scenario, region, soiltype, initdenres) %>% 
+  dplyr::mutate(
+    mean_ann_ww = mean(mean_ww_across_imp), # wheat yield
+    mean_ann_pc = mean(mean_pc_across_imp), # productivity costs
+    ) %>% 
+  ungroup() %>% 
+  dplyr::distinct(scenario, region, soiltype, initdenres, .keep_all = TRUE) %>% 
+  
+  # Create new den-res categories
+  dplyr::mutate(
+    initDR = fct_recode(initdenres,
+                        "LD-LR" = "MD-LR", # LD-LR & MD-LR (best case)
+                        "LD-HR" = "MD-HR", # LD-HR & MD-HR (intermediate case) 
+                        "HD-HR" = "VD-HR"  # HD-HR & VD-HR (worst case)
+                        ),
+    initDR = factor(initDR, levels = c("LD-LR","LD-HR","HD-HR")) # specify order of new levels
+    ) %>% 
+  dplyr::select(-initdenres) %>% 
+  ungroup() %>% 
+  
+  # Average across regions and soil types
+  dplyr::group_by(initDR) %>% 
+  dplyr::mutate(
+    
+    # gross profit
+    ww_mean = mean(mean_ann_ww),
+    ww_min = min(mean_ann_ww),
+    ww_max = max(mean_ann_ww),
+    
+    # opportunity costs
+    # multiply by -1 so that negative values indicate that switching is worthwhile
+    pc_mean = (mean(mean_ann_pc))*(-1),
+    pc_min = (min(mean_ann_pc))*(-1),
+    pc_max = (max(mean_ann_pc))*(-1)
+    
+    ) %>%
+  ungroup() %>% 
+  
+  # Remove duplicates
+  dplyr::distinct(initDR, .keep_all = TRUE) %>% 
+  
+  # Retain just the useful columns
+  dplyr::select(initDR, pc_mean:pc_max) %>% 
+  
+  # Specify how the data frame is ordered
+  dplyr::arrange(initDR) %>%
+  
+  # Round columns 'gp_mean' to 'oc_max'
+  dplyr::mutate(
+  # Applying the transformation using the across() function
+  across(pc_mean:pc_max, 
+         # Anonymous function \(x) to round each element to 2 decimal places
+         \(x) round(x, 2)
+         )
+  ) %>% 
+  dplyr::relocate(pc_max, .before = pc_min) %>% 
+  
+  # add region column to enable joining with table S7 data
+  dplyr::mutate(region = "all") %>% 
+  dplyr::relocate(region, .after = initDR) 
+
+tblS8_prodcost 
+```
+
+### 4.4.3. Scale up to make Table S8
+These data will later be scaled up to the cereal-producing regions in England where we had field sites. This will go into producing table S8. See the upscaling script.
+```{r}
+# Join opp costs and prod costs
+tblS8_all_perha <- left_join(tblS8_oppcost, tblS8_prodcost, by="initDR") %>% 
+  dplyr::rename(region = region.x) %>% 
+  dplyr::relocate(region) %>% 
+  dplyr::select(!region.y) 
+
+# Scale up all-regions costs
+tblS8_allreg_scaled <- left_join(cereal_ds, tblS8_all_perha, by="initDR") %>%
+  dplyr::select(-region.y) %>% 
+  dplyr::rename(region = region.x) %>% 
+  # Arrange by init den-res levels
+  dplyr::mutate(initDR = factor(initDR , 
+                                levels = c("LD-LR", "LD-HR", "HD-HR")
+                                )
+  ) %>% 
+  dplyr::arrange(initDR) %>% 
+  # Scale up opp costs
+  # N.B. take the opportunity to swap min and max column names (want the most negative value to be listed first)
+  dplyr::mutate(
+    oc_reg = oc_mean*cereal_area,
+    oc_reg_min = oc_max*cereal_area,
+    oc_reg_max = oc_min*cereal_area,
+    pc_reg = pc_mean*cereal_area,
+    pc_reg_min = pc_max*cereal_area,
+    pc_reg_max = pc_min*cereal_area
+  ) %>% 
+  dplyr::select(-c(cereal_area:pc_min))
+
+# Scale up costs for individual regions
+tblS8_indivreg_scaled <- left_join(cereal_ds_region, tblS7, by=c("region","initDR")) %>%
+  # Arrange by region and init den-res levels
+  dplyr::mutate(initDR = factor(initDR , levels = c("LD-LR", "LD-HR", "HD-HR")),
+                region = factor(region, levels = c("n", "c", "e"))
+                ) %>% 
+  dplyr::arrange(region, initDR) %>% 
+  # Scale up opp costs
+  # N.B. take the opportunity to swap min and max column names (want the most negative value to be listed first)
+  dplyr::mutate(
+    oc_reg = oc_mean*cereal_area,
+    oc_reg_min = oc_max*cereal_area,
+    oc_reg_max = oc_min*cereal_area,
+    pc_reg = pc_mean*cereal_area,
+    pc_reg_min = pc_max*cereal_area,
+    pc_reg_max = pc_min*cereal_area
+  ) %>% 
+  dplyr::select(-c(cereal_area:pc_min))
+  
+
+# Join regional-level data to all-regions data
+tblS8 <- rbind(tblS8_allreg_scaled, tblS8_indivreg_scaled) %>% 
+  dplyr::mutate(across(oc_reg:pc_reg_max, 
+         # Anonymous function \(x) to round each element to the nearest integer
+         \(x) round(x, 0)
+         )
+  ) 
+
+# Save
+write.csv(tblS8,  '../output/Table_S8.csv', row.names = FALSE)
+
+tblS8
+```
+
+
+For the first three rows (region = 'all'), min and max value indicate variation across regions, soil types and density-resistance sub-category. For all other rows, min and max values indicate variation across soil types and density-resistance sub-category.    
+For opp and prod costs, a negative value means that MIT wins.  
+
+## 4.5. Figure S3 - Proportion of field with economically damaging final weed density
+Specify facet strip labels.  
+```{r specify-facets-figS3}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("n", "c", "e") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("h", "m", "l") # original
+```
+
+Specify the plot annotations. These will show the **numbers of spring crops** in each rotation.  
+```{r annotations-figS3}
+anno_den <- data.frame(
+  x = c("HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "HD-HR","HD-HR","HD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-HR","LD-HR","LD-HR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR",
+        "LD-LR","LD-LR","LD-LR"
+        ),
+  y = c(-0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1,
+        -0.1,-0.1,-0.1
+        ),
+  # numbers of spring crops:
+  lab = c("3", "3", "3", # north, HD-HR
+          "3", "3", "3", # central, HD-HR
+          "4", "4", "4", # east, HD-HR
+          
+          "2", "2", "2", # north, LD-HR
+          "2", "2", "2", # central, LD-HR
+          "1", "1", "1", # east, LD-HR
+          
+          "1", "1", "1", # north, LD-LR
+          "1", "1", "1", # central, LD-LR
+          "0", "0", "0"  # east, LD-LR
+          ),
+  region = c("n",   "n",   "n", 
+             "c", "c", "c",
+             "e",    "e",    "e",
+             "n",   "n",   "n", 
+             "c", "c", "c",
+             "e",    "e",    "e",
+             "n",   "n",   "n", 
+             "c", "c", "c",
+             "e",    "e",    "e"
+             ),
+  soiltype = c("h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l",
+               "h", "m", "l"
+               ),
+  scenario = c("MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT",
+               "MIT", "MIT", "MIT"
+                )
+           ) %>% 
+  dplyr::mutate(
+    region = factor(region,
+                    levels = c("n", "c", "e")
+                    ),
+    soiltype = factor(soiltype,
+                    levels = c("h", "m", "l")
+                    )
+  )
+```
+
+Specify plot.  
+```{r plot-figS3}
+figS3 <- ggplot(prop_hvh %>% dplyr::filter(year == 6 & !scenario=="CWW"), #Keep only yr 6, remove CWW
+       aes(initDR, hvh_mean, colour = scenario, shape = scenario)) + 
+  facet_grid(region ~ soiltype, labeller = labeller(region = region.labs, 
+                                                    soiltype = soiltype.labs)) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  ylim(-0.15, 1) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Proportion of field with economically- \ndamaging Black-grass density at year 6") +
+  # specify colours and shapes for 'scenario':
+  scale_color_manual(name = "Scenario",
+                     values = c("#00306F", # BAU, madison blue
+                                "#00C2F9")) + # MIT, capri blue
+  scale_shape_manual(name = "Scenario",
+                     values=c(15, 16)) + # BAU 15 = square; MIT 16 = circle
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 18),#, color = "red", face = "bold.italic"
+        strip.text.y = element_text(size = 18),
+        plot.title = element_text(size=22),
+        axis.title=element_text(size=20),
+        axis.text.x=element_text(size=rel(2)),
+        axis.text.y=element_text(size=rel(2)),
+        legend.title=element_text(size=18),
+        legend.text=element_text(size=18)
+  ) +
+  geom_pointrange(aes(ymin = hvh_mean + hvh_sd, 
+                      ymax = hvh_mean + hvh_sd),
+                  size = 0.9
+                  ) + 
+  geom_text(data = anno_den, aes(x = x,  y = y, label = lab),
+           colour = "grey",  size=6) +
+  
+  # add red point showing LD-HR strategies run with initial very high density
+  geom_pointrange(data = prop_hvh_wc %>% 
+                  dplyr::filter(year == 6 & initDR=="LD-HR" & rotn_seq=="MMM") %>% 
+                  dplyr::mutate(
+                    initDR = recode_factor(initDR, "LD-HR" = "HD-HR")),
+                  aes(ymin = hvh_mean + hvh_sd, 
+                      ymax = hvh_mean + hvh_sd),
+                  color = "red",
+                  size = 0.9,
+                  show.legend = FALSE)
+
+figS3
+```
+
+Save plot.
+```{r, eval=FALSE, echo=FALSE}
+png("../figures/Figure_S3.png",
+    height = 10, width = 10, units = "in", res = 300)
+print(figS3)
+dev.off()
+```
+
+## 4.6. Figure S4 - Mean annual gross profit and wheat yield for each strategy
+  
+### 4.6.1. Calculate rotation mean values - current densities  
+Rotation mean aka annual mean. Only need them for BAU and MIT.  
+```{r}
+rotn_means <- econ_curr %>% 
+  dplyr::filter(!scenario == "CWW") %>% 
+  group_by(scenario, region, soiltype, initDR) %>% 
+  dplyr::mutate(
+    # gross profit           
+    gp = mean(gpmean),
+    gp_min = min(gpmean),
+    gp_max = max(gpmean),
+    # opportunity costs
+    oc = mean(ocmean),
+    oc_min = min(ocmean),
+    oc_max = max(ocmean),
+    # wheat yield           
+    ww = mean(wwmean),
+    ww_min = min(wwmean),
+    ww_max = max(wwmean),
+    # productivity costs
+    pc = mean(pcmean),
+    pc_min = min(pcmean),
+    pc_max = max(pcmean)
+    ) %>% 
+  # retain only one row per scenario-year:
+  distinct(scenario, region, soiltype, initDR, .keep_all = TRUE) %>% 
+  dplyr::select(scenario, region, soiltype, initDR, gp:pc_max)
+```
+
+### 4.6.2. Calculate rotation mean values - worst case densities  
+Calculate rotation mean for just the first 6 years of the 18 year MMM and BBB sequences. This is then effectively years 1-6 of 'worst case' MIT and BAU strategies, and so allows comparison to the estimates obtained for MIT and BAU strategies using current weed densities.  
+```{r}
+rotn_means_wc <- econ_wc %>% 
+  dplyr::filter( year %in% c(1:6) & rotn_seq %in% c("MMM", "BBB") ) %>% 
+  group_by(scenario, region, soiltype, initDR) %>% 
+  dplyr::mutate(
+    # gross profit           
+    gp = mean(gpmean),
+    gp_min = min(gpmean),
+    gp_max = max(gpmean),
+    # opportunity costs
+    oc = mean(ocmean),
+    oc_min = min(ocmean),
+    oc_max = max(ocmean),
+    # wheat yield           
+    ww = mean(wwmean),
+    ww_min = min(wwmean),
+    ww_max = max(wwmean),
+    # productivity costs
+    pc = mean(pcmean),
+    pc_min = min(pcmean),
+    pc_max = max(pcmean)
+    ) %>% 
+  # retain only one row per scenario-year:
+  distinct(scenario, region, soiltype, initDR, .keep_all = TRUE) %>% 
+  dplyr::select(scenario, region, soiltype, initDR, gp:pc_max) 
+```
+
+### 4.6.3. Specify Figure S4 and save
+Specify panel labels.    
+```{r specify-panel-labels-scatter-plot}
+region.labs <- c("Northern England", "Central England", "Eastern England") # new
+names(region.labs) <- c("n", "c", "e") # original
+
+soiltype.labs <- c("Heavy soil", "Medium soil", "Light soil") # new
+names(soiltype.labs) <- c("h", "m", "l") # original
+```
+  
+Specify the plots.  
+  
+**Gross profit**  
+```{r figS4}
+figS4a <- ggplot(rotn_means, aes(initDR, gp, colour = scenario, shape = scenario)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Mean annual gross profit (£/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario",
+                     values = c("#00306F", # BAU, madison blue
+                                "#00C2F9", # MIT, capri blue
+                                "#005FCC"  # CWW, royal blue
+                                )
+                     ) + 
+  scale_shape_manual(name = "Scenario",
+                     values=c(15, # BAU, 15 = square
+                              16, # MIT, 16 = circle
+                              17) # CWW, 17 = triangle
+                     ) + 
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 22),
+        strip.text.y = element_text(size = 22),
+        axis.title=element_text(size=24),
+        axis.text.x=element_text(size=rel(2.2)),
+        axis.text.y=element_text(size=rel(2.2))
+        ) +
+  geom_pointrange(aes(ymin = gp_min, ymax = gp_max), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) +
+  theme(legend.position="none") +
+  # add red point showing LD-HR strategies run with initial very high density
+  geom_pointrange(data = rotn_means_wc %>% 
+                  dplyr::filter(initDR=="LD-HR" & scenario=="MIT") %>% 
+                  dplyr::mutate(initDR = recode_factor(initDR, "LD-HR" = "HD-HR")),
+                  aes(ymin = gp_min, ymax = gp_max), color = "red", size = 0.9, show.legend = FALSE)
+
+figS4a
+```
+
+
+**Wheat yield**
+```{r}
+figS4b <- ggplot(rotn_means, aes(initDR, ww, colour = scenario, shape = scenario)) + 
+  facet_grid(region ~ soiltype,
+             labeller = labeller(region = region.labs, 
+                                 soiltype = soiltype.labs)) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  labs(x = "Initial density and resistance of Black-grass population", 
+       y = "Mean annual wheat yield (t/ha)") +
+  # specify colours for 'scenario':
+  scale_color_manual(name = "Scenario",
+                     values = c("#00306F", # BAU, madison blue
+                                "#00C2F9", # MIT, capri blue
+                                "#005FCC"  # CWW, royal blue
+                                )
+                     ) + 
+  scale_shape_manual(name = "Scenario",
+                     values=c(15, # BAU, 15 = square
+                              16, # MIT, 16 = circle
+                              17) # CWW, 17 = triangle
+                     ) + 
+  theme(strip.placement = 'outside',
+        strip.text.x = element_text(size = 22),
+        strip.text.y = element_text(size = 22),
+        axis.title=element_text(size=24),
+        axis.text.x=element_text(size=rel(2.2)),
+        axis.text.y=element_text(size=rel(2.2)),
+        legend.title=element_text(size=24),
+        legend.text=element_text(size=24)
+        ) +
+  geom_pointrange(aes(ymin = ww_min, ymax = ww_max), 
+                  position=position_dodge(width=0.3),
+                  size = 0.9) +
+  # add red point showing LD-HR strategies run with initial very high density
+  geom_pointrange(data = rotn_means_wc %>% 
+                  dplyr::filter(initDR=="LD-HR" & scenario=="MIT") %>% 
+                  dplyr::mutate(initDR = recode_factor(initDR, "LD-HR" = "HD-HR")),
+                  aes(ymin = ww_min, ymax = ww_max), color = "red", size = 0.9, show.legend = FALSE)
+
+figS4b
+```
+
+Specify panel plot, save.
+```{r}
+figS4 <- (figS4a + figS4b) + 
+  plot_annotation(tag_levels = 'a', tag_prefix = '(',  tag_suffix = ')') & 
+  theme(plot.tag = element_text(size = 24, face="bold"))
+
+
+png("../figures/Figure_S4.png",
+    height = 10, width = 20, units = "in", res = 300)
+print(figS4)
+dev.off()
+```
