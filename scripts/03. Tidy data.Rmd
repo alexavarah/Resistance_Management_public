@@ -1,0 +1,940 @@
+---
+title: "Tidy the output from density estimation models and ECOMOD"
+author: "Alexa Varah"
+date: "2024-01-19"
+output: html_document
+---
+
+# 1. Load packages
+```{r load-packages, message=FALSE}
+rm(list=ls())
+library(tidyverse) # for data manipulation; includes dplyr, ggplot2, tidyr, stringr & more
+```
+
+# 2. Load & tidy density data
+Tidy the simulated density data for both the original model runs and for the 'worst case' model runs.  
+In the original density simulations, density estimation models were initialised with 'current' black-grass densities; in other words, they were initialised with the initial density distribution for which each strategy was designed.  
+In the 'worst case' density simulations, density estimation models were initialised with very high density distributions for all strategies.  
+  
+Both data frames need columns for (a) initial density and resistance, (b) soil type, and (c) region, that match those in the economic data.  
+  
+For the 'worst case' scenario, all simulations were run once with initial high density and then again with initial very high density. **Only the very high density simulations are used in this analysis.**  
+The initial density distributions for each state are as follows:   
+* "very high"  A 0.1, L 0.1, M 0.2, H 0.3, VH 0.3  
+* "high"       A 0.2, L 0.2, M 0.2, H 0.2, VH 0.2  
+  
+The 'worst case' simulated density data is an R list, nested by initial density and the sequential strategy:   
+$VD_100 = all strategies at Very high density (we use only this for the worst case analysis)  
+$HD_100 = all strategies at High density (we won't use this in the end as it's not the 'worst' case)  
+  
+elements 1-4 e.g. $VD_100[[1:4]] are then the four sequential strategies, as follows:  
+MIT - MIT - MIT  
+BAU - BAU - BAU  
+BAU - BAU - MIT  
+BAU - MIT - MIT  
+  
+where each rotation is 6 years (making 18 in total).  
+  
+As before, there are 37 iterations of each strategy.  
+  
+## 2.1. Load density data
+```{r load-density-data}
+d1_orig <- readRDS("../data/04012024_simulation_results.rds") # original
+d2_worstcase <- readRDS("../data/2023-12-19_sequential_rotation_results.rds") # worst case
+
+purrr::map(d2_worstcase, tibble::as_tibble, .name_repair = "minimal")
+
+HD_MMM <- as.data.frame(d2_worstcase$HD_100[[1]]) %>% 
+  dplyr::mutate(Robden_seq = "HD_MMM")
+HD_BBB <- as.data.frame(d2_worstcase$HD_100[[2]]) %>% 
+  dplyr::mutate(Robden_seq = "HD_BBB")
+HD_BBM <- as.data.frame(d2_worstcase$HD_100[[3]]) %>% 
+  dplyr::mutate(Robden_seq = "HD_BBM")
+HD_BMM <- as.data.frame(d2_worstcase$HD_100[[4]]) %>% 
+  dplyr::mutate(Robden_seq = "HD_BMM")
+
+VD_MMM <- as.data.frame(d2_worstcase$VD_100[[1]]) %>% 
+  dplyr::mutate(Robden_seq = "VD_MMM")
+VD_BBB <- as.data.frame(d2_worstcase$VD_100[[2]]) %>% 
+  dplyr::mutate(Robden_seq = "VD_BBB")
+VD_BBM <- as.data.frame(d2_worstcase$VD_100[[3]]) %>% 
+  dplyr::mutate(Robden_seq = "VD_BBM")
+VD_BMM <- as.data.frame(d2_worstcase$VD_100[[4]]) %>% 
+  dplyr::mutate(Robden_seq = "VD_BMM")
+
+# Join
+simden_wc <- rbind(HD_MMM, HD_BBB, HD_BBM, HD_BMM, VD_MMM, VD_BBB, VD_BBM, VD_BMM)
+
+# Clean up
+rm(HD_MMM, HD_BBB, HD_BBM, HD_BMM, VD_MMM, VD_BBB, VD_BBM, VD_BMM, d2_worstcase)
+```
+
+## 2.2. Tidy density data  
+For worst case scenario we only want simulations with initial very high density.  
+Need to create columns for initial den-res state, soil type, region, sequence of rotations, and, for the worst case data, which rotation (BAU or MIT) was run in the first 6 years of the 18 year sequence.
+```{r tidy-density-data}
+# Original
+simden_orig <- d1_orig |>  
+            dplyr::rename(year = iter) |> 
+            dplyr::mutate(initdenres = str_extract(strategy , "VD_HR|HD_HR|MD_HR|MD_LR|LD_HR|LD_LR"),
+                          initdenres = stringr::str_replace_all(initdenres, "_","-"),
+                          initdenres = factor(initdenres , # specify order of levels
+                                              levels = c("VD-HR", "HD-HR", "MD-HR", 
+                                                         "MD-LR", "LD-HR", "LD-LR")) , 
+                          soiltype = str_extract(strategy , "heavy|medium|light"),
+                          soiltype = dplyr::recode(soiltype,  # rename levels of 'soiltype'
+                                                   "heavy" = "h", #old, new
+                                                   "medium" = "m", #old, new
+                                                   "light" = "l"), #old, new
+                          soiltype = factor(soiltype, # specify order of levels
+                                          levels = c("h", "m", "l")),
+                          region = str_extract(strategy , "north|central|east"),
+                          region = dplyr::recode(region, # rename levels of 'region'
+                                                 "north" = "n", #old, new
+                                                 "central" = "c", #old, new
+                                                 "east" = "e"), #old, new
+                          region = factor(region, # specify order of levels
+                                          levels = c("n", "c", "e")),
+                          strategy = stringr::str_replace_all(strategy, "FF","MIT"),
+                          scenario = str_extract(strategy , "BAU|CWW|MIT"),
+                          year = as.numeric(year),
+                          # Create new ID on which to later join this data frame with the economic data
+                          ID = paste(scenario, region, soiltype, initdenres, year, sep="_")) |> 
+            ungroup() |>  
+            # Sum the proportions of absent and low density black-grass
+            rowwise() |> 
+            dplyr::mutate(al = sum(c_across(a:l), na.rm = T)) %>% # new category: absent & low
+            ungroup() |>
+            dplyr::relocate(al, .before=m) |>
+            dplyr::select(-c(step)) |>
+            dplyr::relocate(scenario, .after = strategy) |>
+            dplyr::relocate(soiltype, .after = region)
+            
+# Worst case
+simden_worstcase <- filter(simden_wc , str_detect(Robden_seq , "VD")) |> 
+            dplyr::rename(year = iter) |> 
+            dplyr::mutate(Rob_initDR = "VD-HR",
+                          soiltype = str_extract(strategy , "heavy|medium|light"),
+                          soiltype = dplyr::recode(soiltype,  # rename levels of 'soiltype'
+                                                   "heavy" = "h", #old, new
+                                                   "medium" = "m", #old, new
+                                                   "light" = "l"), #old, new
+                          soiltype = factor(soiltype, # specify order of levels
+                                          levels = c("h", "m", "l")),
+                          region = str_extract(strategy , "north|central|east"),
+                          region = dplyr::recode(region, # rename levels of 'region'
+                                                 "north" = "n", #old, new
+                                                 "central" = "c", #old, new
+                                                 "east" = "e"), #old, new
+                          region = factor(region, # specify order of levels
+                                          levels = c("n", "c", "e")),
+                          strategy = stringr::str_replace_all(strategy, "FF","MIT"),
+                          initdenres = str_extract(strategy , "VD_HR|HD_HR|MD_HR|MD_LR|LD_HR|LD_LR"),
+                          initdenres = stringr::str_replace_all(initdenres, "_","-"),
+                          initdenres = factor(initdenres , # specify order of levels
+                                              levels = c("VD-HR", "HD-HR", "MD-HR", 
+                                                         "MD-LR", "LD-HR", "LD-LR")),
+                          rotn_seq = stringr::word(Robden_seq, 2, sep = "_"),
+                          year = as.numeric(year)) |> 
+            ungroup() |>
+            # Create new column specifying which scenario was run at each time step
+            dplyr::mutate(
+              scenario = dplyr::case_when(
+                year %in% 1:6 ~ stringr::str_sub(rotn_seq, 1, 1), # get the 1st letter
+                year %in% 7:12 ~ stringr::str_sub(rotn_seq, 2, 2), # get the 2nd letter
+                year %in% 13:18 ~ stringr::str_sub(rotn_seq, 3, 3), # get the 3rd letter
+                .default = NA),
+              scenario = stringr::str_replace_all(scenario, "M","MIT"),
+              scenario = stringr::str_replace_all(scenario, "B","BAU")
+              ) |> 
+            ungroup() |> 
+            dplyr::arrange(rotn_seq, initdenres, region, soiltype, imp, year) |>
+            dplyr::select(-c(Robden_seq, step)) |>
+            dplyr::relocate(rotn_seq, .after = strategy) |>
+            dplyr::relocate(scenario, .after = rotn_seq) |>
+            dplyr::relocate(initdenres, .after = Rob_initDR) |>
+            dplyr::relocate(soiltype, .after = region) |>
+            # Create new ID on which to later join this data frame with the economic data
+            dplyr::mutate(ID = paste(scenario, region, soiltype, initdenres, year, sep="_")) |> 
+            # Sum the proportions of absent and low density black-grass
+            rowwise() |> 
+            dplyr::mutate(al = sum(c_across(a:l), na.rm = T)) %>% # new category: absent & low
+            ungroup() |>
+            dplyr::relocate(al, .before=m) |>
+            # Change year in the ID column so that max is 6 (needs to match the ID in the economic data)
+            dplyr::mutate(
+              ID = stringr::str_replace_all(ID, "7","1"),
+              ID = stringr::str_replace_all(ID, "8","2"),
+              ID = stringr::str_replace_all(ID, "9","3"),
+              ID = stringr::str_replace_all(ID, "10","4"),
+              ID = stringr::str_replace_all(ID, "11","5"),
+              ID = stringr::str_replace_all(ID, "12","6"),
+              ID = stringr::str_replace_all(ID, "13","1"),
+              ID = stringr::str_replace_all(ID, "14","2"),
+              ID = stringr::str_replace_all(ID, "15","3"),
+              ID = stringr::str_replace_all(ID, "16","4"),
+              ID = stringr::str_replace_all(ID, "17","5"),
+              ID = stringr::str_replace_all(ID, "18","6")
+            ) |> 
+            ungroup()
+
+# Clean up
+rm(d1_orig, simden_wc)
+```
+
+
+# 4. Load & tidy ECOMOD data
+## 4.1. MIT
+```{r load-and-prep-MIT}
+## 1. MIT - Create long-format data frames.
+
+## MIT - Low density model run
+mit_low <- read.csv("../output/mit_ECOMOD_output_L_combined.csv", header=TRUE) %>% 
+  dplyr::select(-X) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' before the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+mit_low <- reshape(mit_low, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "low") # add a column to indicate the model run
+
+
+## MIT - Medium density model run
+
+mit_med <- read.csv("../output/mit_ECOMOD_output_M_combined.csv", header=TRUE) %>% 
+  dplyr::select(-X) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' before the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+mit_med <- reshape(mit_med, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "medium") # add a column to indicate the model run
+
+
+## MIT - High density model run
+
+mit_high <- read.csv("../output/mit_ECOMOD_output_H_combined.csv", header=TRUE) %>% 
+  dplyr::select(-X) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' before the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+mit_high <- reshape(mit_high, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "high") # add a column to indicate the model run
+
+
+## MIT - Very high density model run
+
+mit_vhig <- read.csv("../output/mit_ECOMOD_output_V_combined.csv", header=TRUE) %>% 
+  dplyr::select(-X) %>% # remove extra column added by R when reading in the file
+  rename_with(stringr::str_replace, # add '.' before the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+mit_vhig <- reshape(mit_vhig, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "veryhigh") # add a column to indicate the model run
+
+
+## 2. MIT - Join data frames.
+
+# Need to create initcondit col in the same format as in the sim data.
+# Also need to add a column that is identical in both the economic and simulation data frames, 
+# and which identifies scenario, initial conditions and year.
+
+mit_econdata <- rbind(mit_low, mit_med, mit_high, mit_vhig) %>% 
+  dplyr::mutate(
+    field_name = gsub('\\.', '_', field_name), # replace . with _
+    initdenres = sub('_.*', '', field_name), # extract chrs before first '_'
+    soiltype = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    region = substr(field_name, start = 7, stop = 7), # extract 7th character
+    region = tolower(region),
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "MIT",
+    ID = paste(scenario, initcondit, rotation, sep = "_")
+    )
+
+rm(mit_med, mit_high, mit_vhig)
+```
+
+## 4.2. BAU
+```{r load-and-prep-BAU}
+## 1. BAU - Create long-format data frames.
+
+## BAU - Low density model run
+
+bau_low <- read.csv("../output/bau_ECOMOD_output_L.csv", header=TRUE) %>% 
+  dplyr::select(-Field_no) %>% # remove unnecessary column
+  rename_with(stringr::str_replace, # add '.' before the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+bau_low <- reshape(bau_low, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "low") # add a column to indicate the model run
+
+
+## BAU - Medium density model run
+
+bau_med <- read.csv("../output/bau_ECOMOD_output_M.csv", header=TRUE) %>% 
+  dplyr::select(-Field_no) %>% # remove unnecessary column
+  rename_with(stringr::str_replace, # add '.' before the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+bau_med <- reshape(bau_med, varying=c(2:85), direction="long", 
+                  idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "medium") # add a column to indicate the model run
+
+
+## BAU - High density model run
+
+bau_high <- read.csv("../output/bau_ECOMOD_output_H.csv", header=TRUE) %>% 
+  dplyr::select(-Field_no) %>% # remove unnecessary column
+  rename_with(stringr::str_replace, # add '.' before the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+bau_high <- reshape(bau_high, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "high") # add a column to indicate the model run
+
+
+## BAU - Very high density model run
+
+bau_vhig <- read.csv("../output/bau_ECOMOD_output_V.csv", header=TRUE) %>% 
+  dplyr::select(-Field_no) %>% # remove unnecessary column
+  rename_with(stringr::str_replace, # add '.' before the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+bau_vhig <- reshape(bau_vhig, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "veryhigh") # add a column to indicate the model run
+
+
+## 2. BAU - Join data frames.
+
+# Need to create initcondit col in the same format as in the density data.
+# Also need to add a column that is identical in both the economic and simulation data frames, 
+# and which identifies scenario, initial conditions and year.
+
+bau_econdata <- rbind(bau_low, bau_med, bau_high, bau_vhig) %>% 
+  dplyr::mutate(
+    initdenres = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    soiltype = sapply(strsplit(field_name, "_"), function(x) x[2]), # extract characters between 1st and 2nd underscore ('x[2]' retrieves the second result)
+    soiltype = substr(soiltype, start = 1, stop = 1), # extract 1st character
+    region = sub('_.*', '', field_name), # extract chrs before first '_'
+    region = tolower(region),
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "BAU",
+    ID = paste(scenario, initcondit, rotation, sep = "_")
+  )
+
+# Clear up
+rm(bau_med, bau_high, bau_vhig)
+```
+
+## 4.3. CWW
+```{r  load-and-prep-CWW}
+## 1. CWW - Create long-format data frames.
+
+## CWW - Low density model run
+
+cww_low <- read.csv("../output/cww_ECOMOD_output_L.csv", header=TRUE) %>% 
+  dplyr::select(-Field_no) %>% # remove unnecessary column
+  rename_with(stringr::str_replace, # add '.' before the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+cww_low <- reshape(cww_low, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "low") # add a column to indicate the model run
+
+
+## CWW - Medium density model run
+
+cww_med <- read.csv("../output/cww_ECOMOD_output_M.csv", header=TRUE) %>% 
+  dplyr::select(-Field_no) %>% # remove unnecessary column
+  rename_with(stringr::str_replace, # add '.' before the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+cww_med <- reshape(cww_med, varying=c(2:85), direction="long", 
+                   idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "medium") # add a column to indicate the model run
+
+
+## CWW - High density model run
+
+cww_high <- read.csv("../output/cww_ECOMOD_output_H.csv", header=TRUE) %>% 
+  dplyr::select(-Field_no) %>% # remove unnecessary column
+  rename_with(stringr::str_replace, # add '.' before the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+cww_high <- reshape(cww_high, varying=c(2:85), direction="long", 
+                    idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "high") # add a column to indicate the model run
+
+
+## CWW - Very high density model run
+
+cww_vhig <- read.csv("../output/cww_ECOMOD_output_V.csv", header=TRUE) %>% 
+  dplyr::select(-Field_no) %>% # remove unnecessary column
+  rename_with(stringr::str_replace, # add '.' before the number in 'crop' colnames
+              pattern = "crop", replacement = "crop.", 
+              matches("crop")) %>% 
+  rename(meanrotgrossprof = totalrotgrossprof) %>% 
+  data.frame()
+
+cww_vhig <- reshape(cww_vhig, varying=c(2:85), direction="long", 
+                    idvar = "field_name", sep = ".", timevar = "rotation") %>% 
+  arrange(field_name) %>% 
+  mutate(modelrun = "veryhigh") # add a column to indicate the model run
+
+
+## 2. CWW - Join data frames.
+
+# Need to create initcondit col in the same format as in the density data.
+# Also need to add a column that is identical in both the economic and simulation data frames, 
+# and which identifies scenario, initial conditions and year.
+
+cww_econdata <- rbind(cww_low, cww_med, cww_high, cww_vhig) %>% 
+  dplyr::mutate(
+    initdenres = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    soiltype = sapply(strsplit(field_name, "_"), function(x) x[2]), # extract characters between 1st and 2nd underscore ('x[2]' retrieves the second result)
+    soiltype = substr(soiltype, start = 1, stop = 1), # extract 1st character
+    region = sub('_.*', '', field_name), # extract chrs before first '_'
+    region = tolower(region),
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "CWW",
+    ID = paste(scenario, initcondit, rotation, sep = "_")
+  )
+
+# Clear up
+rm(cww_med, cww_high, cww_vhig)
+```
+
+## 4.4. Join economic scenarios & tidy
+```{r join-three-economic-scenarios}
+econdata <- rbind(mit_econdata, bau_econdata, cww_econdata) %>% 
+  dplyr::select(-field_name)
+
+## Clean up
+rm(mit_econdata)
+rm(bau_econdata)
+rm(cww_econdata)
+```
+
+
+# 5. Join datasets and calculate weighted values (original data)
+When joining, the `econdata` rows will automatically repeat to fill the 37 imputations present in the density data.  
+
+Only winter wheat yield will vary depending on black-grass density; yield of all other crops will be unaffected by the weighting process. I calculate weighted yield, output, fuel cost, labour cost and operations cost. Fuel, labour and operations costs (in ECOMOD, Operation cost = Fuel cost + Labour cost) all involve using work rates in their calculation. Work rate is a function of crop yield and so these variables  will be affected by black-grass density when the crop is wheat. When you do the join, the `econdata` rows will automatically repeat to fill the 37 iterations present in `simdata`.  
+
+Not all variables need to be weighted as they are not all affected by crop yield and will therefore not respond to changes in BG density. Furthermore, even weighted variables won't always show differences between imputations as at low and medium densities, Black-grass doesn't affect yield.  
+  
+Opportunity cost is calculated as BBB-BBM, BBB-BMM, or BBB-MMM. This means a negative value indicates that BBB (i.e. 3 consecutive BAU rotations) had higher gross profit, so the other sequence (BBM, BMM or MMM) makes the farmer less money.
+
+## 5.1. Calculate weighted values and opportunity cost
+Calculate weighted gross profit, all other weighted variables, and opportunity cost.
+```{r calculate-weighted-values-and-oc}
+wtd_orig_pre <- left_join(simden_orig, econdata, by="ID", relationship = "many-to-many") %>% 
+  
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "low" ~ al*grossprof,
+      modelrun == "medium" ~ m*grossprof,
+      modelrun == "high" ~ h*grossprof,
+      modelrun == "veryhigh" ~ v*grossprof
+    ),
+    wtd_fuelcost = case_when(
+      modelrun == "low" ~ al*fuelcost,
+      modelrun == "medium" ~ m*fuelcost,
+      modelrun == "high" ~ h*fuelcost,
+      modelrun == "veryhigh" ~ v*fuelcost
+    ),
+    wtd_labcost = case_when(
+      modelrun == "low" ~ al*labcost,
+      modelrun == "medium" ~ m*labcost,
+      modelrun == "high" ~ h*labcost,
+      modelrun == "veryhigh" ~ v*labcost
+    ),
+    wtd_opscost = case_when(
+      modelrun == "low" ~ al*opcost,
+      modelrun == "medium" ~ m*opcost,
+      modelrun == "high" ~ h*opcost,
+      modelrun == "veryhigh" ~ v*opcost
+    ),
+    wtd_yield = case_when(
+      modelrun == "low" ~ al*yield,
+      modelrun == "medium" ~ m*yield,
+      modelrun == "high" ~ h*yield,
+      modelrun == "veryhigh" ~ v*yield
+    ),
+    wtd_output = case_when(
+      modelrun == "low" ~ al*output,
+      modelrun == "medium" ~ m*output,
+      modelrun == "high" ~ h*output,
+      modelrun == "veryhigh" ~ v*output
+    ),
+    ID = factor(ID)
+  ) %>%
+  
+  # Add weighted variables across model runs (low, med, high & vhigh den) 
+  # to get total gross profit, yield etc (i.e., add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy (ID), and for each imputation of that year-strategy (imp).
+  dplyr::group_by(imp, ID) %>% 
+  dplyr::mutate(
+    wtd_gp = sum(wtd_gp),
+    wtd_fuelcost = sum(wtd_fuelcost),
+    wtd_labcost = sum(wtd_labcost),
+    wtd_opscost = sum(wtd_opscost),
+    wtd_yield = sum(wtd_yield),
+    wtd_output = sum(wtd_output)
+  ) %>% 
+  ungroup() %>% 
+  distinct(imp, year, strategy, .keep_all = T) %>% 
+  dplyr::select(
+    imp, strategy, scenario.x, year, 
+    crop, region.x, soiltype.x, initdenres.x, initcondit, ID,
+    wtd_gp, wtd_fuelcost, wtd_labcost, wtd_opscost, wtd_yield, wtd_output
+  ) %>% 
+  dplyr::rename_with(~ stringr::str_remove(., ".x"), everything()) %>% # remove .x in colnames
+  
+  # Specify formats and order of levels (so later plots are in correct order):
+  dplyr::mutate( 
+    scenario = factor(scenario, levels=c("BAU", "MIT", "CWW")),
+    initdenres = factor(initdenres, levels = c("VD-HR", "HD-HR", "MD-HR",
+                                               "MD-LR", "LD-HR", "LD-LR")),
+    initcondit = factor(initcondit, levels = c(
+      "n_h_VD-HR", "n_m_VD-HR", "n_l_VD-HR", 
+      "c_h_VD-HR", "c_m_VD-HR", "c_l_VD-HR",
+      "e_h_VD-HR", "e_m_VD-HR", "e_l_VD-HR",
+      
+      "n_h_HD-HR", "n_m_HD-HR", "n_l_HD-HR",
+      "c_h_HD-HR", "c_m_HD-HR", "c_l_HD-HR",
+      "e_h_HD-HR", "e_m_HD-HR", "e_l_HD-HR",
+      
+      "n_h_MD-HR", "n_m_MD-HR", "n_l_MD-HR",
+      "c_h_MD-HR", "c_m_MD-HR", "c_l_MD-HR",
+      "e_h_MD-HR", "e_m_MD-HR", "e_l_MD-HR",
+      
+      "n_h_MD-LR", "n_m_MD-LR", "n_l_MD-LR",
+      "c_h_MD-LR", "c_m_MD-LR", "c_l_MD-LR",
+      "e_h_MD-LR", "e_m_MD-LR", "e_l_MD-LR",
+      
+      "n_h_LD-HR", "n_m_LD-HR", "n_l_LD-HR",
+      "c_h_LD-HR", "c_m_LD-HR", "c_l_LD-HR",
+      "e_h_LD-HR", "e_m_LD-HR", "e_l_LD-HR",
+      
+      "n_h_LD-LR", "n_m_LD-LR", "n_l_LD-LR",
+      "c_h_LD-LR", "c_m_LD-LR", "c_l_LD-LR",
+      "e_h_LD-LR", "e_m_LD-LR", "e_l_LD-LR"))
+  ) %>% 
+  ungroup() %>%
+  
+  # Calculate opportunity cost of switching out of BAU
+  group_by(imp, year, initcondit) %>% 
+  dplyr::mutate(wtd_opp_cost = wtd_gp - wtd_gp[scenario == "BAU"]) %>% 
+  ungroup() %>% 
+  arrange(scenario, initcondit, year) %>% 
+  
+  # Calculate productivity cost of switching out of BAU
+  dplyr::mutate(ww_yield = ifelse(stringr::str_detect(crop,'wheat'),wtd_yield,0)) %>% # for any crop that isn't wheat, assign zero yield
+  group_by(imp, year, initcondit) %>% 
+  dplyr::mutate(wtd_prod_cost = ww_yield - ww_yield[scenario == "BAU"]) %>% 
+  ungroup() %>% 
+  arrange(scenario, initdenres, region, soiltype, year) %>% 
+  
+  # Create variable for 'other' costs (to be used in a plot later):
+  dplyr::mutate(other = sundry + fertcost + seedcost) %>% 
+  dplyr::relocate(other, .after = varcost)
+
+# Join other costs (that didn't need to be weighted) back on
+econdata_small <- econdata %>% 
+  dplyr::select(ID, fertcost, seedcost, herbcost, sundry, varcost) %>% 
+  distinct(ID, .keep_all=TRUE)
+
+wtd_orig <- inner_join(econdata_small, wtd_orig_pre,  by = "ID") %>% 
+  dplyr::relocate(
+    imp, ID, scenario, region, soiltype, initdenres, initcondit, year, crop,
+    wtd_gp, wtd_opp_cost, wtd_yield, ww_yield, wtd_prod_cost, wtd_output, wtd_fuelcost, wtd_labcost, wtd_opscost) %>% 
+  arrange(scenario, initdenres, region, soiltype)
+
+# Clean up
+rm(econdata_small, wtd_orig_pre)
+```
+
+## 5.2. Calculate productivity cost
+```{r calculate-weighted-pc}
+wtd_yield_orig <- left_join(simden_orig, econdata, by="ID", relationship = "many-to-many") %>% 
+  # Calculate weighted yield for each row for the affected variables
+  dplyr::mutate(
+    wtd_yield = case_when(
+      modelrun == "low" ~ al*yield,
+      modelrun == "medium" ~ m*yield,
+      modelrun == "high" ~ h*yield,
+      modelrun == "veryhigh" ~ v*yield
+    )) %>%
+  # Add weighted variables across model runs (low, med, high & vhigh den) 
+  # to get total yield (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy (ID), and for each imputation of that year-strategy (imp).
+  # This will only give weighted wheat yield as all other crops aren't responsive to 
+  # weed infestation in ECOMOD.
+  dplyr::group_by(imp, ID) %>% 
+  dplyr::mutate(
+    wtd_yield = sum(wtd_yield)) %>% 
+  ungroup() %>% 
+  dplyr::select(imp, ID, scenario.x, initdenres.x, initcondit,
+                region.x, soiltype.x, year, crop, wtd_yield) %>% 
+  dplyr::distinct(imp, ID, .keep_all = TRUE) %>% # remove duplicates
+  dplyr::rename_all(~stringr::str_replace_all(.,fixed(".x"),"")) %>% # remove .x in colnames
+  # specify formats and order of levels
+  dplyr::mutate( 
+    scenario = factor(scenario, levels=c("BAU", "MIT", "CWW")),
+    region = factor(region, levels=c("n", "c", "e")),
+    soiltype = factor(soiltype, levels=c("h", "m", "l")),
+    year = as.integer(year),
+    initdenres = factor(initdenres, levels = c("VD-HR", "HD-HR", "MD-HR",
+                                               "MD-LR", "LD-HR", "LD-LR")),
+    initcondit = factor(initcondit, levels = c(
+      "n_h_VD-HR", "n_m_VD-HR", "n_l_VD-HR", 
+      "c_h_VD-HR", "c_m_VD-HR", "c_l_VD-HR",
+      "e_h_VD-HR", "e_m_VD-HR", "e_l_VD-HR",
+      
+      "n_h_HD-HR", "n_m_HD-HR", "n_l_HD-HR",
+      "c_h_HD-HR", "c_m_HD-HR", "c_l_HD-HR",
+      "e_h_HD-HR", "e_m_HD-HR", "e_l_HD-HR",
+      
+      "n_h_MD-HR", "n_m_MD-HR", "n_l_MD-HR",
+      "c_h_MD-HR", "c_m_MD-HR", "c_l_MD-HR",
+      "e_h_MD-HR", "e_m_MD-HR", "e_l_MD-HR",
+      
+      "n_h_MD-LR", "n_m_MD-LR", "n_l_MD-LR",
+      "c_h_MD-LR", "c_m_MD-LR", "c_l_MD-LR",
+      "e_h_MD-LR", "e_m_MD-LR", "e_l_MD-LR",
+      
+      "n_h_LD-HR", "n_m_LD-HR", "n_l_LD-HR",
+      "c_h_LD-HR", "c_m_LD-HR", "c_l_LD-HR",
+      "e_h_LD-HR", "e_m_LD-HR", "e_l_LD-HR",
+      
+      "n_h_LD-LR", "n_m_LD-LR", "n_l_LD-LR",
+      "c_h_LD-LR", "c_m_LD-LR", "c_l_LD-LR",
+      "e_h_LD-LR", "e_m_LD-LR", "e_l_LD-LR"))
+  ) %>% 
+  # Calculate productivity cost of switching out of BAU
+  dplyr::mutate(ww_yield = ifelse(stringr::str_detect(crop,'wheat'),wtd_yield,0)) %>% # for any crop that isn't wheat, assign zero yield
+  group_by(imp, initcondit, year) %>% 
+  dplyr::mutate(wtd_prod_cost = ww_yield - ww_yield[scenario == "BAU"]) %>% 
+  ungroup() %>% 
+  arrange(scenario, initdenres, region, soiltype, year)
+```
+
+
+## 5.3. Join weighted opportunity and productivity costs (original)
+```{r join-oc-pc}
+wtd_orig <- left_join(wtd_econ_orig, wtd_yield_orig %>% dplyr::select(imp, ID, ww_yield, wtd_prod_cost), by=c("imp", "ID")) %>% 
+  dplyr::relocate(strategy, .after = ID) %>% 
+  # create variable for 'other' costs (to be used in a plot later):
+  dplyr::mutate(other = sundry + fertcost + seedcost) %>% 
+  dplyr::relocate(other, .after = varcost)
+```
+
+
+## 5.4. Calculate cost due to lost wheat yield (original)
+  
+The yield from low density model runs is essentially the 'potential' output as low black-grass densities don't impact wheat yield.  
+  
+Costs due to lost wheat yield are therefore:  
+potential output (no BG) - output (BG present)  
+```{r calculate-costs-due-to-yield-loss}
+# Process and join low density model runs
+mit_low_tidy <- mit_low %>% 
+  dplyr::mutate(
+    year = rotation,
+    field_name = gsub('\\.', '_', field_name), # replace . with _
+    initdenres = sub('_.*', '', field_name), # extract chrs before first '_'
+    soiltype = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    region = substr(field_name, start = 7, stop = 7), # extract 7th character
+    region = tolower(region),
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "MIT",
+    ID = paste(scenario, initcondit, rotation, sep = "_")
+    ) %>% 
+  dplyr::select(-c(meanrotgrossprof, field_name, rotation))
+
+bau_low_tidy <- bau_low %>% 
+  dplyr::mutate(
+    year = rotation,
+    initdenres = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    soiltype = sapply(strsplit(field_name, "_"), function(x) x[2]), # extract string between 1st and 2nd underscore ('x[2]' pulls out the 2nd split string)
+    soiltype = substr(soiltype, start = 1, stop = 1), # extract 1st character
+    region = sub('_.*', '', field_name), # extract chrs before first '_'
+    region = tolower(region),
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "BAU",
+    ID = paste(scenario, initcondit, rotation, sep = "_")
+  ) %>% 
+  dplyr::select(-c(meanrotgrossprof, field_name, rotation))
+
+cww_low_tidy <- cww_low %>% 
+  dplyr::mutate(
+    year = rotation,
+    initdenres = sub('.*\\_', '', field_name), # extract chrs after last '_'
+    soiltype = sapply(strsplit(field_name, "_"), function(x) x[2]), 
+    soiltype = substr(soiltype, start = 1, stop = 1), # extract 1st character
+    region = sub('_.*', '', field_name), # extract chrs before first '_'
+    region = tolower(region),
+    initcondit = paste(region, soiltype, initdenres, sep = "_"),
+    scenario = "CWW",
+    ID = paste(scenario, initcondit, rotation, sep = "_")
+  ) %>% 
+  dplyr::select(-c(meanrotgrossprof, field_name, rotation))
+
+# Join all three
+econdata_low <- rbind(mit_low_tidy, bau_low_tidy, cww_low_tidy) 
+
+# Rename output column
+econdata_low <- econdata_low %>% dplyr::rename(potential_output = output)
+
+# Calculate cost due to lost yield
+# Join output column from econdata_low_tidy onto weighted_orig, then do the subtraction.
+wtd_orig <- inner_join(wtd_orig, econdata_low %>% dplyr::select(ID, potential_output), by = "ID") %>%
+  dplyr::mutate(
+    wtd_cyl = potential_output - wtd_output,
+    wtd_cyl = round(wtd_cyl, digits = 2)
+    )
+
+rm(econdata_low, wtd_econ_orig, wtd_yield_orig,
+   bau_low, bau_low_tidy, cww_low, cww_low_tidy, mit_low, mit_low_tidy)
+```
+
+# 6. Join datasets and calculate weighted values (worst case data)
+## 6.1. Calculate weighted gross profit and opportunity cost (worst case)
+Calculate weighted gross profit, all other weighted variables, and opportunity cost.
+```{r calculate-weighted-variables-worstcase}
+wtd_econ_worstcase <- left_join(simden_worstcase, econdata, by="ID", relationship = "many-to-many") %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_gp = case_when(
+      modelrun == "low" ~ al*grossprof,
+      modelrun == "medium" ~ m*grossprof,
+      modelrun == "high" ~ h*grossprof,
+      modelrun == "veryhigh" ~ v*grossprof
+    ),
+    wtd_fuelcost = case_when(
+      modelrun == "low" ~ al*fuelcost,
+      modelrun == "medium" ~ m*fuelcost,
+      modelrun == "high" ~ h*fuelcost,
+      modelrun == "veryhigh" ~ v*fuelcost
+    ),
+    wtd_labcost = case_when(
+      modelrun == "low" ~ al*labcost,
+      modelrun == "medium" ~ m*labcost,
+      modelrun == "high" ~ h*labcost,
+      modelrun == "veryhigh" ~ v*labcost
+    ),
+    wtd_opscost = case_when(
+      modelrun == "low" ~ al*opcost,
+      modelrun == "medium" ~ m*opcost,
+      modelrun == "high" ~ h*opcost,
+      modelrun == "veryhigh" ~ v*opcost
+    ),
+    wtd_yield = case_when(
+      modelrun == "low" ~ al*yield,
+      modelrun == "medium" ~ m*yield,
+      modelrun == "high" ~ h*yield,
+      modelrun == "veryhigh" ~ v*yield
+    ),
+    wtd_output = case_when(
+      modelrun == "low" ~ al*output,
+      modelrun == "medium" ~ m*output,
+      modelrun == "high" ~ h*output,
+      modelrun == "veryhigh" ~ v*output
+    ),
+    rotn_seq = factor(rotn_seq),
+    ID = factor(ID)
+  ) %>%
+  # Add weighted variables across model runs (low, med, high & vhigh den) 
+  # to get total gross profit, yield etc (i.e., add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy (ID) of each sequence, and for each imputation of those (imp).
+  dplyr::group_by(imp, year, rotn_seq, initcondit) %>% 
+  dplyr::mutate(
+    wtd_gp = sum(wtd_gp),
+    wtd_fuelcost = sum(wtd_fuelcost),
+    wtd_labcost = sum(wtd_labcost),
+    wtd_opscost = sum(wtd_opscost),
+    wtd_yield = sum(wtd_yield),
+    wtd_output = sum(wtd_output)
+  ) %>% 
+  ungroup() %>% 
+  distinct(imp, year, rotn_seq, initcondit, .keep_all = T) %>% 
+  dplyr::select(
+    imp, strategy, rotn_seq, Rob_initDR, scenario.x, year, rotation, 
+    crop, region.x, soiltype.x, initdenres.x, initcondit, ID,
+    wtd_gp, wtd_fuelcost, wtd_labcost, wtd_opscost, wtd_yield, wtd_output
+  ) %>% 
+  dplyr::rename_with(~ stringr::str_remove(., ".x"), everything()) %>% # remove .x in colnames
+  dplyr::mutate(
+    # specify order of levels so later plots are in correct order:
+    initcondit = factor(initcondit, levels = c(
+      "n_h_VD-HR", "n_m_VD-HR", "n_l_VD-HR", 
+      "c_h_VD-HR", "c_m_VD-HR", "c_l_VD-HR",
+      "e_h_VD-HR", "e_m_VD-HR", "e_l_VD-HR",
+      
+      "n_h_HD-HR", "n_m_HD-HR", "n_l_HD-HR",
+      "c_h_HD-HR", "c_m_HD-HR", "c_l_HD-HR",
+      "e_h_HD-HR", "e_m_HD-HR", "e_l_HD-HR",
+      
+      "n_h_MD-HR", "n_m_MD-HR", "n_l_MD-HR",
+      "c_h_MD-HR", "c_m_MD-HR", "c_l_MD-HR",
+      "e_h_MD-HR", "e_m_MD-HR", "e_l_MD-HR",
+      
+      "n_h_MD-LR", "n_m_MD-LR", "n_l_MD-LR",
+      "c_h_MD-LR", "c_m_MD-LR", "c_l_MD-LR",
+      "e_h_MD-LR", "e_m_MD-LR", "e_l_MD-LR",
+      
+      "n_h_LD-HR", "n_m_LD-HR", "n_l_LD-HR",
+      "c_h_LD-HR", "c_m_LD-HR", "c_l_LD-HR",
+      "e_h_LD-HR", "e_m_LD-HR", "e_l_LD-HR",
+      
+      "n_h_LD-LR", "n_m_LD-LR", "n_l_LD-LR",
+      "c_h_LD-LR", "c_m_LD-LR", "c_l_LD-LR",
+      "e_h_LD-LR", "e_m_LD-LR", "e_l_LD-LR")),
+    soiltype = factor(soiltype, levels=c("h", "m", "l")),
+    region = factor(region, levels=c("n", "c", "e"))
+  ) %>% 
+  ungroup() %>% 
+  # calculate opportunity cost of switching out of BAU
+  group_by(imp, year, Rob_initDR, initcondit) %>% 
+  dplyr::mutate(wtd_opp_cost = wtd_gp - wtd_gp[rotn_seq == "BBB"]) %>% 
+  ungroup() 
+```
+
+## 6.2. Calculate weighted wheat yield and productivity cost (worst case)
+```{r calculate-weighted-pc}
+wtd_yield_worstcase <- left_join(simden_worstcase, econdata, by="ID", relationship = "many-to-many") %>% 
+  # Calculate weighted gross profit for each row for the affected variables
+  dplyr::mutate(
+    wtd_yield = case_when(
+      modelrun == "low" ~ al*yield,
+      modelrun == "medium" ~ m*yield,
+      modelrun == "high" ~ h*yield,
+      modelrun == "veryhigh" ~ v*yield
+    )) %>%
+  # Add weighted variables across model runs (low, med, high & vhigh den) 
+  # to get total yield (i.e. add the contributions from the 
+  # different densities in different parts of the field) for each year of each 
+  # strategy (ID), and for each imputation of that year-strategy (imp).
+  # This will only give weighted wheat yield as all other crops aren't responsive to 
+  # weed infestation in ECOMOD.
+  dplyr::group_by(imp, year, rotn_seq, initcondit) %>%
+  dplyr::mutate(
+    wtd_yield = sum(wtd_yield)) %>% 
+  ungroup() %>% 
+  dplyr::select(imp, strategy, rotn_seq, Rob_initDR, scenario.x, year, rotation, 
+    region.x, soiltype.x, initdenres.x, initcondit, ID, crop, wtd_yield) %>% 
+  dplyr::distinct(imp, year, rotn_seq, initcondit, .keep_all = TRUE) %>% # remove duplicates 
+  dplyr::rename_all(~stringr::str_replace_all(.,fixed(".x"),"")) %>% # remove .x in colnames
+  # specify formats and order of levels:
+  dplyr::mutate( 
+    scenario = factor(scenario, levels=c("BAU", "MIT", "CWW")),
+    rotn_seq = factor(rotn_seq, levels=c("BBB", "BBM", "BMM", "MMM")),
+    region = factor(region, levels=c("n", "c", "e")),
+    soiltype = factor(soiltype, levels=c("h", "m", "l")),
+    year = as.integer(year),
+    initdenres = factor(initdenres, levels = c("VD-HR", "HD-HR", "MD-HR",
+                                               "MD-LR", "LD-HR", "LD-LR")),
+    initcondit = factor(initcondit, levels = c(
+      "n_h_VD-HR", "n_m_VD-HR", "n_l_VD-HR", 
+      "c_h_VD-HR", "c_m_VD-HR", "c_l_VD-HR",
+      "e_h_VD-HR", "e_m_VD-HR", "e_l_VD-HR",
+      
+      "n_h_HD-HR", "n_m_HD-HR", "n_l_HD-HR",
+      "c_h_HD-HR", "c_m_HD-HR", "c_l_HD-HR",
+      "e_h_HD-HR", "e_m_HD-HR", "e_l_HD-HR",
+      
+      "n_h_MD-HR", "n_m_MD-HR", "n_l_MD-HR",
+      "c_h_MD-HR", "c_m_MD-HR", "c_l_MD-HR",
+      "e_h_MD-HR", "e_m_MD-HR", "e_l_MD-HR",
+      
+      "n_h_MD-LR", "n_m_MD-LR", "n_l_MD-LR",
+      "c_h_MD-LR", "c_m_MD-LR", "c_l_MD-LR",
+      "e_h_MD-LR", "e_m_MD-LR", "e_l_MD-LR",
+      
+      "n_h_LD-HR", "n_m_LD-HR", "n_l_LD-HR",
+      "c_h_LD-HR", "c_m_LD-HR", "c_l_LD-HR",
+      "e_h_LD-HR", "e_m_LD-HR", "e_l_LD-HR",
+      
+      "n_h_LD-LR", "n_m_LD-LR", "n_l_LD-LR",
+      "c_h_LD-LR", "c_m_LD-LR", "c_l_LD-LR",
+      "e_h_LD-LR", "e_m_LD-LR", "e_l_LD-LR"))
+  ) %>% 
+  # Calculate productivity cost of switching out of BAU
+  dplyr::mutate(ww_yield = ifelse(stringr::str_detect(crop,'wheat'),wtd_yield,0)) %>% # for any crop that isn't wheat, assign zero yield
+  group_by(imp, initcondit, year) %>%
+  dplyr::mutate(wtd_prod_cost = ww_yield - ww_yield[rotn_seq == "BBB"]) %>% 
+  ungroup() %>% 
+  arrange(rotn_seq, initdenres, region, soiltype, year)
+```
+
+## 6.3. Join weighted opportunity and productivity costs (worst case)  
+```{r join-oc-pc}
+wtd_worstcase <- left_join(wtd_econ_worstcase, 
+                           wtd_yield_worstcase %>% dplyr::select(imp, ID, rotn_seq, scenario, year, ww_yield, wtd_prod_cost), 
+                           by=c("imp", "ID", "rotn_seq", "year")) %>% 
+  dplyr::select(-scenario.y) %>% 
+  dplyr::rename(scenario = scenario.x) %>% 
+  dplyr::relocate(ID, .before = strategy) %>% 
+  dplyr::relocate(scenario, .after = rotn_seq) 
+```
+
+# 7. Save output files
+```{r save-output}
+saveRDS(simden_orig, file = "../output/simden_orig_tidy.rds")
+saveRDS(simden_worstcase, file = "../output/simden_worstcase_tidy.rds")
+saveRDS(wtd_orig, file = "../output/weighted-gp-yield-oc_orig.rds")
+saveRDS(wtd_worstcase, file = "../output/weighted-gp-yield-oc_worstcase.rds")
+```
